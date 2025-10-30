@@ -40,7 +40,12 @@ import {
 } from "@mui/icons-material";
 import Swal from "sweetalert2";
 
-const images = ["/foundation1.jpg", "/foundation2.jpg", "/foundation3.jpg"];
+const images = [
+  "/tuvibe-1.jpg",
+  "/tuvibe-2.jpg",
+  "/tuvibe-3.jpg",
+  "/tuvibe-4.jpg",
+];
 
 export default function LoginPage(props) {
   const theme = useTheme();
@@ -275,7 +280,7 @@ export default function LoginPage(props) {
       position="relative"
       sx={{ 
         overflow: "hidden",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+        background: "linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%)"
       }}
     >
       <div
@@ -288,10 +293,11 @@ export default function LoginPage(props) {
           bottom: 0,
           backgroundImage: `url(${images[0]})`,
           backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundPosition: "center center",
           backgroundRepeat: "no-repeat",
           transition: "opacity 1s ease-in-out",
-          filter: "brightness(0.4) contrast(1.2)",
+          filter: "none",
+          zIndex: 0,
         }}
       />
       
@@ -336,17 +342,19 @@ export default function LoginPage(props) {
           left: 0,
           width: "100%",
           height: "100%",
-          background: `linear-gradient(135deg, 
-            rgba(102, 126, 234, 0.8) 0%, 
-            rgba(118, 75, 162, 0.8) 50%, 
-            rgba(0,0,0,0.6) 100%)`,
+          // Make the left half transparent and darken the right half behind the form
+          background: `linear-gradient(90deg,
+            rgba(0,0,0,0.00) 0%,
+            rgba(0,0,0,0.00) 50%,
+            rgba(0,0,0,0.55) 75%,
+            rgba(0,0,0,0.70) 100%)`,
           backdropFilter: "blur(1px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 }, position: "relative", zIndex: 1 }}>
           <Grid
             container
             spacing={{ xs: 2, sm: 3, md: 4 }}
@@ -361,42 +369,6 @@ export default function LoginPage(props) {
                 >
                   <Slide direction="up" in timeout={1200}>
                     <Stack spacing={4} sx={{ textAlign: { xs: "center", md: "left" } }}>
-                      {/* Logo with enhanced styling */}
-                      <Box
-                        sx={{
-                          position: "relative",
-                          display: "inline-block",
-                          "&::before": {
-                            content: '""',
-                            position: "absolute",
-                            top: -10,
-                            left: -10,
-                            right: -10,
-                            bottom: -10,
-                            background: "linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
-                            borderRadius: "20px",
-                            filter: "blur(10px)",
-                            zIndex: -1,
-                          }
-                        }}
-                      >
-                        <Box
-                          component="img"
-                          src="/foundation-logo.png"
-                          alt="Mwalimu Hope Foundation"
-                          sx={{
-                            height: { xs: 80, sm: 100, md: 120, lg: 140 },
-                            width: "auto",
-                            filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.4)) brightness(1.1)",
-                            transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                            "&:hover": {
-                              transform: "scale(1.05) rotate(2deg)",
-                              filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.5)) brightness(1.2)",
-                            },
-                          }}
-                        />
-                      </Box>
-
                       {/* Enhanced title with subtitle */}
                       <Stack spacing={2}>
                         <Typography
