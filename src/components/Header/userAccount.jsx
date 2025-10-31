@@ -37,7 +37,8 @@ export default function UserAccount({ open, onClose, currentUser }) {
     >
       <DialogTitle
         sx={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background:
+            "linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #f7dc6f 100%)",
           color: "white",
           fontWeight: "bold",
           display: "flex",
@@ -80,7 +81,7 @@ export default function UserAccount({ open, onClose, currentUser }) {
             Account Details
           </Typography>
           <Typography variant="body2" sx={{ opacity: 0.9, fontSize: "0.9rem" }}>
-            {currentUser?.full_name}
+            {currentUser?.name}
           </Typography>
         </Box>
 
@@ -109,8 +110,8 @@ export default function UserAccount({ open, onClose, currentUser }) {
               p: 2,
               backgroundColor: "white",
               borderRadius: 2,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(212, 175, 55, 0.1)",
+              border: "1px solid rgba(212, 175, 55, 0.2)",
             }}
           >
             <Typography
@@ -126,14 +127,14 @@ export default function UserAccount({ open, onClose, currentUser }) {
                 gap: 1,
               }}
             >
-              <PersonIcon sx={{ fontSize: 16 }} />
+              <PersonIcon sx={{ fontSize: 16, color: "#d4af37" }} />
               Name
             </Typography>
             <Typography
               variant="body1"
               sx={{ fontWeight: 500, color: "text.primary" }}
             >
-              {currentUser?.full_name}
+              {currentUser?.name}
             </Typography>
           </Box>
 
@@ -143,8 +144,8 @@ export default function UserAccount({ open, onClose, currentUser }) {
               p: 2,
               backgroundColor: "white",
               borderRadius: 2,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(212, 175, 55, 0.1)",
+              border: "1px solid rgba(212, 175, 55, 0.2)",
             }}
           >
             <Typography
@@ -160,7 +161,7 @@ export default function UserAccount({ open, onClose, currentUser }) {
                 gap: 1,
               }}
             >
-              <EmailIcon sx={{ fontSize: 16 }} />
+              <EmailIcon sx={{ fontSize: 16, color: "#d4af37" }} />
               Email
             </Typography>
             <Typography
@@ -177,8 +178,8 @@ export default function UserAccount({ open, onClose, currentUser }) {
               p: 2,
               backgroundColor: "white",
               borderRadius: 2,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(212, 175, 55, 0.1)",
+              border: "1px solid rgba(212, 175, 55, 0.2)",
             }}
           >
             <Typography
@@ -194,7 +195,7 @@ export default function UserAccount({ open, onClose, currentUser }) {
                 gap: 1,
               }}
             >
-              <PhoneIcon sx={{ fontSize: 16 }} />
+              <PhoneIcon sx={{ fontSize: 16, color: "#d4af37" }} />
               Phone Number
             </Typography>
             <Typography
@@ -211,8 +212,8 @@ export default function UserAccount({ open, onClose, currentUser }) {
               p: 2,
               backgroundColor: "white",
               borderRadius: 2,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(212, 175, 55, 0.1)",
+              border: "1px solid rgba(212, 175, 55, 0.2)",
             }}
           >
             <Typography
@@ -228,7 +229,7 @@ export default function UserAccount({ open, onClose, currentUser }) {
                 gap: 1,
               }}
             >
-              <WorkIcon sx={{ fontSize: 16 }} />
+              <WorkIcon sx={{ fontSize: 16, color: "#d4af37" }} />
               Role
             </Typography>
             <Chip
@@ -248,8 +249,8 @@ export default function UserAccount({ open, onClose, currentUser }) {
               p: 2,
               backgroundColor: "white",
               borderRadius: 2,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(212, 175, 55, 0.1)",
+              border: "1px solid rgba(212, 175, 55, 0.2)",
             }}
           >
             <Typography
@@ -269,7 +270,11 @@ export default function UserAccount({ open, onClose, currentUser }) {
             </Typography>
             <Chip
               icon={
-                currentUser?.isActive !== false ? <CheckCircleIcon /> : <CancelIcon />
+                currentUser?.isActive !== false ? (
+                  <CheckCircleIcon />
+                ) : (
+                  <CancelIcon />
+                )
               }
               label={currentUser?.isActive !== false ? "Active" : "Inactive"}
               color={currentUser?.isActive !== false ? "success" : "error"}
@@ -284,8 +289,8 @@ export default function UserAccount({ open, onClose, currentUser }) {
               p: 2,
               backgroundColor: "white",
               borderRadius: 2,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(212, 175, 55, 0.1)",
+              border: "1px solid rgba(212, 175, 55, 0.2)",
             }}
           >
             <Typography
@@ -301,7 +306,7 @@ export default function UserAccount({ open, onClose, currentUser }) {
                 gap: 1,
               }}
             >
-              <LoginIcon sx={{ fontSize: 16 }} />
+              <LoginIcon sx={{ fontSize: 16, color: "#d4af37" }} />
               Last Login
             </Typography>
             <Typography

@@ -25,6 +25,8 @@ import {
   Chip,
   Paper,
   Divider,
+  Avatar,
+  Badge,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import "ol/ol.css";
@@ -32,7 +34,7 @@ import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
-import { fromLonLat } from "ol/proj";
+import { fromLonLat, transformExtent } from "ol/proj";
 import { defaults as defaultControls, ScaleLine } from "ol/control";
 import XYZ from "ol/source/XYZ";
 import MapIcon from "@mui/icons-material/Map";
@@ -52,6 +54,12 @@ import ClearIcon from "@mui/icons-material/Clear";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import LocationSearchingIcon from "@mui/icons-material/LocationSearching";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import StarIcon from "@mui/icons-material/Star";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 const TuvibeMap = () => {
   const mapRef = useRef(null);
@@ -89,6 +97,7 @@ const TuvibeMap = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState("");
 
   // Geolocation states
   const [userLocation, setUserLocation] = useState(null);
@@ -100,6 +109,19 @@ const TuvibeMap = () => {
 
   // Use proxy path instead of direct API URL
   const API_BASE_URL = "/api";
+
+  // Helper to build URL for uploaded assets using Vite proxy
+  const buildImageUrl = (imageUrl) => {
+    if (!imageUrl) return "";
+    if (imageUrl.startsWith("http")) return imageUrl;
+
+    // Use relative URLs - Vite proxy will handle routing to backend
+    if (imageUrl.startsWith("uploads/")) return `/${imageUrl}`;
+    if (imageUrl.startsWith("/uploads/")) return imageUrl;
+    // Handle public users photo path (e.g., "profiles/filename.png")
+    if (imageUrl.startsWith("profiles/")) return `/uploads/${imageUrl}`;
+    return imageUrl;
+  };
 
   // Distance calculation utility (Haversine formula)
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -161,7 +183,7 @@ const TuvibeMap = () => {
     );
   };
 
-  // Find charity projects near user location
+  // Find public users near user location
   const findNearMeProjects = () => {
     if (!userLocation) {
       getUserLocation(() => {
@@ -323,6 +345,11 @@ const TuvibeMap = () => {
         limit: 10000,
       });
 
+      // Add category filter
+      if (categoryFilter) {
+        params.append("category", categoryFilter);
+      }
+
       if (query.trim()) {
         if (column === "all") {
           params.append("q", query);
@@ -365,8 +392,17 @@ const TuvibeMap = () => {
       setIsLoading(true);
       try {
         const token = localStorage.getItem("token");
+        const params = new URLSearchParams({
+          limit: "10000",
+        });
+
+        // Add category filter
+        if (categoryFilter) {
+          params.append("category", categoryFilter);
+        }
+
         const usersResponse = await fetch(
-          `${API_BASE_URL}/admin-users/public-users?limit=10000`,
+          `${API_BASE_URL}/admin-users/public-users?${params}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -389,7 +425,7 @@ const TuvibeMap = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [categoryFilter]);
 
   // Debounced search effect
   useEffect(() => {
@@ -402,59 +438,70 @@ const TuvibeMap = () => {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchColumn]);
+  }, [searchQuery, searchColumn, categoryFilter]);
 
-  // Auto-zoom to search results when search results change
+  // Auto-zoom to filtered results when data changes
   useEffect(() => {
-    if (searchResults.length > 0 && mapInstance.current && mapInitialized) {
-      const map = mapInstance.current;
-      const view = map.getView();
+    if (mapInstance.current && mapInitialized) {
+      const dataToZoom = searchResults.length > 0 ? searchResults : publicUsers;
 
-      // Calculate bounds for all search results
-      const coordinates = searchResults
-        .filter((project) => project.longitude && project.latitude)
-        .map((project) => [
-          parseFloat(project.longitude),
-          parseFloat(project.latitude),
-        ]);
+      if (dataToZoom && dataToZoom.length > 0) {
+        const map = mapInstance.current;
+        const view = map.getView();
 
-      if (coordinates.length > 0) {
-        if (coordinates.length === 1) {
-          // Single result - zoom to it
-          view.setCenter(fromLonLat(coordinates[0]));
-          view.setZoom(15);
-        } else {
-          // Multiple results - fit all in view
-          const extent = coordinates.reduce(
-            (extent, coord) => {
-              const [lon, lat] = coord;
-              return [
-                Math.min(extent[0], lon),
-                Math.min(extent[1], lat),
-                Math.max(extent[2], lon),
-                Math.max(extent[3], lat),
-              ];
-            },
-            [Infinity, Infinity, -Infinity, -Infinity]
-          );
+        // Calculate bounds for filtered results
+        const coordinates = dataToZoom
+          .filter((user) => user.longitude && user.latitude)
+          .map((user) => [
+            parseFloat(user.longitude),
+            parseFloat(user.latitude),
+          ]);
 
-          // Add some padding to the extent
-          const padding = 0.01; // degrees
-          const paddedExtent = [
-            extent[0] - padding,
-            extent[1] - padding,
-            extent[2] + padding,
-            extent[3] + padding,
-          ];
+        if (coordinates.length > 0) {
+          if (coordinates.length === 1) {
+            // Single result - zoom to it
+            view.setCenter(fromLonLat(coordinates[0]));
+            view.setZoom(15);
+          } else {
+            // Multiple results - fit all in view
+            const extent = coordinates.reduce(
+              (extent, coord) => {
+                const [lon, lat] = coord;
+                return [
+                  Math.min(extent[0], lon),
+                  Math.min(extent[1], lat),
+                  Math.max(extent[2], lon),
+                  Math.max(extent[3], lat),
+                ];
+              },
+              [Infinity, Infinity, -Infinity, -Infinity]
+            );
 
-          view.fit(fromLonLat(paddedExtent), {
-            padding: [50, 50, 50, 50],
-            duration: 1000,
-          });
+            // Add some padding to the extent
+            const padding = 0.01; // degrees
+            const paddedExtent = [
+              extent[0] - padding,
+              extent[1] - padding,
+              extent[2] + padding,
+              extent[3] + padding,
+            ];
+
+            // Transform extent from lon/lat to map coordinates
+            const transformedExtent = transformExtent(
+              paddedExtent,
+              "EPSG:4326",
+              view.getProjection()
+            );
+
+            view.fit(transformedExtent, {
+              padding: [50, 50, 50, 50],
+              duration: 1000,
+            });
+          }
         }
       }
     }
-  }, [searchResults, mapInitialized]);
+  }, [searchResults, publicUsers, categoryFilter, mapInitialized]);
 
   // Auto-update near me results when radius changes
   useEffect(() => {
@@ -561,12 +608,18 @@ const TuvibeMap = () => {
   // Create public user markers
   const createProjectMarkers = (users, isSearchResult = false) => {
     return users
-      .filter(
-        (user) =>
-          user.longitude !== null &&
-          user.latitude !== null &&
-          visibleCategories[user.category]
-      )
+      .filter((user) => {
+        // Check if coordinates are valid
+        if (user.longitude === null || user.latitude === null) {
+          return false;
+        }
+        // If categoryFilter is set, only show that category
+        if (categoryFilter) {
+          return user.category === categoryFilter;
+        }
+        // Otherwise, use visibleCategories from legend checkboxes
+        return visibleCategories[user.category];
+      })
       .map((user) => {
         const lon = parseFloat(user.longitude); // longitude
         const lat = parseFloat(user.latitude); // latitude
@@ -625,9 +678,9 @@ const TuvibeMap = () => {
         image: new Icon({
           src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="16" cy="16" r="12" fill="#2196f3" stroke="white" stroke-width="3"/>
+              <circle cx="16" cy="16" r="12" fill="#FFD700" stroke="white" stroke-width="3"/>
               <circle cx="16" cy="16" r="6" fill="white"/>
-              <circle cx="16" cy="16" r="3" fill="#2196f3"/>
+              <circle cx="16" cy="16" r="3" fill="#FFD700"/>
             </svg>
           `)}`,
           scale: 1,
@@ -646,7 +699,7 @@ const TuvibeMap = () => {
     // Clear existing markers
     const existingFeatures = vectorSource.getFeatures();
     const projectFeatures = existingFeatures.filter(
-      (f) => f.get("properties")?.type === "charityProject"
+      (f) => f.get("properties")?.type === "publicUser"
     );
     const userLocationFeatures = existingFeatures.filter(
       (f) => f.get("properties")?.type === "userLocation"
@@ -683,6 +736,7 @@ const TuvibeMap = () => {
     nearMeMode,
     nearMeResults,
     userLocation,
+    categoryFilter,
   ]);
 
   const handleBaseLayerChange = (event) => {
@@ -712,6 +766,7 @@ const TuvibeMap = () => {
   };
 
   // User categories matching the API (Public User categories)
+  // Original vibrant colors for markers and legend
   const USER_CATEGORIES = {
     Regular: { label: "Regular", color: "#4caf50" },
     "Sugar Mummy": { label: "Sugar Mummy", color: "#e91e63" },
@@ -719,19 +774,9 @@ const TuvibeMap = () => {
     "Ben 10": { label: "Ben 10", color: "#ff9800" },
   };
 
-  // Project status colors
-  const STATUS_COLORS = {
-    pending: "#ff9800", // Orange
-    in_progress: "#4caf50", // Green
-    completed: "#2196f3", // Blue
-    on_hold: "#ff5722", // Deep Orange
-    cancelled: "#f44336", // Red
-  };
-
-  // Helper function to get status color
-  const getStatusColor = (status) => {
-    return STATUS_COLORS[status] || "#666";
-  };
+  // Gold accent color (primary brand color)
+  const GOLD_COLOR = "#FFD700";
+  const GOLD_DARK = "#F4C430";
 
   // Helper function to get category marker
   const getCategoryMarker = (category, status, isSearchResult = false) => {
@@ -853,6 +898,7 @@ const TuvibeMap = () => {
     setSearchColumn("all");
     setSearchResults([]);
     setSearchError(null);
+    setCategoryFilter(""); // Also clear category filter
   };
 
   const clearNearMe = () => {
@@ -922,7 +968,7 @@ const TuvibeMap = () => {
             variant="h6"
             sx={{
               fontWeight: 600,
-              color: "#4caf50",
+              color: "#FFD700",
               fontSize: "1.1rem",
             }}
           >
@@ -948,12 +994,12 @@ const TuvibeMap = () => {
                 minWidth: 120,
                 textTransform: "none",
                 fontWeight: 600,
-                backgroundColor: nearMeMode ? "#2196f3" : "transparent",
-                borderColor: "#2196f3",
-                color: nearMeMode ? "white" : "#2196f3",
+                backgroundColor: nearMeMode ? "#FFD700" : "transparent",
+                borderColor: "#FFD700",
+                color: nearMeMode ? "white" : "#FFD700",
                 "&:hover": {
-                  backgroundColor: nearMeMode ? "#1976d2" : "#e3f2fd",
-                  borderColor: "#1976d2",
+                  backgroundColor: nearMeMode ? "#F4C430" : "#FFF9E6",
+                  borderColor: "#F4C430",
                 },
                 "&:disabled": {
                   backgroundColor: "transparent",
@@ -1004,11 +1050,11 @@ const TuvibeMap = () => {
                   minWidth: 100,
                   textTransform: "none",
                   fontWeight: 600,
-                  borderColor: "#4caf50",
-                  color: "#4caf50",
+                  borderColor: "#FFD700",
+                  color: "#FFD700",
                   "&:hover": {
-                    backgroundColor: "#e8f5e8",
-                    borderColor: "#388e3c",
+                    backgroundColor: "#FFF9E6",
+                    borderColor: "#F4C430",
                   },
                 }}
               >
@@ -1041,185 +1087,131 @@ const TuvibeMap = () => {
           </Box>
         </Box>
 
-        {/* Search Bar Row */}
+        {/* Category Filter Row */}
         <Box
           sx={{
             display: "flex",
             gap: 1.5,
             alignItems: "center",
             mb: 0,
-            justifyContent: "space-between",
+            justifyContent: "flex-start",
           }}
         >
-          {/* Left side - Search controls */}
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-            {/* Search Input */}
-            <TextField
-              size="small"
-              placeholder="Search by project name, category, county, target individual, or description..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              sx={{
-                width: 350,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: searchQuery && (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      onClick={clearSearch}
-                      sx={{ p: 0.5 }}
-                    >
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            {/* Search Column Selector */}
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Search in</InputLabel>
-              <Select
-                value={searchColumn}
-                onChange={handleSearchColumnChange}
-                label="Search in"
-              >
-                <MenuItem value="all">All Fields</MenuItem>
-                <MenuItem value="name">Project Name</MenuItem>
-                <MenuItem value="category">Category</MenuItem>
-                <MenuItem value="status">Status</MenuItem>
-                <MenuItem value="county">County</MenuItem>
-                <MenuItem value="subcounty">Subcounty</MenuItem>
-                <MenuItem value="target_individual">Target Individual</MenuItem>
-                <MenuItem value="description">Description</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          {/* Right side - Search Status Indicators */}
-          <Box
+          {/* Category Filter */}
+          <FormControl
+            variant="outlined"
+            size="small"
             sx={{
-              display: "flex",
-              gap: 1,
-              alignItems: "center",
-              flexShrink: 0,
+              minWidth: 200,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                backgroundColor: "white",
+                border: "1px solid rgba(255, 215, 0, 0.3)",
+                "&:hover fieldset": {
+                  borderColor: "rgba(255, 215, 0, 0.5)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#FFD700",
+                },
+              },
             }}
           >
-            {/* Search Status Indicators */}
-            {isSearching && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  ml: 1,
-                }}
-              >
-                <CircularProgress size={12} />
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ fontSize: "0.7rem" }}
-                >
-                  Searching...
-                </Typography>
-              </Box>
-            )}
+            <InputLabel
+              sx={{
+                color: "#7f8c8d",
+                fontWeight: 600,
+              }}
+            >
+              Filter by Category
+            </InputLabel>
+            <Select
+              value={categoryFilter}
+              onChange={(e) => {
+                const newFilter = e.target.value;
+                setCategoryFilter(newFilter);
+                setSearchResults([]); // Clear search results when filter changes
+                setNearMeResults([]); // Clear near me results when filter changes
+                setNearMeMode(false); // Exit near me mode when filter changes
 
-            {searchResults.length > 0 && !isSearching && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  ml: 1,
-                  px: 1,
-                  py: 0.5,
-                  backgroundColor: "#e3f2fd",
-                  borderRadius: 1,
-                  border: "1px solid #2196f3",
-                }}
-              >
-                <Typography variant="caption" color="primary" fontWeight="bold">
-                  {searchResults.length} result
-                  {searchResults.length !== 1 ? "s" : ""} found
-                </Typography>
-              </Box>
-            )}
+                // Update visibleCategories to match the filter
+                if (newFilter) {
+                  // When a specific category is selected, enable only that category
+                  setVisibleCategories({
+                    Regular: newFilter === "Regular",
+                    "Sugar Mummy": newFilter === "Sugar Mummy",
+                    Sponsor: newFilter === "Sponsor",
+                    "Ben 10": newFilter === "Ben 10",
+                  });
+                } else {
+                  // When "All Categories" is selected, enable all
+                  setVisibleCategories({
+                    Regular: true,
+                    "Sugar Mummy": true,
+                    Sponsor: true,
+                    "Ben 10": true,
+                  });
+                }
+              }}
+              label="Filter by Category"
+              sx={{
+                color: "#2c3e50",
+                fontWeight: 600,
+                "& .MuiSelect-icon": {
+                  color: "#FFD700",
+                },
+              }}
+            >
+              <MenuItem value="">
+                <em>All Categories</em>
+              </MenuItem>
+              <MenuItem value="Regular">Regular</MenuItem>
+              <MenuItem value="Sugar Mummy">Sugar Mummy</MenuItem>
+              <MenuItem value="Sponsor">Sponsor</MenuItem>
+              <MenuItem value="Ben 10">Ben 10</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
-            {searchError && (
-              <Chip
-                label={`Error: ${
-                  searchError.length > 15
-                    ? searchError.substring(0, 15) + "..."
-                    : searchError
-                }`}
-                color="error"
-                size="small"
-                onDelete={() => setSearchError(null)}
-                sx={{
-                  fontSize: "0.7rem",
-                  height: "20px",
-                  ml: 1,
-                }}
-              />
-            )}
+        {/* Near Me Status Indicators */}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          {nearMeMode && nearMeResults.length > 0 && (
+            <Chip
+              label={`${nearMeResults.length} users within ${nearMeRadius}km`}
+              color="info"
+              size="small"
+              variant="outlined"
+              sx={{
+                fontSize: "0.7rem",
+                height: "20px",
+                ml: 1,
+              }}
+            />
+          )}
 
-            {searchResults.length > 0 && !nearMeMode && (
-              <Chip
-                label={`${searchResults.length} results`}
-                color="primary"
-                size="small"
-                variant="outlined"
-                sx={{
-                  fontSize: "0.7rem",
-                  height: "20px",
-                  ml: 1,
-                }}
-              />
-            )}
-
-            {nearMeMode && nearMeResults.length > 0 && (
-              <Chip
-                label={`${nearMeResults.length} projects within ${nearMeRadius}km`}
-                color="info"
-                size="small"
-                variant="outlined"
-                sx={{
-                  fontSize: "0.7rem",
-                  height: "20px",
-                  ml: 1,
-                }}
-              />
-            )}
-
-            {locationError && (
-              <Chip
-                label={`Location: ${
-                  locationError.length > 15
-                    ? locationError.substring(0, 15) + "..."
-                    : locationError
-                }`}
-                color="error"
-                size="small"
-                onDelete={() => setLocationError(null)}
-                sx={{
-                  fontSize: "0.7rem",
-                  height: "20px",
-                  ml: 1,
-                }}
-              />
-            )}
-          </Box>
+          {locationError && (
+            <Chip
+              label={`Location: ${
+                locationError.length > 15
+                  ? locationError.substring(0, 15) + "..."
+                  : locationError
+              }`}
+              color="error"
+              size="small"
+              onDelete={() => setLocationError(null)}
+              sx={{
+                fontSize: "0.7rem",
+                height: "20px",
+                ml: 1,
+              }}
+            />
+          )}
         </Box>
       </Box>
 
@@ -1333,7 +1325,7 @@ const TuvibeMap = () => {
           >
             <CircularProgress size={20} />
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              Loading charity projects...
+              Loading Tuvibe Family...
             </Typography>
           </Box>
         )}
@@ -1363,7 +1355,7 @@ const TuvibeMap = () => {
           <IconButton
             sx={{
               backgroundColor: "transparent",
-              color: baseLayer === "osm" ? "#2196f3" : "#666",
+              color: baseLayer === "osm" ? "#FFD700" : "#666",
               "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
             }}
             onClick={() => handleBaseLayerChange({ target: { value: "osm" } })}
@@ -1373,7 +1365,7 @@ const TuvibeMap = () => {
           <IconButton
             sx={{
               backgroundColor: "transparent",
-              color: baseLayer === "satellite" ? "#2196f3" : "#666",
+              color: baseLayer === "satellite" ? "#FFD700" : "#666",
               "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
             }}
             onClick={() =>
@@ -1385,7 +1377,7 @@ const TuvibeMap = () => {
           <IconButton
             sx={{
               backgroundColor: "transparent",
-              color: baseLayer === "terrain" ? "#2196f3" : "#666",
+              color: baseLayer === "terrain" ? "#FFD700" : "#666",
               "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
             }}
             onClick={() =>
@@ -1396,7 +1388,7 @@ const TuvibeMap = () => {
           </IconButton>
         </Box>
 
-        {/* Compact Legend Box for charity projects with filtering */}
+        {/* Compact Legend Box for Tuvibe Family with filtering */}
         <Box
           sx={{
             position: "absolute",
@@ -1432,13 +1424,13 @@ const TuvibeMap = () => {
                 py: 0.1,
                 px: 0.75,
                 textTransform: "none",
-                borderColor: "#4caf50",
-                color: "#4caf50",
+                borderColor: "#FFD700",
+                color: "#FFD700",
                 minWidth: "auto",
                 height: "20px",
                 "&:hover": {
-                  backgroundColor: "#e8f5e8",
-                  borderColor: "#388e3c",
+                  backgroundColor: "#FFF9E6",
+                  borderColor: "#F4C430",
                 },
               }}
             >
@@ -1476,7 +1468,7 @@ const TuvibeMap = () => {
                 gap: 0.25,
                 mb: 0.5,
                 p: 0.25,
-                backgroundColor: "#e3f2fd",
+                backgroundColor: "#FFF9E6",
                 borderRadius: 0.5,
               }}
             >
@@ -1485,7 +1477,7 @@ const TuvibeMap = () => {
                   width: 12,
                   height: 12,
                   borderRadius: "50%",
-                  backgroundColor: "#2196f3",
+                  backgroundColor: "#FFD700",
                   mr: 0.5,
                 }}
               />
@@ -1494,7 +1486,7 @@ const TuvibeMap = () => {
                 sx={{
                   fontSize: "10px",
                   fontWeight: 600,
-                  color: "#1976d2",
+                  color: "#F4C430",
                 }}
               >
                 Your Location
@@ -1669,7 +1661,7 @@ const TuvibeMap = () => {
                 p: 3,
                 borderBottom: 1,
                 borderColor: "divider",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #FFD700 0%, #F4C430 100%)",
                 color: "white",
                 position: "relative",
                 overflow: "hidden",
@@ -1713,7 +1705,7 @@ const TuvibeMap = () => {
                   variant="h6"
                   sx={{ fontWeight: 600, fontSize: "1.1rem" }}
                 >
-                  Project Details
+                  User Details
                 </Typography>
                 <IconButton
                   onClick={() => setDrawerOpen(false)}
@@ -1756,12 +1748,12 @@ const TuvibeMap = () => {
                   fontSize: "0.9rem",
                   minHeight: "56px",
                   "&.Mui-selected": {
-                    color: "#667eea",
+                    color: "#FFD700",
                     fontWeight: 600,
                   },
                 },
                 "& .MuiTabs-indicator": {
-                  backgroundColor: "#667eea",
+                  backgroundColor: "#FFD700",
                   height: 3,
                   borderRadius: "2px 2px 0 0",
                 },
@@ -1794,6 +1786,56 @@ const TuvibeMap = () => {
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                     >
+                      {/* Profile Photo */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          mb: 1,
+                        }}
+                      >
+                        <Badge
+                          overlap="circular"
+                          anchorOrigin={{
+                            vertical: "bottom",
+                            horizontal: "right",
+                          }}
+                          badgeContent={
+                            selectedProjectDetails.is_online ? (
+                              <Box
+                                sx={{
+                                  width: 14,
+                                  height: 14,
+                                  borderRadius: "50%",
+                                  backgroundColor: "#C8E6C9",
+                                  border: "2px solid white",
+                                }}
+                              />
+                            ) : null
+                          }
+                        >
+                          <Avatar
+                            src={
+                              selectedProjectDetails.photo
+                                ? buildImageUrl(selectedProjectDetails.photo)
+                                : undefined
+                            }
+                            sx={{
+                              width: 120,
+                              height: 120,
+                              border: "3px solid #FFD700",
+                              bgcolor: "#FFD700",
+                            }}
+                          >
+                            {selectedProjectDetails.name
+                              ?.charAt(0)
+                              .toUpperCase() || <PersonIcon />}
+                          </Avatar>
+                        </Badge>
+                      </Box>
+
+                      {/* Name */}
                       <Box
                         sx={{
                           p: 2,
@@ -1813,63 +1855,62 @@ const TuvibeMap = () => {
                             letterSpacing: 0.5,
                           }}
                         >
-                          Project Name
+                          Name
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Typography
+                            variant="body1"
+                            sx={{ fontWeight: 500, color: "text.primary" }}
+                          >
+                            {selectedProjectDetails.name || "-"}
+                          </Typography>
+                          {selectedProjectDetails.isVerified && (
+                            <VerifiedIcon
+                              sx={{
+                                fontSize: 20,
+                                color: "#FFD700",
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </Box>
+
+                      {/* Gender & Age */}
+                      <Box
+                        sx={{
+                          p: 2,
+                          backgroundColor: "white",
+                          borderRadius: 2,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            color: "text.secondary",
+                            mb: 1,
+                            fontSize: "0.8rem",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          Gender & Age
                         </Typography>
                         <Typography
                           variant="body1"
                           sx={{ fontWeight: 500, color: "text.primary" }}
                         >
-                          {selectedProjectDetails.name}
+                          {selectedProjectDetails.gender || "-"}
+                          {selectedProjectDetails.age
+                            ? `, ${selectedProjectDetails.age} years`
+                            : ""}
                         </Typography>
                       </Box>
 
-                      <Box
-                        sx={{
-                          p: 2,
-                          backgroundColor: "white",
-                          borderRadius: 2,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                          border: "1px solid #e0e0e0",
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{
-                            color: "text.secondary",
-                            mb: 1,
-                            fontSize: "0.8rem",
-                            textTransform: "uppercase",
-                            letterSpacing: 0.5,
-                          }}
-                        >
-                          Status
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            px: 2,
-                            py: 0.5,
-                            borderRadius: 3,
-                            backgroundColor: `${getStatusColor(
-                              selectedProjectDetails.status
-                            )}20`,
-                            color: getStatusColor(
-                              selectedProjectDetails.status
-                            ),
-                            fontWeight: 600,
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          {selectedProjectDetails.status
-                            .charAt(0)
-                            .toUpperCase() +
-                            selectedProjectDetails.status
-                              .slice(1)
-                              .replace("_", " ")}
-                        </Box>
-                      </Box>
-
+                      {/* Category */}
                       <Box
                         sx={{
                           p: 2,
@@ -1916,6 +1957,7 @@ const TuvibeMap = () => {
                         </Box>
                       </Box>
 
+                      {/* City */}
                       <Box
                         sx={{
                           p: 2,
@@ -1935,16 +1977,17 @@ const TuvibeMap = () => {
                             letterSpacing: 0.5,
                           }}
                         >
-                          Target Individual
+                          City
                         </Typography>
                         <Typography
                           variant="body1"
                           sx={{ fontWeight: 500, color: "text.primary" }}
                         >
-                          {selectedProjectDetails.target_individual || "-"}
+                          {selectedProjectDetails.city || "-"}
                         </Typography>
                       </Box>
 
+                      {/* Phone */}
                       <Box
                         sx={{
                           p: 2,
@@ -1964,14 +2007,180 @@ const TuvibeMap = () => {
                             letterSpacing: 0.5,
                           }}
                         >
-                          Description
+                          Phone
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <PhoneIcon
+                            sx={{ fontSize: 16, color: "text.secondary" }}
+                          />
+                          <Typography
+                            variant="body1"
+                            sx={{ fontWeight: 500, color: "text.primary" }}
+                          >
+                            {selectedProjectDetails.phone || "-"}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Email */}
+                      <Box
+                        sx={{
+                          p: 2,
+                          backgroundColor: "white",
+                          borderRadius: 2,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            color: "text.secondary",
+                            mb: 1,
+                            fontSize: "0.8rem",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          Email
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <EmailIcon
+                            sx={{ fontSize: 16, color: "text.secondary" }}
+                          />
+                          <Typography
+                            variant="body1"
+                            sx={{ fontWeight: 500, color: "text.primary" }}
+                          >
+                            {selectedProjectDetails.email || "-"}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Bio */}
+                      <Box
+                        sx={{
+                          p: 2,
+                          backgroundColor: "white",
+                          borderRadius: 2,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            color: "text.secondary",
+                            mb: 1,
+                            fontSize: "0.8rem",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          Bio
                         </Typography>
                         <Typography
                           variant="body1"
                           sx={{ fontWeight: 500, color: "text.primary" }}
                         >
-                          {selectedProjectDetails.description || "-"}
+                          {selectedProjectDetails.bio || "-"}
                         </Typography>
+                      </Box>
+
+                      {/* Stats Row */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                        }}
+                      >
+                        {/* Boost Score */}
+                        <Box
+                          sx={{
+                            flex: 1,
+                            p: 2,
+                            backgroundColor: "white",
+                            borderRadius: 2,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            border: "1px solid #e0e0e0",
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: "text.secondary",
+                              mb: 0.5,
+                              fontSize: "0.7rem",
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Boost Score
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <StarIcon sx={{ fontSize: 16, color: "#ff9800" }} />
+                            <Typography
+                              variant="body1"
+                              sx={{ fontWeight: 600, color: "text.primary" }}
+                            >
+                              {selectedProjectDetails.boost_score || 0}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Token Balance */}
+                        <Box
+                          sx={{
+                            flex: 1,
+                            p: 2,
+                            backgroundColor: "white",
+                            borderRadius: 2,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            border: "1px solid #e0e0e0",
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: "text.secondary",
+                              mb: 0.5,
+                              fontSize: "0.7rem",
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Tokens
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <AccountBalanceWalletIcon
+                              sx={{ fontSize: 16, color: "#F4C430" }}
+                            />
+                            <Typography
+                              variant="body1"
+                              sx={{ fontWeight: 600, color: "text.primary" }}
+                            >
+                              {parseFloat(
+                                selectedProjectDetails.token_balance || 0
+                              ).toFixed(2)}
+                            </Typography>
+                          </Box>
+                        </Box>
                       </Box>
 
                       {/* Distance from user location */}
@@ -2005,8 +2214,8 @@ const TuvibeMap = () => {
                                 px: 2,
                                 py: 0.5,
                                 borderRadius: 3,
-                                backgroundColor: "#e3f2fd",
-                                color: "#1976d2",
+                                backgroundColor: "#FFF9E6",
+                                color: "#F4C430",
                                 fontWeight: 600,
                                 fontSize: "0.85rem",
                               }}
@@ -2022,6 +2231,7 @@ const TuvibeMap = () => {
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                     >
+                      {/* City */}
                       <Box
                         sx={{
                           p: 2,
@@ -2041,104 +2251,17 @@ const TuvibeMap = () => {
                             letterSpacing: 0.5,
                           }}
                         >
-                          County
+                          City
                         </Typography>
                         <Typography
                           variant="body1"
                           sx={{ fontWeight: 500, color: "text.primary" }}
                         >
-                          {selectedProjectDetails.county || "-"}
+                          {selectedProjectDetails.city || "-"}
                         </Typography>
                       </Box>
 
-                      <Box
-                        sx={{
-                          p: 2,
-                          backgroundColor: "white",
-                          borderRadius: 2,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                          border: "1px solid #e0e0e0",
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{
-                            color: "text.secondary",
-                            mb: 1,
-                            fontSize: "0.8rem",
-                            textTransform: "uppercase",
-                            letterSpacing: 0.5,
-                          }}
-                        >
-                          Subcounty
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{ fontWeight: 500, color: "text.primary" }}
-                        >
-                          {selectedProjectDetails.subcounty || "-"}
-                        </Typography>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          p: 2,
-                          backgroundColor: "white",
-                          borderRadius: 2,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                          border: "1px solid #e0e0e0",
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{
-                            color: "text.secondary",
-                            mb: 1,
-                            fontSize: "0.8rem",
-                            textTransform: "uppercase",
-                            letterSpacing: 0.5,
-                          }}
-                        >
-                          Progress
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{ fontWeight: 500, color: "text.primary" }}
-                        >
-                          {selectedProjectDetails.progress || 0}%
-                        </Typography>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          p: 2,
-                          backgroundColor: "white",
-                          borderRadius: 2,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                          border: "1px solid #e0e0e0",
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{
-                            color: "text.secondary",
-                            mb: 1,
-                            fontSize: "0.8rem",
-                            textTransform: "uppercase",
-                            letterSpacing: 0.5,
-                          }}
-                        >
-                          Assigned To
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{ fontWeight: 500, color: "text.primary" }}
-                        >
-                          {selectedProjectDetails.assignee?.full_name ||
-                            "Not Assigned"}
-                        </Typography>
-                      </Box>
-
+                      {/* Coordinates */}
                       <Box
                         sx={{
                           p: 2,
@@ -2199,6 +2322,107 @@ const TuvibeMap = () => {
                           </Box>
                         </Box>
                       </Box>
+
+                      {/* Last Seen */}
+                      {selectedProjectDetails.last_seen_at && (
+                        <Box
+                          sx={{
+                            p: 2,
+                            backgroundColor: "white",
+                            borderRadius: 2,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            border: "1px solid #e0e0e0",
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: "text.secondary",
+                              mb: 1,
+                              fontSize: "0.8rem",
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Last Seen
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <CalendarTodayIcon
+                              sx={{ fontSize: 16, color: "text.secondary" }}
+                            />
+                            <Typography
+                              variant="body1"
+                              sx={{ fontWeight: 500, color: "text.primary" }}
+                            >
+                              {new Date(
+                                selectedProjectDetails.last_seen_at
+                              ).toLocaleString()}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+
+                      {/* Online Status */}
+                      <Box
+                        sx={{
+                          p: 2,
+                          backgroundColor: "white",
+                          borderRadius: 2,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            color: "text.secondary",
+                            mb: 1,
+                            fontSize: "0.8rem",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          Online Status
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 3,
+                            backgroundColor: selectedProjectDetails.is_online
+                              ? "#C8E6C920"
+                              : "#9e9e9e20",
+                            color: selectedProjectDetails.is_online
+                              ? "#81C784"
+                              : "#9e9e9e",
+                            fontWeight: 600,
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              backgroundColor: selectedProjectDetails.is_online
+                                ? "#81C784"
+                                : "#9e9e9e",
+                              mr: 1,
+                            }}
+                          />
+                          {selectedProjectDetails.is_online
+                            ? "Online"
+                            : "Offline"}
+                        </Box>
+                      </Box>
                     </Box>
                   )}
                 </>
@@ -2227,14 +2451,14 @@ const TuvibeMap = () => {
                     color="text.secondary"
                     sx={{ mb: 1, fontWeight: 500 }}
                   >
-                    No Item Selected
+                    No User Selected
                   </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ opacity: 0.7 }}
                   >
-                    Click on a marker on the map to view details
+                    Click on a marker on the map to view user details
                   </Typography>
                 </Box>
               )}
@@ -2256,7 +2480,7 @@ const TuvibeMap = () => {
                 variant="contained"
                 onClick={() => {
                   if (selectedProjectDetails?.id) {
-                    navigate(`/projects/${selectedProjectDetails.id}`);
+                    navigate(`/users`);
                   }
                 }}
                 sx={{
@@ -2266,17 +2490,17 @@ const TuvibeMap = () => {
                   textTransform: "none",
                   borderRadius: 2,
                   background:
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "linear-gradient(135deg, #FFD700 0%, #F4C430 100%)",
                   "&:hover": {
                     background:
-                      "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)",
+                      "linear-gradient(135deg, #F4C430 0%, #FFA500 100%)",
                     transform: "translateY(-1px)",
-                    boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                    boxShadow: "0 4px 12px rgba(255, 215, 0, 0.4)",
                   },
                   transition: "all 0.2s ease-in-out",
                 }}
               >
-                View Full Details
+                View All Users
               </Button>
             </Box>
           </Box>

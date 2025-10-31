@@ -17,69 +17,69 @@ import { Close, Email, Person, Edit } from "@mui/icons-material";
 export default function EditUserDetails({
   open,
   onClose,
-  isAuthenticated,
   currentUser,
+  isAuthenticated,
   setIsAuthenticated,
 }) {
   const [isError, setIsError] = useState("");
   const [body, updateBody] = useState({
     email: "",
-    full_name: "",
+    name: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const rfPhone = useRef();
   const rfName = useRef();
 
   const editDetails = () => {
-    if (isAuthenticated) {
-      const d = {
-        email: rfPhone.current.value,
-        full_name: rfName.current.value,
-      };
+    const d = {
+      email: rfPhone.current.value,
+      name: rfName.current.value,
+    };
 
-      if (!d.full_name.includes(" ")) {
-        return setIsError(
-          "Enter a valid name including your Surname and Firstname"
-        );
-      }
-      if (d.full_name.length < 3) {
-        return setIsError("Name too short");
-      }
-
-      setIsLoading(true);
-      updateBody(d);
-      setIsError("");
-
-      fetch(`/api/admin-users/${currentUser.id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(d),
-      })
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          } else throw Error("Change of details failed");
-        })
-        .then((data) => {
-          setIsLoading(false);
-          if (data.success) {
-            setIsError(data.success);
-            setTimeout(() => {
-              localStorage.clear();
-              setIsAuthenticated(false);
-              window.location.href = "/";
-            }, 1000);
-          }
-        })
-        .catch((err) => {
-          setIsLoading(false);
-          setIsError("Update failed!");
-        });
+    if (!d.name.includes(" ")) {
+      return setIsError(
+        "Enter a valid name including your Surname and Firstname"
+      );
     }
+    if (d.name.length < 3) {
+      return setIsError("Name too short");
+    }
+
+    setIsLoading(true);
+    updateBody(d);
+    setIsError("");
+
+    fetch(`/api/admin-users/${currentUser.id}`, {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(d),
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else throw Error("Change of details failed");
+      })
+      .then((data) => {
+        setIsLoading(false);
+        if (data.success) {
+          setIsError(data.success);
+          setTimeout(() => {
+            localStorage.clear();
+            if (setIsAuthenticated) {
+              setIsAuthenticated(false);
+            }
+            window.location.href = "/";
+          }, 1000);
+        }
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setIsError("Update failed!");
+      });
   };
 
   return (
@@ -140,7 +140,7 @@ export default function EditUserDetails({
             Edit Account Details
           </Typography>
           <Typography variant="body2" sx={{ opacity: 0.9, fontSize: "0.9rem" }}>
-            {currentUser.full_name}
+            {currentUser.name}
           </Typography>
         </Box>
 
@@ -205,7 +205,7 @@ export default function EditUserDetails({
               inputRef={rfName}
               label="Change Name"
               variant="outlined"
-              defaultValue={currentUser.full_name}
+              defaultValue={currentUser.name}
               fullWidth
               sx={{
                 "& .MuiOutlinedInput-root": {

@@ -6,19 +6,15 @@ import {
   MenuItem,
   Typography,
   CircularProgress,
-  Avatar,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   ArrowDropDown as ArrowDropDownIcon,
-  Person as PersonIcon,
   AccountCircle as AccountCircleIcon,
   Lock as LockIcon,
   Logout as LogoutIcon,
 } from "@mui/icons-material";
 import UserAccount from "./userAccount";
-import EditUserDetails from "./editUserDetails";
-import ChangePassword from "./changePassword";
 import { useNavigate } from "react-router-dom";
 
 const LoadingScreen = () => (
@@ -40,31 +36,10 @@ const LoadingScreen = () => (
   </Box>
 );
 
-// Helper to build URL for uploaded assets using Vite proxy
-const buildImageUrl = (imageUrl) => {
-  if (!imageUrl) return "";
-  if (imageUrl.startsWith("http")) return imageUrl;
-
-  // Use relative URLs - Vite proxy will handle routing to backend
-  if (imageUrl.startsWith("uploads/")) return `/${imageUrl}`;
-  if (imageUrl.startsWith("/uploads/")) return imageUrl;
-  return imageUrl;
-};
-
-// Helper to get user initials
-const getInitials = (name) => {
-  if (!name) return "U";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-};
-
 export default function Header(props) {
   const [currentUser, setCurrentUser] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const [toggleAccount, setToggleAccount] = useState(false);
-  const [toggleEditDetails, setToggleEditDetails] = useState(false);
-  const [toggleChangePass, setToggleChangePass] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -111,8 +86,10 @@ export default function Header(props) {
           alignItems: "center",
           justifyContent: "space-between",
           p: 2,
-          color: "white",
+          color: "#ffffff",
           width: "100%",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          boxShadow: "0 4px 20px rgba(102, 126, 234, 0.3)",
         }}
       >
         <IconButton
@@ -120,9 +97,12 @@ export default function Header(props) {
           onClick={props.handleDrawerOpen}
           edge="start"
           sx={{
-            color: "white",
+            color: "#ffffff",
             marginRight: 5,
             ...(props.open && { display: "none" }),
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+            },
           }}
         >
           <MenuIcon />
@@ -131,41 +111,28 @@ export default function Header(props) {
         <Box sx={{ flexGrow: 1 }}></Box>
 
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Typography variant="body1" sx={{ mr: 1 }}>
-            {currentUser?.full_name}
+          <Typography
+            variant="body1"
+            sx={{
+              mr: 1,
+              color: "#ffffff",
+              fontWeight: 600,
+              fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+              textShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            {currentUser?.name}
           </Typography>
 
-          {/* Profile Picture or Avatar */}
-          <Box sx={{ mr: 1 }}>
-            {currentUser?.profile_image ? (
-              <Avatar
-                src={buildImageUrl(currentUser.profile_image)}
-                alt={currentUser?.full_name}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  border: "2px solid rgba(255, 255, 255, 0.3)",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                }}
-              />
-            ) : (
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  border: "2px solid rgba(255, 255, 255, 0.3)",
-                  color: "white",
-                  fontWeight: "bold",
-                  fontSize: "0.875rem",
-                }}
-              >
-                {getInitials(currentUser?.full_name)}
-              </Avatar>
-            )}
-          </Box>
-
-          <IconButton color="inherit" onClick={handleClick}>
+          <IconButton
+            onClick={handleClick}
+            sx={{
+              color: "#ffffff",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+              },
+            }}
+          >
             <ArrowDropDownIcon />
           </IconButton>
         </Box>
@@ -174,11 +141,30 @@ export default function Header(props) {
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleClose}
+          PaperProps={{
+            sx: {
+              mt: 1.5,
+              minWidth: 200,
+              borderRadius: 2,
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+              border: "1px solid rgba(212, 175, 55, 0.15)",
+            },
+          }}
         >
           <MenuItem
             onClick={() => {
               setToggleAccount(true);
               handleClose();
+            }}
+            sx={{
+              color: "#1a1a1a",
+              fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+              "&:hover": {
+                backgroundColor: "rgba(212, 175, 55, 0.1)",
+              },
+              "& .MuiSvgIcon-root": {
+                color: "#d4af37",
+              },
             }}
           >
             <AccountCircleIcon sx={{ mr: 1 }} /> Account
@@ -188,6 +174,16 @@ export default function Header(props) {
               navigate("/settings");
               handleClose();
             }}
+            sx={{
+              color: "#1a1a1a",
+              fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+              "&:hover": {
+                backgroundColor: "rgba(212, 175, 55, 0.1)",
+              },
+              "& .MuiSvgIcon-root": {
+                color: "#d4af37",
+              },
+            }}
           >
             <LockIcon sx={{ mr: 1 }} /> Change Password
           </MenuItem>
@@ -195,6 +191,16 @@ export default function Header(props) {
             onClick={() => {
               logout();
               handleClose();
+            }}
+            sx={{
+              color: "#1a1a1a",
+              fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+              "&:hover": {
+                backgroundColor: "rgba(212, 175, 55, 0.1)",
+              },
+              "& .MuiSvgIcon-root": {
+                color: "#d4af37",
+              },
             }}
           >
             <LogoutIcon sx={{ mr: 1 }} /> Logout
@@ -207,24 +213,6 @@ export default function Header(props) {
               setToggleAccount(false);
             }}
             open={toggleAccount}
-            currentUser={currentUser}
-          />
-        )}
-        {currentUser && (
-          <EditUserDetails
-            open={toggleEditDetails}
-            onClose={() => {
-              setToggleEditDetails(false);
-            }}
-            currentUser={currentUser}
-          />
-        )}
-        {currentUser && (
-          <ChangePassword
-            open={toggleChangePass}
-            onClose={() => {
-              setToggleChangePass(false);
-            }}
             currentUser={currentUser}
           />
         )}

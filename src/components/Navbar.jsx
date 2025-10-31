@@ -176,12 +176,7 @@ const Navbar = (props) => {
       icon: <Folder />,
       subItems: [
         {
-          text: "Documents",
-          icon: <Folder />,
-          path: "/documents",
-        },
-        {
-          text: "Charity Map",
+          text: "Tuvibe Map",
           icon: <Map />,
           path: "/map",
         },
@@ -190,22 +185,12 @@ const Navbar = (props) => {
           icon: <Warning />,
           path: "/issues",
         },
-        {
-          text: "Testimonies",
-          icon: <RateReview />,
-          path: "/testimonies",
-        },
       ],
     },
     {
       text: "System",
       icon: <Settings />,
       subItems: [
-        {
-          text: "Audit Trail",
-          icon: <History />,
-          path: "/audit",
-        },
         {
           text: "Settings",
           icon: <Settings />,
