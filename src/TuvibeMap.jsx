@@ -53,7 +53,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import LocationSearchingIcon from "@mui/icons-material/LocationSearching";
 
-const CharityMap = () => {
+const TuvibeMap = () => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const navigate = useNavigate();
@@ -67,7 +67,7 @@ const CharityMap = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [tileLoadError, setTileLoadError] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
-  const [charityProjects, setCharityProjects] = useState([]);
+  const [publicUsers, setPublicUsers] = useState([]);
   const [selectedProjectDetails, setSelectedProjectDetails] = useState(null);
   const [tooltip, setTooltip] = useState({
     visible: false,
@@ -77,12 +77,10 @@ const CharityMap = () => {
   });
 
   const [visibleCategories, setVisibleCategories] = useState({
-    volunteer: true,
-    education: true,
-    mental_health: true,
-    community: true,
-    donation: true,
-    partnership: true,
+    Regular: true,
+    "Sugar Mummy": true,
+    Sponsor: true,
+    "Ben 10": true,
   });
 
   // Search and filter states
@@ -180,8 +178,7 @@ const CharityMap = () => {
   const performNearMeSearch = () => {
     if (!userLocation) return;
 
-    const dataToSearch =
-      searchResults.length > 0 ? searchResults : charityProjects;
+    const dataToSearch = searchResults.length > 0 ? searchResults : publicUsers;
 
     console.log("Performing near me search with:", {
       userLocation,
@@ -189,33 +186,33 @@ const CharityMap = () => {
       nearMeRadius,
     });
 
-    const nearbyProjects = dataToSearch
-      .filter((project) => {
+    const nearbyUsers = dataToSearch
+      .filter((user) => {
         const hasValidCoords =
-          project.longitude !== null && project.latitude !== null;
+          user.longitude !== null && user.latitude !== null;
         if (!hasValidCoords) {
-          console.log("Project missing coordinates:", project.name, {
-            longitude: project.longitude,
-            latitude: project.latitude,
+          console.log("User missing coordinates:", user.name, {
+            longitude: user.longitude,
+            latitude: user.latitude,
           });
         }
         return hasValidCoords;
       })
-      .map((project) => {
+      .map((user) => {
         const distance = calculateDistance(
           userLocation.latitude,
           userLocation.longitude,
-          parseFloat(project.latitude),
-          parseFloat(project.longitude)
+          parseFloat(user.latitude),
+          parseFloat(user.longitude)
         );
-        return { ...project, distance };
+        return { ...user, distance };
       })
-      .filter((project) => project.distance <= nearMeRadius)
+      .filter((user) => user.distance <= nearMeRadius)
       .sort((a, b) => a.distance - b.distance);
 
-    console.log("Near me results:", nearbyProjects);
+    console.log("Near me results:", nearbyUsers);
 
-    setNearMeResults(nearbyProjects);
+    setNearMeResults(nearbyUsers);
     setNearMeMode(true);
   };
 
@@ -316,31 +313,34 @@ const CharityMap = () => {
     }
   }, [showMarker, mapInitialized]);
 
-  // Search charity projects function
-  const searchCharityProjects = async (query, column) => {
+  // Search public users function
+  const searchPublicUsers = async (query, column) => {
     setIsSearching(true);
     setSearchError(null);
 
     try {
       const params = new URLSearchParams({
-        limit: 5000,
+        limit: 10000,
       });
 
       if (query.trim()) {
         if (column === "all") {
-          params.append("search", query);
+          params.append("q", query);
         } else {
           params.append(column, query);
         }
       }
 
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/projects?${params}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/admin-users/public-users?${params}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -350,7 +350,7 @@ const CharityMap = () => {
       setSearchResults(data?.data || []);
       return data?.data || [];
     } catch (error) {
-      console.error("Error searching charity projects:", error);
+      console.error("Error searching public users:", error);
       setSearchError(error.message);
       setSearchResults([]);
       return [];
@@ -359,14 +359,14 @@ const CharityMap = () => {
     }
   };
 
-  // Fetch charity projects
+  // Fetch public users
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const projectsResponse = await fetch(
-          `${API_BASE_URL}/projects?limit=5000`,
+        const usersResponse = await fetch(
+          `${API_BASE_URL}/admin-users/public-users?limit=10000`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -375,15 +375,15 @@ const CharityMap = () => {
           }
         );
 
-        if (!projectsResponse.ok) {
-          throw new Error(`HTTP error! status: ${projectsResponse.status}`);
+        if (!usersResponse.ok) {
+          throw new Error(`HTTP error! status: ${usersResponse.status}`);
         }
 
-        const projectsData = await projectsResponse.json();
-        setCharityProjects(projectsData?.data || []);
+        const usersData = await usersResponse.json();
+        setPublicUsers(usersData?.data || []);
       } catch (error) {
-        console.error("Error fetching charity projects:", error);
-        setCharityProjects([]);
+        console.error("Error fetching public users:", error);
+        setPublicUsers([]);
       } finally {
         setIsLoading(false);
       }
@@ -395,7 +395,7 @@ const CharityMap = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim()) {
-        searchCharityProjects(searchQuery, searchColumn);
+        searchPublicUsers(searchQuery, searchColumn);
       } else {
         setSearchResults([]);
       }
@@ -491,8 +491,8 @@ const CharityMap = () => {
         const properties = feature.get("properties");
         const featureType = properties?.type;
 
-        if (featureType === "charityProject") {
-          // Show tooltip for charity projects
+        if (featureType === "publicUser") {
+          // Show tooltip for public users
           const coordinate = event.coordinate;
           const pixel = map.getPixelFromCoordinate(coordinate);
           setTooltip({
@@ -543,8 +543,8 @@ const CharityMap = () => {
         const properties = feature.get("properties");
         const featureType = properties?.type;
 
-        if (featureType === "charityProject") {
-          // Show project details in drawer
+        if (featureType === "publicUser") {
+          // Show user details in drawer
           setSelectedProjectDetails(properties);
           setDrawerOpen(true);
         }
@@ -558,18 +558,18 @@ const CharityMap = () => {
     };
   }, [mapInitialized, navigate]);
 
-  // Create charity project markers
-  const createProjectMarkers = (projects, isSearchResult = false) => {
-    return projects
+  // Create public user markers
+  const createProjectMarkers = (users, isSearchResult = false) => {
+    return users
       .filter(
-        (project) =>
-          project.longitude !== null &&
-          project.latitude !== null &&
-          visibleCategories[project.category]
+        (user) =>
+          user.longitude !== null &&
+          user.latitude !== null &&
+          visibleCategories[user.category]
       )
-      .map((project) => {
-        const lon = parseFloat(project.longitude); // longitude
-        const lat = parseFloat(project.latitude); // latitude
+      .map((user) => {
+        const lon = parseFloat(user.longitude); // longitude
+        const lat = parseFloat(user.latitude); // latitude
 
         if (isNaN(lon) || isNaN(lat)) {
           return null;
@@ -578,16 +578,16 @@ const CharityMap = () => {
         const feature = new Feature({
           geometry: new Point(fromLonLat([lon, lat])),
           properties: {
-            ...project,
-            type: "charityProject",
+            ...user,
+            type: "publicUser",
             isSearchResult: isSearchResult,
           },
         });
 
         // Get category specific marker
         const markerSvg = getCategoryMarker(
-          project.category,
-          project.status,
+          user.category,
+          user.isVerified ? "verified" : "unverified",
           isSearchResult
         );
 
@@ -661,7 +661,7 @@ const CharityMap = () => {
     } else if (searchResults.length > 0) {
       dataToShow = searchResults;
     } else {
-      dataToShow = charityProjects;
+      dataToShow = publicUsers;
     }
 
     // Add project markers
@@ -676,7 +676,7 @@ const CharityMap = () => {
       vectorSource.addFeature(userLocationMarker);
     }
   }, [
-    charityProjects,
+    publicUsers,
     searchResults,
     mapInitialized,
     visibleCategories,
@@ -711,14 +711,12 @@ const CharityMap = () => {
     setTabValue(newValue);
   };
 
-  // Project categories matching the API
-  const PROJECT_CATEGORIES = {
-    volunteer: { label: "Volunteer Opportunities", color: "#4caf50" },
-    education: { label: "Educational Support", color: "#2196f3" },
-    mental_health: { label: "Mental Health Services", color: "#e91e63" },
-    community: { label: "Community Programs", color: "#ff9800" },
-    donation: { label: "Donations & Support", color: "#9c27b0" },
-    partnership: { label: "Partnership Opportunities", color: "#00bcd4" },
+  // User categories matching the API (Public User categories)
+  const USER_CATEGORIES = {
+    Regular: { label: "Regular", color: "#4caf50" },
+    "Sugar Mummy": { label: "Sugar Mummy", color: "#e91e63" },
+    Sponsor: { label: "Sponsor", color: "#2196f3" },
+    "Ben 10": { label: "Ben 10", color: "#ff9800" },
   };
 
   // Project status colors
@@ -736,101 +734,57 @@ const CharityMap = () => {
   };
 
   // Helper function to get category marker
-  const getCategoryMarker = (
-    category,
-    status,
-    isSearchResult = false
-  ) => {
-    const statusColor = getStatusColor(status);
-    const scale = isSearchResult ? 1.5 : 1.2;
+  const getCategoryMarker = (category, status, isSearchResult = false) => {
+    const categoryColor = USER_CATEGORIES[category]?.color || "#666";
     const strokeWidth = isSearchResult ? 3 : 2;
     const outerRadius = isSearchResult ? 12 : 10;
 
     let svgIcon = "";
 
     switch (category) {
-      case "volunteer":
+      case "Regular":
         svgIcon = `
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${outerRadius}" fill="${statusColor}" stroke="white" stroke-width="${strokeWidth}"/>
+            <circle cx="12" cy="12" r="${outerRadius}" fill="${categoryColor}" stroke="white" stroke-width="${strokeWidth}"/>
             ${
               isSearchResult
                 ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
                 : ""
             }
-            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="white"/>
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="white"/>
           </svg>
         `;
         break;
-      case "education":
+      case "Sugar Mummy":
         svgIcon = `
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${outerRadius}" fill="${statusColor}" stroke="white" stroke-width="${strokeWidth}"/>
+            <circle cx="12" cy="12" r="${outerRadius}" fill="${categoryColor}" stroke="white" stroke-width="${strokeWidth}"/>
             ${
               isSearchResult
                 ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
                 : ""
             }
-            <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z" fill="white"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="white"/>
           </svg>
         `;
         break;
-      case "donation":
+      case "Sponsor":
         svgIcon = `
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${outerRadius}" fill="${statusColor}" stroke="white" stroke-width="${strokeWidth}"/>
+            <circle cx="12" cy="12" r="${outerRadius}" fill="${categoryColor}" stroke="white" stroke-width="${strokeWidth}"/>
             ${
               isSearchResult
                 ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
                 : ""
             }
-            <path d="M20.5 4c-2.61 0.45-5.59 1.22-8 2.5-2.41-1.28-5.39-2.05-8-2.5v11.5c2.61 0.45 5.59 1.22 8 2.5 2.41-1.28 5.39-2.05 8-2.5V4zm-8 10.92c-1.87-0.73-3.96-1.18-6-1.36V5.64c2.04 0.18 4.13 0.63 6 1.36v7.92z" fill="white"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.93s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z" fill="white"/>
           </svg>
         `;
         break;
-      case "mental_health":
+      case "Ben 10":
         svgIcon = `
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${outerRadius}" fill="${statusColor}" stroke="white" stroke-width="${strokeWidth}"/>
-            ${
-              isSearchResult
-                ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
-                : ""
-            }
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="white"/>
-          </svg>
-        `;
-        break;
-      case "community":
-        svgIcon = `
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${outerRadius}" fill="${statusColor}" stroke="white" stroke-width="${strokeWidth}"/>
-            ${
-              isSearchResult
-                ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
-                : ""
-            }
-            <path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z" fill="white"/>
-          </svg>
-        `;
-        break;
-      case "partnership":
-        svgIcon = `
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${outerRadius}" fill="${statusColor}" stroke="white" stroke-width="${strokeWidth}"/>
-            ${
-              isSearchResult
-                ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
-                : ""
-            }
-            <path d="M9 11.75c-.69 0-1.25.56-1.25 1.25s.56 1.25 1.25 1.25 1.25-.56 1.25-1.25-.56-1.25-1.25-1.25zm6 0c-.69 0-1.25.56-1.25 1.25s.56 1.25 1.25 1.25 1.25-.56 1.25-1.25-.56-1.25-1.25-1.25zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-.29.02-.58.05-.86 2.36-1.05 4.23-2.98 5.21-5.37C11.07 8.33 14.05 10 17.42 10c.78 0 1.53-.09 2.25-.26.21.71.33 1.47.33 2.26 0 4.41-3.59 8-8 8z" fill="white"/>
-          </svg>
-        `;
-        break;
-      default:
-        svgIcon = `
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${outerRadius}" fill="${statusColor}" stroke="white" stroke-width="${strokeWidth}"/>
+            <circle cx="12" cy="12" r="${outerRadius}" fill="${categoryColor}" stroke="white" stroke-width="${strokeWidth}"/>
             ${
               isSearchResult
                 ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
@@ -840,11 +794,23 @@ const CharityMap = () => {
           </svg>
         `;
         break;
+      default:
+        svgIcon = `
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="${outerRadius}" fill="${categoryColor}" stroke="white" stroke-width="${strokeWidth}"/>
+            ${
+              isSearchResult
+                ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
+                : ""
+            }
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="white"/>
+          </svg>
+        `;
+        break;
     }
 
     return svgIcon;
   };
-
 
   // Handle category toggle
   const handleCategoryToggle = (category) => {
@@ -857,23 +823,19 @@ const CharityMap = () => {
   // Handle select all/deselect all
   const handleSelectAll = () => {
     setVisibleCategories({
-      volunteer: true,
-      education: true,
-      mental_health: true,
-      community: true,
-      donation: true,
-      partnership: true,
+      Regular: true,
+      "Sugar Mummy": true,
+      Sponsor: true,
+      "Ben 10": true,
     });
   };
 
   const handleDeselectAll = () => {
     setVisibleCategories({
-      volunteer: false,
-      education: false,
-      mental_health: false,
-      community: false,
-      donation: false,
-      partnership: false,
+      Regular: false,
+      "Sugar Mummy": false,
+      Sponsor: false,
+      "Ben 10": false,
     });
   };
 
@@ -910,7 +872,7 @@ const CharityMap = () => {
   // Get category counts
   const getCategoryCounts = () => {
     const counts = {};
-    const categories = Object.keys(PROJECT_CATEGORIES);
+    const categories = Object.keys(USER_CATEGORIES);
     let dataToCount;
 
     if (nearMeMode && nearMeResults.length > 0) {
@@ -918,15 +880,15 @@ const CharityMap = () => {
     } else if (searchResults.length > 0) {
       dataToCount = searchResults;
     } else {
-      dataToCount = charityProjects;
+      dataToCount = publicUsers;
     }
 
     categories.forEach((category) => {
       counts[category] = dataToCount.filter(
-        (project) =>
-          project.category === category &&
-          project.longitude !== null &&
-          project.latitude !== null
+        (user) =>
+          user.category === category &&
+          user.longitude !== null &&
+          user.latitude !== null
       ).length;
     });
 
@@ -947,7 +909,7 @@ const CharityMap = () => {
           border: "1px solid #e0e0e0",
         }}
       >
-        {/* Charity Projects Location Label and Near Me Controls */}
+        {/* Tuvibe Map Label and Near Me Controls */}
         <Box
           sx={{
             display: "flex",
@@ -964,7 +926,7 @@ const CharityMap = () => {
               fontSize: "1.1rem",
             }}
           >
-            Charity Projects Map
+            Tuvibe Map
           </Typography>
 
           {/* Near Me Controls */}
@@ -1550,89 +1512,88 @@ const CharityMap = () => {
               color: "text.secondary",
             }}
           >
-            Project Categories
+            User Categories
           </Typography>
           <Box
             sx={{ display: "flex", flexDirection: "column", gap: 0.25, mb: 1 }}
           >
-            {Object.entries(visibleCategories).map(
-              ([category, isVisible]) => (
-                <Box
-                  key={category}
+            {Object.entries(visibleCategories).map(([category, isVisible]) => (
+              <Box
+                key={category}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.25,
+                  transition: "all 0.2s ease-in-out",
+                }}
+              >
+                <Checkbox
+                  checked={isVisible}
+                  onChange={() => handleCategoryToggle(category)}
+                  size="small"
                   sx={{
+                    padding: 0.1,
+                    "&.Mui-checked": {
+                      color: USER_CATEGORIES[category]?.color,
+                    },
+                    "&:hover": {
+                      backgroundColor: `${USER_CATEGORIES[category]?.color}20`,
+                    },
+                  }}
+                />
+                <Box
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    backgroundColor: USER_CATEGORIES[category]?.color,
+                    mr: 0.25,
+                    transition: "all 0.2s ease-in-out",
+                    opacity: isVisible ? 1 : 0.5,
                     display: "flex",
                     alignItems: "center",
-                    gap: 0.25,
-                    transition: "all 0.2s ease-in-out",
+                    justifyContent: "center",
+                    fontSize: "7px",
+                    color: "white",
+                    fontWeight: "bold",
                   }}
                 >
-                  <Checkbox
-                    checked={isVisible}
-                    onChange={() => handleCategoryToggle(category)}
-                    size="small"
-                    sx={{
-                      padding: 0.1,
-                      "&.Mui-checked": {
-                        color: PROJECT_CATEGORIES[category]?.color,
-                      },
-                      "&:hover": {
-                        backgroundColor: `${PROJECT_CATEGORIES[category]?.color}20`,
-                      },
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      backgroundColor: PROJECT_CATEGORIES[category]?.color,
-                      mr: 0.25,
-                      transition: "all 0.2s ease-in-out",
-                      opacity: isVisible ? 1 : 0.5,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "7px",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {category.charAt(0).toUpperCase()}
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: "10px",
-                      fontWeight: isVisible ? 600 : 400,
-                      color: isVisible ? "text.primary" : "text.secondary",
-                      transition: "all 0.2s ease-in-out",
-                      flexGrow: 1,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {PROJECT_CATEGORIES[category]?.label || category.replace("_", " ")}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: "8px",
-                      color: "text.secondary",
-                      backgroundColor: isVisible ? `${PROJECT_CATEGORIES[category]?.color}20` : "#f5f5f5",
-                      px: 0.25,
-                      py: 0.05,
-                      borderRadius: 0.25,
-                      fontWeight: 600,
-                      minWidth: "14px",
-                      textAlign: "center",
-                    }}
-                  >
-                    {categoryCounts[category]}
-                  </Typography>
+                  {category.charAt(0).toUpperCase()}
                 </Box>
-              )
-            )}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: "10px",
+                    fontWeight: isVisible ? 600 : 400,
+                    color: isVisible ? "text.primary" : "text.secondary",
+                    transition: "all 0.2s ease-in-out",
+                    flexGrow: 1,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {USER_CATEGORIES[category]?.label || category}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: "8px",
+                    color: "text.secondary",
+                    backgroundColor: isVisible
+                      ? `${USER_CATEGORIES[category]?.color}20`
+                      : "#f5f5f5",
+                    px: 0.25,
+                    py: 0.05,
+                    borderRadius: 0.25,
+                    fontWeight: 600,
+                    minWidth: "14px",
+                    textAlign: "center",
+                  }}
+                >
+                  {categoryCounts[category]}
+                </Typography>
+              </Box>
+            ))}
           </Box>
-
 
           {/* Summary */}
           <Box
@@ -1665,7 +1626,10 @@ const CharityMap = () => {
             >
               {Object.entries(visibleCategories)
                 .filter(([_, isVisible]) => isVisible)
-                .reduce((sum, [category, _]) => sum + categoryCounts[category], 0)}
+                .reduce(
+                  (sum, [category, _]) => sum + categoryCounts[category],
+                  0
+                )}
             </Typography>
           </Box>
         </Box>
@@ -1934,15 +1898,21 @@ const CharityMap = () => {
                             px: 2,
                             py: 0.5,
                             borderRadius: 3,
-                            backgroundColor: `${PROJECT_CATEGORIES[selectedProjectDetails.category]?.color}20`,
-                            color: PROJECT_CATEGORIES[selectedProjectDetails.category]?.color,
+                            backgroundColor: `${
+                              USER_CATEGORIES[selectedProjectDetails.category]
+                                ?.color
+                            }20`,
+                            color:
+                              USER_CATEGORIES[selectedProjectDetails.category]
+                                ?.color,
                             fontWeight: 600,
                             fontSize: "0.85rem",
                           }}
                         >
-                          {PROJECT_CATEGORIES[selectedProjectDetails.category]?.label || 
-                           selectedProjectDetails.category?.charAt(0).toUpperCase() + 
-                           selectedProjectDetails.category?.slice(1) || "-"}
+                          {USER_CATEGORIES[selectedProjectDetails.category]
+                            ?.label ||
+                            selectedProjectDetails.category ||
+                            "-"}
                         </Box>
                       </Box>
 
@@ -2164,7 +2134,8 @@ const CharityMap = () => {
                           variant="body1"
                           sx={{ fontWeight: 500, color: "text.primary" }}
                         >
-                          {selectedProjectDetails.assignee?.full_name || "Not Assigned"}
+                          {selectedProjectDetails.assignee?.full_name ||
+                            "Not Assigned"}
                         </Typography>
                       </Box>
 
@@ -2315,4 +2286,4 @@ const CharityMap = () => {
   );
 };
 
-export default CharityMap;
+export default TuvibeMap;

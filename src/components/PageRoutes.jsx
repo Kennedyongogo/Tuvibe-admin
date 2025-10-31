@@ -10,7 +10,7 @@ import ProjectEdit from "./Projects/ProjectEdit";
 import ProjectCreate from "./Projects/ProjectCreate";
 import Issues from "./Issues/Issues";
 import Testimony from "./Testimony/Testimony";
-import CharityMap from "../CharityMap";
+import TuvibeMap from "../TuvibeMap";
 import Documents from "./Documents/Documents";
 import UsersTable from "./Users/UsersTable";
 import Analytics from "./Analytics/Analytics";
@@ -68,60 +68,66 @@ function PageRoutes() {
             <Route path="projects/:id/edit" element={<ProjectEdit />} />
             <Route path="issues" element={<Issues />} />
             <Route path="testimonies" element={<Testimony />} />
-            <Route path="map" element={<CharityMap />} />
+            <Route path="map" element={<TuvibeMap />} />
             <Route path="documents" element={<Documents />} />
             <Route path="audit" element={<Audit />} />
             <Route path="analytics" element={<Analytics />} />
-            <Route 
-              path="reports" 
+            <Route
+              path="reports"
               element={
-                <Suspense fallback={
-                  <Box
-                    sx={{
-                      flexGrow: 1,
-                      p: { xs: 1, sm: 1.5 },
-                      minHeight: "100vh",
-                      background: "#f5f7fa",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Card
+                <Suspense
+                  fallback={
+                    <Box
                       sx={{
-                        background: "white",
-                        borderRadius: 4,
-                        boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                        overflow: "hidden",
-                        position: "relative",
-                        "&::before": {
-                          content: '""',
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: "4px",
-                          background: "linear-gradient(90deg, #667eea, #764ba2, #f093fb)",
-                        },
+                        flexGrow: 1,
+                        p: { xs: 1, sm: 1.5 },
+                        minHeight: "100vh",
+                        background: "#f5f7fa",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
                       }}
                     >
-                      <Box
+                      <Card
                         sx={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          height: "400px",
-                          width: "600px",
+                          background: "white",
+                          borderRadius: 4,
+                          boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                          overflow: "hidden",
+                          position: "relative",
+                          "&::before": {
+                            content: '""',
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: "4px",
+                            background:
+                              "linear-gradient(90deg, #667eea, #764ba2, #f093fb)",
+                          },
                         }}
                       >
-                        <CircularProgress size={60} sx={{ color: "#667eea" }} />
-                      </Box>
-                    </Card>
-                  </Box>
-                }>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            height: "400px",
+                            width: "600px",
+                          }}
+                        >
+                          <CircularProgress
+                            size={60}
+                            sx={{ color: "#667eea" }}
+                          />
+                        </Box>
+                      </Card>
+                    </Box>
+                  }
+                >
                   <Reports />
                 </Suspense>
-              } 
+              }
             />
             <Route path="users" element={<UsersTable />} />
             <Route path="settings" element={<Settings user={user} />} />
