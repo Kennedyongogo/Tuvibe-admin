@@ -54,6 +54,12 @@ import {
   TrendingUp as BoostIcon,
   Verified as VerifiedIcon,
   AccessTime as LastSeenIcon,
+  Pending as PendingIcon,
+  Cancel as CancelIcon,
+  CheckCircle as ApproveIcon,
+  ThumbUp as ThumbUpIcon,
+  ThumbDown as ThumbDownIcon,
+  PhotoCamera as PhotoIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import Swal from "sweetalert2";
@@ -91,6 +97,7 @@ const UsersTable = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [moderationLoading, setModerationLoading] = useState({});
   const [userForm, setUserForm] = useState({
     full_name: "",
     email: "",
@@ -379,6 +386,81 @@ const UsersTable = () => {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // Moderation handlers
+  const handleModeration = async (userId, type, action, notes = "") => {
+    try {
+      const key = `${userId}-${type}`;
+      setModerationLoading((prev) => ({ ...prev, [key]: true }));
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No authentication token found.",
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `/api/moderation/${type}/${userId}/${action}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ notes }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Moderation action failed");
+      }
+
+      // Refresh user data
+      if (selectedUser?.id === userId) {
+        const refreshResponse = await fetch(
+          `/api/admin-users/public-users/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const refreshData = await refreshResponse.json();
+        if (refreshData.success) {
+          setSelectedUser(refreshData.data);
+        }
+      }
+
+      // Refresh users list
+      fetchUsers();
+
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: `${type === "photo" ? "Photo" : "Bio"} ${action === "approve" ? "approved" : "rejected"} successfully.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      console.error("Moderation error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "Failed to perform moderation action.",
+      });
+    } finally {
+      const key = `${userId}-${type}`;
+      setModerationLoading((prev) => ({ ...prev, [key]: false }));
     }
   };
 
@@ -826,43 +908,82 @@ const UsersTable = () => {
                         </>
                       )}
                       <TableCell>
-                        <Chip
-                          label={
-                            user.isActive !== undefined
-                              ? user.isActive
-                                ? "Active"
-                                : "Inactive"
-                              : "Verified"
-                          }
-                          size="small"
-                          variant="outlined"
-                          sx={{
-                            textTransform: "capitalize",
-                            fontWeight: 600,
-                            borderRadius: 2,
-                            ...(user.isActive !== undefined
-                              ? {
-                                  borderColor: user.isActive
-                                    ? "#90EE90"
-                                    : "#FFB6C1",
-                                  color: user.isActive ? "#2d8659" : "#b85050",
-                                  backgroundColor: user.isActive
-                                    ? "rgba(144, 238, 144, 0.1)"
-                                    : "rgba(255, 182, 193, 0.1)",
-                                }
-                              : user.isVerified
-                              ? {
-                                  borderColor: "#FFD700",
-                                  color: "#b8860b",
-                                  backgroundColor: "rgba(255, 215, 0, 0.1)",
-                                }
-                              : {
-                                  borderColor: "#B0E0E6",
-                                  color: "#5a8a93",
-                                  backgroundColor: "rgba(176, 224, 230, 0.1)",
-                                }),
-                          }}
-                        />
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                          <Chip
+                            label={
+                              user.isActive !== undefined
+                                ? user.isActive
+                                  ? "Active"
+                                  : "Inactive"
+                                : user.isVerified
+                                ? "Verified"
+                                : "Not Verified"
+                            }
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              textTransform: "capitalize",
+                              fontWeight: 600,
+                              borderRadius: 2,
+                              ...(user.isActive !== undefined
+                                ? {
+                                    borderColor: user.isActive
+                                      ? "#90EE90"
+                                      : "#FFB6C1",
+                                    color: user.isActive ? "#2d8659" : "#b85050",
+                                    backgroundColor: user.isActive
+                                      ? "rgba(144, 238, 144, 0.1)"
+                                      : "rgba(255, 182, 193, 0.1)",
+                                  }
+                                : user.isVerified
+                                ? {
+                                    borderColor: "#FFD700",
+                                    color: "#b8860b",
+                                    backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                  }
+                                : {
+                                    borderColor: "#B0E0E6",
+                                    color: "#5a8a93",
+                                    backgroundColor: "rgba(176, 224, 230, 0.1)",
+                                  }),
+                            }}
+                          />
+                          {/* Moderation Status Indicators */}
+                          {userTypeTabs[activeTab]?.value === "public" && (
+                            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                              {user.photo_moderation_status === "pending" && (
+                                <Chip
+                                  icon={<PendingIcon sx={{ fontSize: "0.75rem !important" }} />}
+                                  label="Photo Pending"
+                                  size="small"
+                                  sx={{
+                                    fontSize: "0.65rem",
+                                    height: "20px",
+                                    bgcolor: "rgba(255, 193, 7, 0.2)",
+                                    color: "#B8860B",
+                                    fontWeight: 600,
+                                    border: "1px solid rgba(255, 193, 7, 0.4)",
+                                  }}
+                                />
+                              )}
+                              {user.bio_moderation_status === "pending" && (
+                                <Chip
+                                  icon={<PendingIcon sx={{ fontSize: "0.75rem !important" }} />}
+                                  label="Bio Pending"
+                                  size="small"
+                                  sx={{
+                                    fontSize: "0.65rem",
+                                    height: "20px",
+                                    bgcolor: "rgba(255, 193, 7, 0.2)",
+                                    color: "#B8860B",
+                                    fontWeight: 600,
+                                    border: "1px solid rgba(255, 193, 7, 0.4)",
+                                  }}
+                                />
+                              )}
+                            </Box>
+                          )}
+                        </Box>
                       </TableCell>
                       <TableCell>
                         <Box display="flex" gap={0.5}>
@@ -1111,15 +1232,112 @@ const UsersTable = () => {
                   </Box>
                 </Box>
 
-                {/* Profile Picture Display */}
+                {/* Profile Picture Display with Moderation */}
                 {(selectedUser?.profile_image || selectedUser?.photo) && (
                   <Box sx={{ textAlign: "center", mb: 3 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{ mb: 2, color: "#2c3e50", fontWeight: 600 }}
-                    >
-                      Profile Picture
-                    </Typography>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{ color: "#2c3e50", fontWeight: 600 }}
+                      >
+                        Profile Picture
+                      </Typography>
+                      {/* Photo Moderation Status & Actions */}
+                      {userTypeTabs[activeTab]?.value === "public" && (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          {selectedUser?.photo_moderation_status === "pending" && (
+                            <Chip
+                              icon={<PendingIcon sx={{ fontSize: "0.875rem !important" }} />}
+                              label="Pending Approval"
+                              size="small"
+                              sx={{
+                                bgcolor: "rgba(255, 193, 7, 0.2)",
+                                color: "#B8860B",
+                                fontWeight: 600,
+                                border: "1px solid rgba(255, 193, 7, 0.4)",
+                              }}
+                            />
+                          )}
+                          {selectedUser?.photo_moderation_status === "approved" && (
+                            <Chip
+                              icon={<CheckCircle sx={{ fontSize: "0.875rem !important", color: "#4CAF50 !important" }} />}
+                              label="Approved"
+                              size="small"
+                              sx={{
+                                bgcolor: "rgba(76, 175, 80, 0.15)",
+                                color: "#2E7D32",
+                                fontWeight: 600,
+                                border: "1px solid rgba(76, 175, 80, 0.3)",
+                              }}
+                            />
+                          )}
+                          {selectedUser?.photo_moderation_status === "rejected" && (
+                            <Chip
+                              icon={<CancelIcon sx={{ fontSize: "0.875rem !important", color: "#F44336 !important" }} />}
+                              label="Rejected"
+                              size="small"
+                              sx={{
+                                bgcolor: "rgba(244, 67, 54, 0.15)",
+                                color: "#C62828",
+                                fontWeight: 600,
+                                border: "1px solid rgba(244, 67, 54, 0.3)",
+                              }}
+                            />
+                          )}
+                          {selectedUser?.photo_moderation_status === "pending" && (
+                            <Box sx={{ display: "flex", gap: 0.5 }}>
+                              <Tooltip title="Approve Photo" arrow>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleModeration(selectedUser.id, "photo", "approve")}
+                                  disabled={moderationLoading[`${selectedUser.id}-photo`]}
+                                  sx={{
+                                    bgcolor: "rgba(76, 175, 80, 0.1)",
+                                    color: "#4CAF50",
+                                    "&:hover": { bgcolor: "rgba(76, 175, 80, 0.2)" },
+                                  }}
+                                >
+                                  <ThumbUpIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject Photo" arrow>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    Swal.fire({
+                                      title: "Reject Photo",
+                                      input: "textarea",
+                                      inputLabel: "Rejection Reason (Optional)",
+                                      inputPlaceholder: "Enter reason for rejection...",
+                                      inputAttributes: {
+                                        "aria-label": "Enter rejection reason",
+                                      },
+                                      showCancelButton: true,
+                                      confirmButtonColor: "#d33",
+                                      cancelButtonColor: "#3085d6",
+                                      confirmButtonText: "Reject",
+                                      cancelButtonText: "Cancel",
+                                    }).then((result) => {
+                                      if (result.isConfirmed) {
+                                        handleModeration(selectedUser.id, "photo", "reject", result.value || "");
+                                      }
+                                    });
+                                  }}
+                                  disabled={moderationLoading[`${selectedUser.id}-photo`]}
+                                  sx={{
+                                    bgcolor: "rgba(244, 67, 54, 0.1)",
+                                    color: "#F44336",
+                                    "&:hover": { bgcolor: "rgba(244, 67, 54, 0.2)" },
+                                  }}
+                                >
+                                  <ThumbDownIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
                     <Box
                       sx={{
                         p: 2,
@@ -1129,6 +1347,7 @@ const UsersTable = () => {
                         cursor: "pointer",
                         transition: "transform 0.2s ease-in-out",
                         display: "inline-block",
+                        position: "relative",
                         "&:hover": {
                           transform: "scale(1.02)",
                         },
@@ -1140,25 +1359,78 @@ const UsersTable = () => {
                         window.open(fullImageUrl, "_blank");
                       }}
                     >
-                      <Box
-                        component="img"
-                        src={buildImageUrl(
-                          selectedUser.profile_image || selectedUser.photo
-                        )}
-                        alt="Profile Picture"
-                        sx={{
-                          width: 150,
-                          height: 150,
-                          objectFit: "cover",
-                          borderRadius: "50%",
-                          border: "4px solid #FFD700",
-                          boxShadow: "0 8px 25px rgba(255, 215, 0, 0.25)",
-                        }}
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.nextSibling.style.display = "block";
-                        }}
-                      />
+                      <Box sx={{ position: "relative", display: "inline-block" }}>
+                        <Box
+                          component="img"
+                          src={buildImageUrl(
+                            selectedUser.profile_image || selectedUser.photo
+                          )}
+                          alt="Profile Picture"
+                          sx={{
+                            width: 150,
+                            height: 150,
+                            objectFit: "cover",
+                            borderRadius: "50%",
+                            border: "4px solid #FFD700",
+                            boxShadow: "0 8px 25px rgba(255, 215, 0, 0.25)",
+                            opacity:
+                              userTypeTabs[activeTab]?.value === "public" &&
+                              selectedUser?.photo_moderation_status !== "approved" &&
+                              selectedUser?.photo_moderation_status !== null
+                                ? 0.7
+                                : 1,
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.nextSibling.style.display = "block";
+                          }}
+                        />
+                        {/* Overlay badge for pending/rejected photos (admin view) */}
+                        {userTypeTabs[activeTab]?.value === "public" &&
+                          selectedUser?.photo_moderation_status === "pending" && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: -5,
+                                right: -5,
+                                bgcolor: "rgba(255, 193, 7, 0.95)",
+                                color: "#1a1a1a",
+                                borderRadius: "50%",
+                                width: 32,
+                                height: 32,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                border: "2px solid rgba(184, 134, 11, 0.5)",
+                                boxShadow: "0 2px 8px rgba(255, 193, 7, 0.4)",
+                              }}
+                            >
+                              <PendingIcon sx={{ fontSize: "1.2rem" }} />
+                            </Box>
+                          )}
+                        {userTypeTabs[activeTab]?.value === "public" &&
+                          selectedUser?.photo_moderation_status === "rejected" && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: -5,
+                                right: -5,
+                                bgcolor: "rgba(244, 67, 54, 0.95)",
+                                color: "#fff",
+                                borderRadius: "50%",
+                                width: 32,
+                                height: 32,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                border: "2px solid rgba(198, 40, 40, 0.5)",
+                                boxShadow: "0 2px 8px rgba(244, 67, 54, 0.4)",
+                              }}
+                            >
+                              <CancelIcon sx={{ fontSize: "1.2rem" }} />
+                            </Box>
+                          )}
+                      </Box>
                       <Box
                         textAlign="center"
                         sx={{
@@ -1527,28 +1799,134 @@ const UsersTable = () => {
                             },
                           }}
                         >
-                          <Box display="flex" alignItems="flex-start" gap={2}>
-                            <BioIcon
-                              sx={{ fontSize: 24, color: "#B0E0E6", mt: 0.5 }}
-                            />
-                            <Box>
-                              <Typography
-                                variant="caption"
-                                sx={{ color: "#7f8c8d" }}
-                              >
-                                BIO
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  fontWeight: 400,
-                                  color: "#2c3e50",
-                                  mt: 0.5,
-                                }}
-                              >
-                                {selectedUser.bio}
-                              </Typography>
+                          <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={2}>
+                            <Box display="flex" alignItems="flex-start" gap={2} sx={{ flex: 1 }}>
+                              <BioIcon
+                                sx={{ fontSize: 24, color: "#B0E0E6", mt: 0.5 }}
+                              />
+                              <Box sx={{ flex: 1 }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: "#7f8c8d" }}
+                                  >
+                                    BIO
+                                  </Typography>
+                                  {/* Bio Moderation Status */}
+                                  {userTypeTabs[activeTab]?.value === "public" && (
+                                    <>
+                                      {selectedUser?.bio_moderation_status === "pending" && (
+                                        <Chip
+                                          icon={<PendingIcon sx={{ fontSize: "0.75rem !important" }} />}
+                                          label="Pending Approval"
+                                          size="small"
+                                          sx={{
+                                            fontSize: "0.65rem",
+                                            height: "20px",
+                                            bgcolor: "rgba(255, 193, 7, 0.2)",
+                                            color: "#B8860B",
+                                            fontWeight: 600,
+                                            border: "1px solid rgba(255, 193, 7, 0.4)",
+                                          }}
+                                        />
+                                      )}
+                                      {selectedUser?.bio_moderation_status === "approved" && (
+                                        <Chip
+                                          icon={<CheckCircle sx={{ fontSize: "0.75rem !important", color: "#4CAF50 !important" }} />}
+                                          label="Approved"
+                                          size="small"
+                                          sx={{
+                                            fontSize: "0.65rem",
+                                            height: "20px",
+                                            bgcolor: "rgba(76, 175, 80, 0.15)",
+                                            color: "#2E7D32",
+                                            fontWeight: 600,
+                                            border: "1px solid rgba(76, 175, 80, 0.3)",
+                                          }}
+                                        />
+                                      )}
+                                      {selectedUser?.bio_moderation_status === "rejected" && (
+                                        <Chip
+                                          icon={<CancelIcon sx={{ fontSize: "0.75rem !important", color: "#F44336 !important" }} />}
+                                          label="Rejected"
+                                          size="small"
+                                          sx={{
+                                            fontSize: "0.65rem",
+                                            height: "20px",
+                                            bgcolor: "rgba(244, 67, 54, 0.15)",
+                                            color: "#C62828",
+                                            fontWeight: 600,
+                                            border: "1px solid rgba(244, 67, 54, 0.3)",
+                                          }}
+                                        />
+                                      )}
+                                    </>
+                                  )}
+                                </Box>
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    fontWeight: 400,
+                                    color: "#2c3e50",
+                                    mt: 0.5,
+                                  }}
+                                >
+                                  {selectedUser.bio}
+                                </Typography>
+                              </Box>
                             </Box>
+                            {/* Bio Moderation Actions */}
+                            {userTypeTabs[activeTab]?.value === "public" && selectedUser?.bio_moderation_status === "pending" && (
+                              <Box sx={{ display: "flex", gap: 0.5 }}>
+                                <Tooltip title="Approve Bio" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleModeration(selectedUser.id, "bio", "approve")}
+                                    disabled={moderationLoading[`${selectedUser.id}-bio`]}
+                                    sx={{
+                                      bgcolor: "rgba(76, 175, 80, 0.1)",
+                                      color: "#4CAF50",
+                                      "&:hover": { bgcolor: "rgba(76, 175, 80, 0.2)" },
+                                    }}
+                                  >
+                                    <ThumbUpIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Reject Bio" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                      Swal.fire({
+                                        title: "Reject Bio",
+                                        input: "textarea",
+                                        inputLabel: "Rejection Reason (Optional)",
+                                        inputPlaceholder: "Enter reason for rejection...",
+                                        inputAttributes: {
+                                          "aria-label": "Enter rejection reason",
+                                        },
+                                        showCancelButton: true,
+                                        confirmButtonColor: "#d33",
+                                        cancelButtonColor: "#3085d6",
+                                        confirmButtonText: "Reject",
+                                        cancelButtonText: "Cancel",
+                                      }).then((result) => {
+                                        if (result.isConfirmed) {
+                                          handleModeration(selectedUser.id, "bio", "reject", result.value || "");
+                                        }
+                                      });
+                                    }}
+                                    disabled={moderationLoading[`${selectedUser.id}-bio`]}
+                                    sx={{
+                                      bgcolor: "rgba(244, 67, 54, 0.1)",
+                                      color: "#F44336",
+                                      "&:hover": { bgcolor: "rgba(244, 67, 54, 0.2)" },
+                                    }}
+                                  >
+                                    <ThumbDownIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            )}
                           </Box>
                         </Card>
                       )}

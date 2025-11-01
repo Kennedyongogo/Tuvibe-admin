@@ -15,6 +15,7 @@ import Documents from "./Documents/Documents";
 import UsersTable from "./Users/UsersTable";
 import Analytics from "./Analytics/Analytics";
 import Audit from "./Audit/Audit";
+import Verification from "./Verification/Verification";
 import { lazy, Suspense } from "react";
 
 // Lazy load the Reports component to avoid loading date picker dependencies on every page
@@ -71,6 +72,7 @@ function PageRoutes() {
             <Route path="map" element={<TuvibeMap />} />
             <Route path="documents" element={<Documents />} />
             <Route path="audit" element={<Audit />} />
+            <Route path="verification" element={<Verification />} />
             <Route path="analytics" element={<Analytics />} />
             <Route
               path="reports"

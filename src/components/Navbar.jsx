@@ -28,6 +28,7 @@ import {
   History,
   Assessment,
   RateReview,
+  VerifiedUser,
 } from "@mui/icons-material";
 import { Money } from "@phosphor-icons/react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -162,14 +163,14 @@ const Navbar = (props) => {
       path: "/projects",
     },
     {
-      text: "Reports",
-      icon: <Assessment />,
-      path: "/reports",
-    },
-    {
       text: "Users",
       icon: <PeopleAlt />,
       path: "/users",
+    },
+    {
+      text: "Verification",
+      icon: <VerifiedUser />,
+      path: "/verification",
     },
     {
       text: "Resources",
