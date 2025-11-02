@@ -23,12 +23,11 @@ import {
   Settings,
   QuestionAnswer,
   Schedule,
-  Business,
   Folder,
   History,
-  Assessment,
   RateReview,
   VerifiedUser,
+  Store,
 } from "@mui/icons-material";
 import { Money } from "@phosphor-icons/react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -158,11 +157,6 @@ const Navbar = (props) => {
   const adminItems = [
     { text: "Dashboard", icon: <Dashboard />, path: "/analytics" },
     {
-      text: "Projects",
-      icon: <Business />,
-      path: "/projects",
-    },
-    {
       text: "Users",
       icon: <PeopleAlt />,
       path: "/users",
@@ -171,6 +165,11 @@ const Navbar = (props) => {
       text: "Verification",
       icon: <VerifiedUser />,
       path: "/verification",
+    },
+    {
+      text: "Marketplace",
+      icon: <Store />,
+      path: "/marketplace",
     },
     {
       text: "Resources",

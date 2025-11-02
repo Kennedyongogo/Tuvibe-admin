@@ -25,6 +25,12 @@ import {
   ListItemText,
   Avatar,
   TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import {
   BarChart,
@@ -50,6 +56,7 @@ import {
 import {
   Analytics as AnalyticsIcon,
   TrendingUp,
+  TrendingDown,
   TrendingUp as TrendingUpIcon,
   PieChart as PieChartIcon,
   BarChart as BarChartIcon,
@@ -68,6 +75,12 @@ import {
   AccountCircle as AccountCircleIcon,
   Add as AddIcon,
   CheckCircle as CheckCircleIcon,
+  AccountBalanceWallet,
+  VerifiedUser,
+  Store,
+  CurrencyExchange,
+  ShoppingCart,
+  AttachMoney,
 } from "@mui/icons-material";
 
 // Color palette for charts
@@ -91,21 +104,18 @@ const Analytics = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [analyticsData, setAnalyticsData] = useState({
     overview: {},
-    projects: {},
-    tasks: {},
-    budget: {},
-    issues: {},
-    equipment: {},
-    labor: {},
-    materials: {},
-    equipmentSummary: {},
-    performance: {},
+    categoryBreakdown: {},
+    tokenStats: {},
+    tokensByMethod: [],
+    paymentStats: {},
+    paymentsByMethod: [],
+    premiumStats: {},
+    marketStats: {},
+    engagementStats: {},
+    unlocksByCategory: [],
+    newUsersStats: {},
     recentActivity: {},
-    documents: {},
-    engineers: {},
   });
-  const [projectsByDate, setProjectsByDate] = useState([]);
-  const [tasksByDate, setTasksByDate] = useState([]);
   // Helper function to format date for display
   const formatDateForDisplay = (dateString) => {
     const date = new Date(dateString);
@@ -126,18 +136,15 @@ const Analytics = () => {
   });
 
   const [overviewHelpOpen, setOverviewHelpOpen] = useState(false);
-  const [projectsHelpOpen, setProjectsHelpOpen] = useState(false);
-  const [tasksLaborHelpOpen, setTasksLaborHelpOpen] = useState(false);
-  const [budgetResourcesHelpOpen, setBudgetResourcesHelpOpen] = useState(false);
-  const [performanceHelpOpen, setPerformanceHelpOpen] = useState(false);
-  const [equipmentMaterialsHelpOpen, setEquipmentMaterialsHelpOpen] =
-    useState(false);
-  const [inquiriesHelpOpen, setInquiriesHelpOpen] = useState(false);
+  const [tokensHelpOpen, setTokensHelpOpen] = useState(false);
+  const [premiumHelpOpen, setPremiumHelpOpen] = useState(false);
+  const [marketHelpOpen, setMarketHelpOpen] = useState(false);
 
   const tabs = [
     { label: "Overview", icon: <AnalyticsIcon />, value: 0 },
-    { label: "Projects", icon: <MapIcon />, value: 1 },
-    { label: "Inquiries", icon: <BarChartIcon />, value: 2 },
+    { label: "Tokens", icon: <AccountBalanceWallet />, value: 1 },
+    { label: "Premium", icon: <VerifiedUser />, value: 2 },
+    { label: "Market", icon: <Store />, value: 3 },
   ];
 
   useEffect(() => {
@@ -154,7 +161,7 @@ const Analytics = () => {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch("/api/analytics", {
+      const response = await fetch("/api/stats/dashboard", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -197,14 +204,14 @@ const Analytics = () => {
         <Box display="flex" alignItems="center" gap={1}>
           <InfoIcon color="primary" />
           <Typography variant="h6" fontWeight="bold">
-            Mwalimu Hope Foundation - Overview Data Explanation
+            TuVibe - Overview Data Explanation
           </Typography>
         </Box>
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          This overview provides comprehensive insights about your foundation's activities, 
-          including inquiries, projects, documents, users, and system activity. Here's what each section means:
+          This overview provides comprehensive insights about your TuVibe platform, 
+          including users, tokens, premium members, market items, and engagement metrics. Here's what each section means:
         </Typography>
 
         {/* Key Metrics Cards */}
@@ -214,38 +221,20 @@ const Analytics = () => {
         <List dense>
           <ListItem>
             <ListItemIcon>
-              <BarChartIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Total Inquiries"
-              secondary="The total number of inquiries received by the foundation"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <MapIcon color="secondary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Total Projects"
-              secondary="The total number of projects currently managed by the foundation"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <DescriptionIcon color="success" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Total Documents"
-              secondary="The total number of documents stored in the system"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <PeopleIcon color="warning" />
+              <PeopleIcon color="primary" />
             </ListItemIcon>
             <ListItemText
               primary="Total Users"
-              secondary="The total number of users (admin and super-admin) in the system"
+              secondary="The total number of registered users on the platform"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <VerifiedUser color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Premium Users"
+              secondary="The total number of users with premium category membership (Sugar Mummy, Sponsor, Ben 10)"
             />
           </ListItem>
           <ListItem>
@@ -253,35 +242,35 @@ const Analytics = () => {
               <AccountCircleIcon color="info" />
             </ListItemIcon>
             <ListItemText
-              primary="Active Users"
-              secondary="The number of currently active users in the system"
+              primary="Online Users"
+              secondary="The number of currently active users on the platform"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <TrendingUpIcon color="primary" />
+              <Store color="success" />
             </ListItemIcon>
             <ListItemText
-              primary="Recent Inquiries (30d)"
-              secondary="Number of new inquiries received in the last 30 days"
+              primary="Total Market Items"
+              secondary="The total number of items listed in the marketplace"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <AddIcon color="secondary" />
+              <CheckCircleIcon color="secondary" />
             </ListItemIcon>
             <ListItemText
-              primary="Recent Projects (30d)"
-              secondary="Number of new projects created in the last 30 days"
+              primary="Pending Verifications"
+              secondary="The number of premium users awaiting verification"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <CheckCircleIcon color="success" />
+              <AccountCircleIcon color="warning" />
             </ListItemIcon>
             <ListItemText
-              primary="Completed Projects (30d)"
-              secondary="Number of projects completed in the last 30 days"
+              primary="Total Admins"
+              secondary="The total number of admin users managing the platform"
             />
           </ListItem>
         </List>
@@ -293,124 +282,38 @@ const Analytics = () => {
         <List dense>
           <ListItem>
             <ListItemIcon>
-              <Chip label="Inquiry Metrics" color="primary" size="small" />
+              <AccountBalanceWallet color="warning" />
             </ListItemIcon>
             <ListItemText
-              primary="Inquiry Metrics"
-              secondary="Shows pending inquiries and recently resolved inquiries (30 days)"
+              primary="Token Stats"
+              secondary="Shows total tokens in circulation and total tokens deducted from the system"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <Chip label="Project Progress" color="success" size="small" />
+              <VerifiedUser color="success" />
             </ListItemIcon>
             <ListItemText
-              primary="Project Progress"
-              secondary="Displays average project progress and number of projects in progress"
+              primary="Premium Stats"
+              secondary="Displays verified premium users and pending verification requests"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <Chip label="Recent Activity" color="warning" size="small" />
+              <PeopleIcon color="primary" />
             </ListItemIcon>
             <ListItemText
-              primary="Recent Activity"
-              secondary="Shows activity count for the last 7 days and number of active users"
-            />
-          </ListItem>
-        </List>
-
-        {/* Additional Charts */}
-        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          📊 Additional Analytics Charts
-        </Typography>
-        <List dense>
-          <ListItem>
-            <ListItemIcon>
-              <PieChartIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Documents by Type"
-              secondary="Pie chart showing distribution of documents by file type (Word, PDF, etc.)"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <BarChartIcon color="secondary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Users by Role"
-              secondary="Bar chart showing distribution of users by their roles (admin, super-admin)"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <AssessmentIcon color="success" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Activity by Action (Last 7 Days)"
-              secondary="Bar chart showing system activity breakdown by action type (create, update, download)"
-            />
-          </ListItem>
-        </List>
-
-        {/* 30-Day Trends */}
-        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          📅 30-Day Trends Summary
-        </Typography>
-        <List dense>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="New Inquiries" color="primary" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="New Inquiries"
-              secondary="Number of new inquiries received in the last 30 days"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="Resolved Inquiries" color="success" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Resolved Inquiries"
-              secondary="Number of inquiries resolved in the last 30 days"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="New Projects" color="warning" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="New Projects"
-              secondary="Number of new projects created in the last 30 days"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="Completed Projects" color="success" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Completed Projects"
-              secondary="Number of projects completed in the last 30 days"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="New Documents" color="info" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="New Documents"
-              secondary="Number of new documents uploaded in the last 30 days"
+              primary="Engagement Stats"
+              secondary="Shows chat unlocks and profile views indicating user activity"
             />
           </ListItem>
         </List>
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> These metrics help you understand your foundation's 
-            performance, track engagement, monitor project progress, and identify areas 
-            needing attention. Use the trends to spot patterns and make data-driven decisions.
+            <strong>💡 Tip:</strong> These metrics help you understand your platform's 
+            performance, track user engagement, monitor premium membership status, and identify areas 
+            needing attention. Use the tabs to dive deeper into specific areas like Tokens, Premium, and Market.
           </Typography>
         </Alert>
       </DialogContent>
@@ -422,283 +325,498 @@ const Analytics = () => {
     </Dialog>
   );
 
-  // Projects Help Dialog Component
-  const ProjectsHelpDialog = () => (
+  // Tokens Help Dialog Component
+  const TokensHelpDialog = () => (
     <Dialog
-      open={projectsHelpOpen}
-      onClose={() => setProjectsHelpOpen(false)}
+      open={tokensHelpOpen}
+      onClose={() => setTokensHelpOpen(false)}
       maxWidth="md"
       fullWidth
     >
       <DialogTitle>
         <Box display="flex" alignItems="center" gap={1}>
-          <MapIcon color="primary" />
+          <AccountBalanceWallet color="primary" />
           <Typography variant="h6" fontWeight="bold">
-            Mwalimu Hope Foundation - Projects Data Explanation
+            TuVibe - Tokens Analytics Explanation
           </Typography>
         </Box>
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The Projects tab provides comprehensive insights into your foundation's project portfolio, 
-          including status distribution, categories, geographical spread, and progress metrics. 
-          Here's how to understand what you're seeing:
+          The Tokens tab provides comprehensive insights into the token economy of your TuVibe platform, 
+          including token circulation, deductions, and distribution by payment method. Here's what each metric means:
         </Typography>
 
-        {/* Project Summary Cards */}
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          📊 Project Summary Cards
+          💰 Token Statistics
         </Typography>
         <List dense>
           <ListItem>
             <ListItemIcon>
-              <MapIcon color="primary" />
+              <AccountBalanceWallet color="warning" />
             </ListItemIcon>
             <ListItemText
-              primary="Total Projects"
-              secondary="The total number of projects currently managed by the foundation"
+              primary="Tokens in Circulation"
+              secondary="The total number of tokens currently available in the system across all users"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <AssessmentIcon color="secondary" />
+              <TrendingDown color="error" />
             </ListItemIcon>
             <ListItemText
-              primary="Average Progress"
-              secondary="The average completion percentage across all projects"
+              primary="Tokens Deducted"
+              secondary="The total number of tokens that have been spent or deducted from user accounts"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <TrendingUpIcon color="success" />
+              <AttachMoney color="success" />
             </ListItemIcon>
             <ListItemText
-              primary="Completion Rate"
-              secondary="The percentage of projects that have been completed"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="info" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Completed Projects"
-              secondary="The total number of projects that have been finished"
+              primary="Tokens Bonus"
+              secondary="The total number of bonus tokens given to users (promotions, referrals, etc.)"
             />
           </ListItem>
         </List>
 
-        {/* Progress Statistics */}
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          📈 Progress Statistics
+          📅 Time-Based Token Metrics
         </Typography>
         <List dense>
           <ListItem>
             <ListItemIcon>
-              <Chip label="Minimum Progress" color="info" size="small" />
+              <TrendingUp color="primary" />
             </ListItemIcon>
             <ListItemText
-              primary="Minimum Progress"
-              secondary="The lowest progress percentage among all projects"
+              primary="Tokens Today"
+              secondary="Number of tokens added or circulated in the system today"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <Chip label="Maximum Progress" color="success" size="small" />
+              <InsightsIcon color="secondary" />
             </ListItemIcon>
             <ListItemText
-              primary="Maximum Progress"
-              secondary="The highest progress percentage among all projects"
+              primary="Tokens This Week"
+              secondary="Total tokens added or circulated in the current week"
             />
           </ListItem>
           <ListItem>
             <ListItemIcon>
-              <Chip label="Average Progress" color="primary" size="small" />
+              <AssessmentIcon color="info" />
             </ListItemIcon>
             <ListItemText
-              primary="Average Progress"
-              secondary="The mean progress percentage across all projects"
+              primary="Tokens This Month"
+              secondary="Total tokens added or circulated in the current month"
             />
           </ListItem>
         </List>
 
-        {/* Project Status Distribution */}
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          📊 Project Status Distribution
+          💳 Tokens by Payment Method
         </Typography>
         <List dense>
           <ListItem>
             <ListItemIcon>
-              <Chip label="Pending" color="warning" size="small" />
+              <CurrencyExchange color="primary" />
             </ListItemIcon>
             <ListItemText
-              primary="Pending"
-              secondary="Projects that are approved but not yet started"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="In Progress" color="primary" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="In Progress"
-              secondary="Projects currently being implemented"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="On Hold" color="default" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="On Hold"
-              secondary="Projects temporarily paused due to various reasons"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <Chip label="Completed" color="success" size="small" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Completed"
-              secondary="Projects that have been successfully finished"
-            />
-          </ListItem>
-        </List>
-
-        {/* Project Category Distribution */}
-        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          🏗️ Project Category Distribution
-        </Typography>
-        <List dense>
-          <ListItem>
-            <ListItemIcon>
-              <PeopleIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Volunteer"
-              secondary="Projects focused on volunteer programs and community service"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <AssessmentIcon color="secondary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Education"
-              secondary="Educational initiatives, schools, and learning programs"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <InfoIcon color="success" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Mental Health"
-              secondary="Mental health awareness, counseling, and support programs"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <LocationIcon color="warning" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Community"
-              secondary="Community development and social welfare projects"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <TrendingUpIcon color="info" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Donation"
-              secondary="Fundraising and donation management projects"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <GaugeIcon color="default" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Partnership"
-              secondary="Collaborative projects with other organizations"
-            />
-          </ListItem>
-        </List>
-
-        {/* Geographical Distribution */}
-        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          🌍 Geographical Distribution
-        </Typography>
-        <List dense>
-          <ListItem>
-            <ListItemIcon>
-              <LocationIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Projects by County"
-              secondary="Distribution of projects across different counties in Kenya"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <MapIcon color="secondary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Geographic Spread"
-              secondary="Visual representation of project locations and coverage"
-            />
-          </ListItem>
-        </List>
-
-        {/* Visual Charts */}
-        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          📊 Visual Analytics
-        </Typography>
-        <List dense>
-          <ListItem>
-            <ListItemIcon>
-              <PieChartIcon color="primary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Project Status Pie Chart"
-              secondary="Visual breakdown of projects by status (pending, in progress, on hold, completed)"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <BarChartIcon color="secondary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Category Bar Chart"
-              secondary="Bar chart showing distribution of projects by category"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <AssessmentIcon color="success" />
-            </ListItemIcon>
-            <ListItemText
-              primary="County Distribution Chart"
-              secondary="Bar chart showing projects distributed across different counties"
+              primary="Payment Method Distribution"
+              secondary="Shows how tokens were acquired (e.g., system credits, purchases, bonuses)"
             />
           </ListItem>
         </List>
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> Use these metrics to track project performance, 
-            identify areas needing attention, understand your foundation's impact across 
-            different categories and regions, and make data-driven decisions for future projects.
+            <strong>💡 Tip:</strong> Monitor token circulation to understand user engagement and spending patterns. 
+            High token deductions indicate active platform usage, while increasing circulation suggests growing user base or promotional activity.
           </Typography>
         </Alert>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setProjectsHelpOpen(false)} color="primary">
+        <Button onClick={() => setTokensHelpOpen(false)} color="primary">
           Got it!
         </Button>
       </DialogActions>
     </Dialog>
+  );
+
+  // Premium Help Dialog Component
+  const PremiumHelpDialog = () => (
+    <Dialog
+      open={premiumHelpOpen}
+      onClose={() => setPremiumHelpOpen(false)}
+      maxWidth="md"
+      fullWidth
+    >
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          <VerifiedUser color="primary" />
+          <Typography variant="h6" fontWeight="bold">
+            TuVibe - Premium User Analytics Explanation
+          </Typography>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          The Premium tab provides insights into premium membership on your TuVibe platform, 
+          including verified users, premium categories, and verification requests. Here's what each metric means:
+        </Typography>
+
+        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
+          ✅ Premium Categories
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemIcon>
+              <VerifiedUser color="success" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Total Verified"
+              secondary="The total number of premium users who have been verified by administrators"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <PeopleIcon color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Sugar Mummies"
+              secondary="Number of users with the 'Sugar Mummy' premium category membership"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <AccountCircleIcon color="info" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Sponsors"
+              secondary="Number of users with the 'Sponsor' premium category membership"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <CheckCircleIcon color="secondary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Ben 10s"
+              secondary="Number of users with the 'Ben 10' premium category membership"
+            />
+          </ListItem>
+        </List>
+
+        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
+          📋 Verification Requests
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemIcon>
+              <DescriptionIcon color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Pending Requests"
+              secondary="Number of premium verification requests awaiting admin review"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <CheckCircleIcon color="success" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Approved Requests"
+              secondary="Total number of premium verification requests that have been approved"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingDown color="error" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Rejected Requests"
+              secondary="Total number of premium verification requests that have been rejected"
+            />
+          </ListItem>
+        </List>
+
+        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
+          📝 Additional Premium Metrics
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemIcon>
+              <AddIcon color="primary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Looking For Posts"
+              secondary="Total number of 'Looking For' posts created by premium users seeking connections"
+            />
+          </ListItem>
+        </List>
+
+        <Alert severity="info" sx={{ mt: 3 }}>
+          <Typography variant="body2">
+            <strong>💡 Tip:</strong> Monitor pending verification requests regularly to ensure timely processing. 
+            Track category distribution to understand which premium types are most popular among your users.
+          </Typography>
+        </Alert>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setPremiumHelpOpen(false)} color="primary">
+          Got it!
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  // Market Help Dialog Component
+  const MarketHelpDialog = () => (
+    <Dialog
+      open={marketHelpOpen}
+      onClose={() => setMarketHelpOpen(false)}
+      maxWidth="md"
+      fullWidth
+    >
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Store color="primary" />
+          <Typography variant="h6" fontWeight="bold">
+            TuVibe - Market Analytics Explanation
+          </Typography>
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          The Market tab provides insights into your marketplace, including item counts, special collections, 
+          and growth metrics. Here's what each metric means:
+        </Typography>
+
+        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
+          🛍️ Item Statistics
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemIcon>
+              <Store color="primary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Total Items"
+              secondary="The total number of items listed in the marketplace"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <ShoppingCart color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Regular Items"
+              secondary="Standard marketplace items without special tags or promotions"
+            />
+          </ListItem>
+        </List>
+
+        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
+          ⭐ Special Collections
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingUpIcon color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Featured Items"
+              secondary="Items that have been featured by administrators for special promotion"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingUp color="error" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Hot Deals"
+              secondary="Items marked as hot deals with special pricing or promotions"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingUp color="info" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Weekend Picks"
+              secondary="Items specially curated for weekend shopping"
+            />
+          </ListItem>
+        </List>
+
+        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
+          📈 Growth Metrics
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemIcon>
+              <AddIcon color="success" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Items Added Today"
+              secondary="Number of new items added to the marketplace today"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <InsightsIcon color="secondary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Items Added This Week"
+              secondary="Total number of items added to the marketplace in the current week"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <AssessmentIcon color="primary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Items Added This Month"
+              secondary="Total number of items added to the marketplace in the current month"
+            />
+          </ListItem>
+        </List>
+
+        <Alert severity="info" sx={{ mt: 3 }}>
+          <Typography variant="body2">
+            <strong>💡 Tip:</strong> Track special collections to see which promotional strategies are working. 
+            Monitor growth metrics to understand marketplace activity and seller engagement patterns.
+          </Typography>
+        </Alert>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setMarketHelpOpen(false)} color="primary">
+          Got it!
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  // Tokens tab render function
+  const renderTokens = () => (
+    <Box>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 3 }}
+      >
+        <Typography variant="h5" fontWeight="bold" color="text.primary">
+          Token Analytics
+        </Typography>
+        <IconButton
+          onClick={() => setTokensHelpOpen(true)}
+          color="primary"
+          sx={{
+            backgroundColor: "rgba(25, 118, 210, 0.1)",
+            "&:hover": {
+              backgroundColor: "rgba(25, 118, 210, 0.2)",
+            },
+          }}
+          title="Click to understand the data shown here"
+        >
+          <HelpIcon />
+        </IconButton>
+      </Box>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#D4AF37", mb: 1 }}>
+              {analyticsData.tokenStats?.totalTokensInCirculation || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tokens in Circulation
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
+              {analyticsData.tokenStats?.totalTokensDeducted || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tokens Deducted
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4facfe", mb: 1 }}>
+              {analyticsData.tokenStats?.totalTokensBonus || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tokens Bonus
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#43e97b", mb: 1 }}>
+              {analyticsData.tokenStats?.tokensToday || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tokens Today
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#00f2fe", mb: 1 }}>
+              {analyticsData.tokenStats?.tokensThisWeek || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tokens This Week
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#764ba2", mb: 1 }}>
+              {analyticsData.tokenStats?.tokensThisMonth || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tokens This Month
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Tokens by Payment Method */}
+      {(analyticsData.tokensByMethod || []).length > 0 && (
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Tokens by Payment Method
+          </Typography>
+          <Card sx={{ p: 3 }}>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Payment Method</strong></TableCell>
+                    <TableCell align="right"><strong>Total Tokens</strong></TableCell>
+                    <TableCell align="right"><strong>Count</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {analyticsData.tokensByMethod.map((method, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{method.payment_method || 'N/A'}</TableCell>
+                      <TableCell align="right">{parseFloat(method.total || 0).toLocaleString()}</TableCell>
+                      <TableCell align="right">{parseInt(method.count || 0)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </Box>
+      )}
+    </Box>
   );
 
   // Inquiries Help Dialog Component
@@ -1947,36 +2065,28 @@ const Analytics = () => {
           {/* Key Metrics Cards */}
           <Grid container spacing={3}>
             <CardItem
-              title="Total Inquiries"
-              value={analyticsData.overview?.totalInquiries || 0}
-            />
-            <CardItem
-              title="Total Projects"
-              value={analyticsData.overview?.totalProjects || 0}
-            />
-            <CardItem
-              title="Total Documents"
-              value={analyticsData.overview?.totalDocuments || 0}
-            />
-            <CardItem
               title="Total Users"
               value={analyticsData.overview?.totalUsers || 0}
             />
             <CardItem
-              title="Active Users"
-              value={analyticsData.overview?.activeUsers || 0}
+              title="Premium Users"
+              value={analyticsData.overview?.totalPremiumUsers || 0}
             />
             <CardItem
-              title="Recent Inquiries (30d)"
-              value={analyticsData.trends?.last30Days?.inquiries || 0}
+              title="Online Users"
+              value={analyticsData.overview?.onlineUsers || 0}
             />
             <CardItem
-              title="Recent Projects (30d)"
-              value={analyticsData.trends?.last30Days?.projects || 0}
+              title="Total Market Items"
+              value={analyticsData.overview?.totalMarketItems || 0}
             />
             <CardItem
-              title="Completed Projects (30d)"
-              value={analyticsData.trends?.last30Days?.completedProjects || 0}
+              title="Pending Verifications"
+              value={analyticsData.overview?.pendingVerifications || 0}
+            />
+            <CardItem
+              title="Total Admins"
+              value={analyticsData.overview?.totalAdmins || 0}
             />
           </Grid>
 
@@ -2006,7 +2116,7 @@ const Analytics = () => {
                   }}
                 >
                   <Typography variant="h6" gutterBottom fontWeight="600">
-                    Inquiry Metrics
+                    Token Stats
                   </Typography>
                   <Stack spacing={2} sx={{ flex: 1 }}>
                     <Box
@@ -2015,14 +2125,14 @@ const Analytics = () => {
                       alignItems="center"
                       p={2}
                       sx={{
-                        backgroundColor: "rgba(25, 118, 210, 0.05)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
                         borderRadius: 2,
-                        border: "1px solid rgba(25, 118, 210, 0.1)",
+                        border: "1px solid rgba(212, 175, 55, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Pending</Typography>
+                      <Typography fontWeight="500">In Circulation</Typography>
                       <Chip
-                        label={analyticsData.inquiries?.byStatus?.find(s => s.status === 'pending')?.count || 0}
+                        label={analyticsData.tokenStats?.totalTokensInCirculation || 0}
                         color="warning"
                       />
                     </Box>
@@ -2038,11 +2148,11 @@ const Analytics = () => {
                       }}
                     >
                       <Typography fontWeight="500">
-                        Resolved (30d)
+                        Deducted
                       </Typography>
                       <Chip
-                        label={analyticsData.inquiries?.recentResolved || 0}
-                        color="success"
+                        label={analyticsData.tokenStats?.totalTokensDeducted || 0}
+                        color="secondary"
                       />
                     </Box>
                   </Stack>
@@ -2074,7 +2184,7 @@ const Analytics = () => {
                   }}
                 >
                   <Typography variant="h6" gutterBottom fontWeight="600">
-                    Project Progress
+                    Premium Stats
                   </Typography>
                   <Stack spacing={2} sx={{ flex: 1 }}>
                     <Box
@@ -2089,10 +2199,10 @@ const Analytics = () => {
                       }}
                     >
                       <Typography fontWeight="500">
-                        Average Progress
+                        Verified Users
                       </Typography>
                       <Chip
-                        label={`${analyticsData.projects?.averageProgress || 0}%`}
+                        label={analyticsData.premiumStats?.totalVerified || 0}
                         color="success"
                       />
                     </Box>
@@ -2107,9 +2217,9 @@ const Analytics = () => {
                         border: "1px solid rgba(0, 188, 212, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">In Progress</Typography>
+                      <Typography fontWeight="500">Pending Requests</Typography>
                       <Chip
-                        label={analyticsData.projects?.byStatus?.find(s => s.status === 'in_progress')?.count || 0}
+                        label={analyticsData.premiumStats?.pendingRequests || 0}
                         color="info"
                       />
                     </Box>
@@ -2142,7 +2252,7 @@ const Analytics = () => {
                   }}
                 >
                   <Typography variant="h6" gutterBottom fontWeight="600">
-                    Recent Activity
+                    Engagement Stats
                   </Typography>
                   <Stack spacing={2} sx={{ flex: 1 }}>
                     <Box
@@ -2156,9 +2266,9 @@ const Analytics = () => {
                         border: "1px solid rgba(25, 118, 210, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Last 7 Days</Typography>
+                      <Typography fontWeight="500">Chat Unlocks</Typography>
                       <Chip
-                        label={analyticsData.activity?.last7Days || 0}
+                        label={analyticsData.engagementStats?.totalChatUnlocks || 0}
                         color="primary"
                       />
                     </Box>
@@ -2173,10 +2283,44 @@ const Analytics = () => {
                         border: "1px solid rgba(255, 152, 0, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Active Users</Typography>
+                      <Typography fontWeight="500">Profile Views</Typography>
                       <Chip
-                        label={analyticsData.overview?.activeUsers || 0}
+                        label={analyticsData.engagementStats?.totalProfileViews || 0}
                         color="warning"
+                      />
+                    </Box>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      p={2}
+                      sx={{
+                        backgroundColor: "rgba(156, 39, 176, 0.05)",
+                        borderRadius: 2,
+                        border: "1px solid rgba(156, 39, 176, 0.1)",
+                      }}
+                    >
+                      <Typography fontWeight="500">Favourites</Typography>
+                      <Chip
+                        label={analyticsData.engagementStats?.totalFavourites || 0}
+                        color="secondary"
+                      />
+                    </Box>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      p={2}
+                      sx={{
+                        backgroundColor: "rgba(0, 188, 212, 0.05)",
+                        borderRadius: 2,
+                        border: "1px solid rgba(0, 188, 212, 0.1)",
+                      }}
+                    >
+                      <Typography fontWeight="500">Notifications</Typography>
+                      <Chip
+                        label={analyticsData.engagementStats?.totalNotifications || 0}
+                        color="info"
                       />
                     </Box>
                   </Stack>
@@ -2313,6 +2457,191 @@ const Analytics = () => {
                 </ResponsiveContainer>
               </Card>
             </Grid>
+
+            {/* Category Breakdown */}
+            {analyticsData.categoryBreakdown && Object.keys(analyticsData.categoryBreakdown).length > 0 && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card sx={{ p: 3, height: 400 }}>
+                  <Typography variant="h6" gutterBottom fontWeight="600">
+                    User Category Breakdown
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(analyticsData.categoryBreakdown).map(([category, count]) => ({
+                          name: category,
+                          value: parseInt(count) || 0,
+                        }))}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius="80%"
+                        fill="#8884d8"
+                      >
+                        {Object.entries(analyticsData.categoryBreakdown).map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [value, "Users"]} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Grid>
+            )}
+
+            {/* New Users Stats */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom fontWeight="600">
+                  New Users Statistics
+                </Typography>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Box textAlign="center" p={2}>
+                      <Typography variant="h4" color="primary" fontWeight="bold">
+                        {analyticsData.newUsersStats?.today || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Today
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Box textAlign="center" p={2}>
+                      <Typography variant="h4" color="secondary" fontWeight="bold">
+                        {analyticsData.newUsersStats?.thisWeek || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        This Week
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Box textAlign="center" p={2}>
+                      <Typography variant="h4" color="success.main" fontWeight="bold">
+                        {analyticsData.newUsersStats?.thisMonth || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        This Month
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Card>
+            </Grid>
+
+            {/* Engagement Time-based Metrics */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom fontWeight="600">
+                  Engagement Time-based Metrics
+                </Typography>
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(25, 118, 210, 0.05)", borderRadius: 2 }}>
+                    <Typography fontWeight="500">Unlocks Today</Typography>
+                    <Chip label={analyticsData.engagementStats?.unlocksToday || 0} color="primary" />
+                  </Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
+                    <Typography fontWeight="500">Unlocks This Week</Typography>
+                    <Chip label={analyticsData.engagementStats?.unlocksThisWeek || 0} color="secondary" />
+                  </Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
+                    <Typography fontWeight="500">Unlocks This Month</Typography>
+                    <Chip label={analyticsData.engagementStats?.unlocksThisMonth || 0} color="success" />
+                  </Box>
+                </Stack>
+              </Card>
+            </Grid>
+
+            {/* Unlocks by Category */}
+            {(analyticsData.unlocksByCategory || []).length > 0 && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card sx={{ p: 3, height: 400 }}>
+                  <Typography variant="h6" gutterBottom fontWeight="600">
+                    Unlocks by Category
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={(analyticsData.unlocksByCategory || []).map((item) => ({
+                        name: item["target.category"] || "Unknown",
+                        count: parseInt(item.count) || 0,
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => [value, "Unlocks"]} />
+                      <Bar dataKey="count" fill="#667eea" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Grid>
+            )}
+
+            {/* Recent Activity - Recent Users */}
+            {analyticsData.recentActivity?.recentUsers && analyticsData.recentActivity.recentUsers.length > 0 && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card sx={{ p: 3, maxHeight: 400, overflow: "auto" }}>
+                  <Typography variant="h6" gutterBottom fontWeight="600">
+                    Recent Users
+                  </Typography>
+                  <List>
+                    {analyticsData.recentActivity.recentUsers.slice(0, 5).map((user) => (
+                      <ListItem key={user.id}>
+                        <ListItemIcon>
+                          <Avatar sx={{ bgcolor: user.isVerified ? "#4caf50" : "#9e9e9e" }}>
+                            {user.name?.charAt(0) || "U"}
+                          </Avatar>
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={user.name}
+                          secondary={`${user.category} • ${user.email}`}
+                        />
+                        <Chip
+                          label={user.isVerified ? "Verified" : "Not Verified"}
+                          color={user.isVerified ? "success" : "default"}
+                          size="small"
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Card>
+              </Grid>
+            )}
+
+            {/* Recent Activity - Recent Unlocks */}
+            {analyticsData.recentActivity?.recentUnlocks && analyticsData.recentActivity.recentUnlocks.length > 0 && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card sx={{ p: 3, maxHeight: 400, overflow: "auto" }}>
+                  <Typography variant="h6" gutterBottom fontWeight="600">
+                    Recent Unlocks
+                  </Typography>
+                  <List>
+                    {analyticsData.recentActivity.recentUnlocks.slice(0, 5).map((unlock) => (
+                      <ListItem key={unlock.id}>
+                        <ListItemIcon>
+                          <AccountBalanceWallet color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={`${unlock.initiator?.name || "Unknown"} unlocked ${unlock.target?.name || "Unknown"}`}
+                          secondary={`${unlock.token_cost} tokens • ${new Date(unlock.createdAt).toLocaleDateString()}`}
+                        />
+                        <Chip
+                          label={unlock.status}
+                          color={unlock.status === "success" ? "success" : "default"}
+                          size="small"
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Card>
+              </Grid>
+            )}
 
             {/* Trends Summary */}
             <Grid size={{ xs: 12 }}>
@@ -4102,41 +4431,20 @@ const Analytics = () => {
     </Box>
   );
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 0:
-        return renderOverview();
-      case 1:
-        return renderProjects();
-      case 2:
-        return renderInquiries();
-      default:
-        return renderOverview();
-    }
-  };
-  
-  // Inquiries tab render function
-  const renderInquiries = () => (
+  // Premium tab render function
+  const renderPremium = () => (
     <Box>
-      {/* Header */}
       <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          mb: 3,
-        }}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 3 }}
       >
-        <Box>
-          <Typography variant="h6" fontWeight="600" color="text.primary">
-            Inquiry Status & Distribution
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Inquiry status breakdown and category distribution
-          </Typography>
-        </Box>
+        <Typography variant="h5" fontWeight="bold" color="text.primary">
+          Premium User Analytics
+        </Typography>
         <IconButton
-          onClick={() => setInquiriesHelpOpen(true)}
+          onClick={() => setPremiumHelpOpen(true)}
           color="primary"
           sx={{
             backgroundColor: "rgba(25, 118, 210, 0.1)",
@@ -4149,286 +4457,224 @@ const Analytics = () => {
           <HelpIcon />
         </IconButton>
       </Box>
-
-      {/* Loading State */}
-      {loading && !dataLoaded && (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="200px"
-          mb={3}
-        >
-          <Box textAlign="center">
-            <CircularProgress size={40} sx={{ mb: 2 }} />
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#667eea", mb: 1 }}>
+              {analyticsData.premiumStats?.totalVerified || 0}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
-              Loading inquiry data...
+              Verified Users
             </Typography>
-          </Box>
-        </Box>
-      )}
-
-      {/* Data Content */}
-      {dataLoaded && (
-        <>
-          <Grid container spacing={3}>
-            {/* Summary Cards */}
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                    transform: "translateY(-2px)",
-                  },
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ p: 3, textAlign: "center" }}>
-                  <InfoIcon sx={{ fontSize: 48, color: "#1976d2", mb: 2 }} />
-                  <Typography variant="h3" fontWeight="bold" color="primary">
-                    {analyticsData.inquiries?.total || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Total Inquiries
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                    transform: "translateY(-2px)",
-                  },
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ p: 3, textAlign: "center" }}>
-                  <Timeline sx={{ fontSize: 48, color: "#f57c00", mb: 2 }} />
-                  <Typography variant="h3" fontWeight="bold" color="warning.main">
-                    {analyticsData.inquiries?.byStatus?.find(s => s.status === 'pending')?.count || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Pending Inquiries
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                    transform: "translateY(-2px)",
-                  },
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ p: 3, textAlign: "center" }}>
-                  <TrendingUp sx={{ fontSize: 48, color: "#2e7d32", mb: 2 }} />
-                  <Typography variant="h3" fontWeight="bold" color="success.main">
-                    {analyticsData.inquiries?.byStatus?.find(s => s.status === 'resolved')?.count || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Resolved Inquiries
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                    transform: "translateY(-2px)",
-                  },
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ p: 3, textAlign: "center" }}>
-                  <GaugeIcon sx={{ fontSize: 48, color: "#7b1fa2", mb: 2 }} />
-                  <Typography variant="h3" fontWeight="bold" color="secondary.main">
-                    {analyticsData.inquiries?.averageResolutionTimeHours || "0.00"}h
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Avg Resolution Time
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Inquiry Status Chart */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 3, height: 400 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Inquiry Status Distribution
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  {(analyticsData.inquiries?.byStatus || []).length > 0 ? (
-                    <PieChart>
-                      <Pie
-                        data={(analyticsData.inquiries?.byStatus || []).map(
-                          (item) => ({
-                            name: item.status.replace('_', ' ').toUpperCase(),
-                            value: parseInt(item.count) || 0,
-                          })
-                        )}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius="90%"
-                        innerRadius="50%"
-                        fill="#8884d8"
-                      >
-                        {(analyticsData.inquiries?.byStatus || []).map(
-                          (entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          )
-                        )}
-                      </Pie>
-                      <Tooltip formatter={(value) => [value, "Inquiries"]} />
-                      <Legend />
-                    </PieChart>
-                  ) : (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        No inquiry data available
-                      </Typography>
-                    </Box>
-                  )}
-                </ResponsiveContainer>
-              </Card>
-            </Grid>
-
-            {/* Inquiry Category Chart */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 3, height: 400 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Inquiry Category Distribution
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={(analyticsData.inquiries?.byCategory || []).map(
-                      (item) => ({
-                        ...item,
-                        name: item.category.replace('_', ' ').toUpperCase(),
-                        count: parseInt(item.count) || 0,
-                      })
-                    )}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [value, "Inquiries"]} />
-                    <Bar dataKey="count" fill="#667eea" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card>
-            </Grid>
-
-            {/* Category Breakdown Table */}
-            <Grid size={{ xs: 12 }}>
-              <Card sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Category Breakdown
-                </Typography>
-                <Box sx={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                      <tr style={{ backgroundColor: "rgba(102, 126, 234, 0.05)" }}>
-                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid rgba(102, 126, 234, 0.2)" }}>
-                          Category
-                        </th>
-                        <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid rgba(102, 126, 234, 0.2)" }}>
-                          Count
-                        </th>
-                        <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid rgba(102, 126, 234, 0.2)" }}>
-                          Percentage
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(analyticsData.inquiries?.byCategory || []).map((item, index) => {
-                        const total = analyticsData.inquiries?.total || 1;
-                        const percentage = ((parseInt(item.count) / total) * 100).toFixed(1);
-                        return (
-                          <tr key={index} style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
-                            <td style={{ padding: "12px", textTransform: "capitalize" }}>
-                              {item.category.replace('_', ' ')}
-                            </td>
-                            <td style={{ padding: "12px", textAlign: "center", fontWeight: "bold" }}>
-                              {item.count}
-                            </td>
-                            <td style={{ padding: "12px", textAlign: "center" }}>
-                              <Chip 
-                                label={`${percentage}%`} 
-                                color="primary" 
-                                size="small"
-                                variant="outlined"
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </Box>
-              </Card>
-            </Grid>
-          </Grid>
-        </>
-      )}
-
-      {/* Fallback when data is not loaded */}
-      {!dataLoaded && !loading && (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="200px"
-          mb={3}
-        >
-          <Box textAlign="center">
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-              No inquiry data available
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
+              {analyticsData.premiumStats?.sugarMummys || 0}
             </Typography>
-            <Button
-              variant="contained"
-              onClick={fetchAnalyticsData}
-              startIcon={<RefreshIcon />}
-            >
-              Load Data
-            </Button>
-          </Box>
-        </Box>
-      )}
+            <Typography variant="body2" color="text.secondary">
+              Sugar Mummies
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#764ba2", mb: 1 }}>
+              {analyticsData.premiumStats?.sponsors || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Sponsors
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4facfe", mb: 1 }}>
+              {analyticsData.premiumStats?.ben10s || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Ben 10s
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Verification Requests & Additional Stats */}
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#ff9800", mb: 1 }}>
+              {analyticsData.premiumStats?.pendingRequests || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Pending Requests
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4caf50", mb: 1 }}>
+              {analyticsData.premiumStats?.approvedRequests || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Approved Requests
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f44336", mb: 1 }}>
+              {analyticsData.premiumStats?.rejectedRequests || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Rejected Requests
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#9c27b0", mb: 1 }}>
+              {analyticsData.premiumStats?.totalLookingForPosts || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Looking For Posts
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
+
+  // Market tab render function
+  const renderMarket = () => (
+    <Box>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 3 }}
+      >
+        <Typography variant="h5" fontWeight="bold" color="text.primary">
+          Market Analytics
+        </Typography>
+        <IconButton
+          onClick={() => setMarketHelpOpen(true)}
+          color="primary"
+          sx={{
+            backgroundColor: "rgba(25, 118, 210, 0.1)",
+            "&:hover": {
+              backgroundColor: "rgba(25, 118, 210, 0.2)",
+            },
+          }}
+          title="Click to understand the data shown here"
+        >
+          <HelpIcon />
+        </IconButton>
+      </Box>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#667eea", mb: 1 }}>
+              {analyticsData.marketStats?.totalItems || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Items
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#FFD700", mb: 1 }}>
+              {analyticsData.marketStats?.featuredItems || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Featured Items
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
+              {analyticsData.marketStats?.hotDeals || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Hot Deals
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4ecdc4", mb: 1 }}>
+              {analyticsData.marketStats?.weekendPicks || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Weekend Picks
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#9e9e9e", mb: 1 }}>
+              {analyticsData.marketStats?.regularItems || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Regular Items
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Growth Metrics */}
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4caf50", mb: 1 }}>
+              {analyticsData.marketStats?.itemsAddedToday || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Items Added Today
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#2196f3", mb: 1 }}>
+              {analyticsData.marketStats?.itemsAddedThisWeek || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Items Added This Week
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "#ff9800", mb: 1 }}>
+              {analyticsData.marketStats?.itemsAddedThisMonth || 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Items Added This Month
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 0:
+        return renderOverview();
+      case 1:
+        return renderTokens();
+      case 2:
+        return renderPremium();
+      case 3:
+        return renderMarket();
+      default:
+        return renderOverview();
+    }
+  };
 
   // Show error message if there's an error
   if (error) {
@@ -4460,7 +4706,7 @@ const Analytics = () => {
           WebkitTextFillColor: "transparent",
         }}
       >
-        Mwalimu Hope Foundation Dashboard
+        TuVibe Analytics Dashboard
       </Typography>
 
       <Card
@@ -4522,14 +4768,12 @@ const Analytics = () => {
 
       {/* Help Dialogs */}
       <OverviewHelpDialog />
-      <ProjectsHelpDialog />
-      <InquiriesHelpDialog />
-      <TasksLaborHelpDialog />
-      <BudgetResourcesHelpDialog />
-      <PerformanceHelpDialog />
-      <EquipmentMaterialsHelpDialog />
+      <TokensHelpDialog />
+      <PremiumHelpDialog />
+      <MarketHelpDialog />
     </Box>
   );
 };
 
 export default Analytics;
+

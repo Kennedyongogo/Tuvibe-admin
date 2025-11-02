@@ -1,0 +1,1066 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Button,
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
+  Divider,
+  CircularProgress,
+  Alert,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Tooltip,
+  FormControlLabel,
+  Switch,
+  CardMedia,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Store as StoreIcon,
+  CloudUpload as UploadIcon,
+  Image as ImageIcon,
+  AttachMoney as MoneyIcon,
+  LocalOffer as TagIcon,
+  Star as StarIcon,
+} from "@mui/icons-material";
+import { Tabs, Tab } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import Swal from "sweetalert2";
+
+const Marketplace = () => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [tabCounts, setTabCounts] = useState({
+    all: 0,
+    hot_deals: 0,
+    weekend_picks: 0,
+    featured: 0,
+  });
+  const [itemForm, setItemForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    whatsapp_number: "",
+    is_featured: false,
+    tag: "none",
+  });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const tagTabs = [
+    { label: "All Items", value: "all", count: tabCounts.all },
+    { label: "Hot Deals", value: "hot_deals", count: tabCounts.hot_deals },
+    { label: "Weekend Picks", value: "weekend_picks", count: tabCounts.weekend_picks },
+    { label: "Featured", value: "featured", count: tabCounts.featured },
+  ];
+
+  useEffect(() => {
+    fetchItems();
+  }, [page, rowsPerPage, activeTab]);
+
+  useEffect(() => {
+    fetchAllItemsForCounts();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("No authentication token found. Please login again.");
+        return;
+      }
+
+      const currentTag = tagTabs[activeTab]?.value;
+      let url = `/api/market?page=${page + 1}&limit=${rowsPerPage}`;
+      if (currentTag && currentTag !== "all" && currentTag !== "featured") {
+        url += `&tag=${currentTag}`;
+      }
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        let filteredData = data.data || [];
+        
+        // Filter featured items if "featured" tab is selected
+        if (currentTag === "featured") {
+          filteredData = filteredData.filter((item) => item.is_featured);
+        }
+
+        setItems(filteredData);
+        setTotalItems(filteredData.length);
+      } else {
+        setError("Failed to fetch items: " + (data.message || "Unknown error"));
+      }
+    } catch (err) {
+      setError("Error fetching items: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAllItemsForCounts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(`/api/market?limit=1000`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        updateTabCounts(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching item counts:", err);
+    }
+  };
+
+  const updateTabCounts = (itemsData) => {
+    const counts = {
+      all: itemsData.length,
+      hot_deals: 0,
+      weekend_picks: 0,
+      featured: 0,
+    };
+
+    itemsData.forEach((item) => {
+      if (item.tag === "hot_deals") counts.hot_deals++;
+      if (item.tag === "weekend_picks") counts.weekend_picks++;
+      if (item.is_featured) counts.featured++;
+    });
+
+    setTabCounts(counts);
+  };
+
+  const handleImageSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreateItem = async () => {
+    try {
+      if (!itemForm.title || !itemForm.price) {
+        Swal.fire({
+          icon: "error",
+          title: "Validation Error",
+          text: "Title and price are required.",
+        });
+        return;
+      }
+
+      setUploading(true);
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      formData.append("title", itemForm.title);
+      formData.append("description", itemForm.description || "");
+      formData.append("price", itemForm.price);
+      formData.append("whatsapp_number", itemForm.whatsapp_number || "");
+      formData.append("is_featured", itemForm.is_featured);
+      formData.append("tag", itemForm.tag);
+
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      const response = await fetch("/api/market", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: "Market item created successfully!",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        resetForm();
+        fetchItems();
+        fetchAllItemsForCounts();
+      } else {
+        throw new Error(result.message || "Failed to create item");
+      }
+    } catch (err) {
+      console.error("Error creating item:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "Failed to create item. Please try again.",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleUpdateItem = async () => {
+    try {
+      if (!itemForm.title || !itemForm.price) {
+        Swal.fire({
+          icon: "error",
+          title: "Validation Error",
+          text: "Title and price are required.",
+        });
+        return;
+      }
+
+      setUploading(true);
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      formData.append("title", itemForm.title);
+      formData.append("description", itemForm.description || "");
+      formData.append("price", itemForm.price);
+      formData.append("whatsapp_number", itemForm.whatsapp_number || "");
+      formData.append("is_featured", itemForm.is_featured);
+      formData.append("tag", itemForm.tag);
+
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      const response = await fetch(`/api/market/${selectedItem.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Updated!",
+          text: "Item updated successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        resetForm();
+        fetchItems();
+        fetchAllItemsForCounts();
+      } else {
+        throw new Error(result.message || "Failed to update item");
+      }
+    } catch (err) {
+      console.error("Error updating item:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "Failed to update item. Please try again.",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteItem = async (item) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `Do you want to delete "${item.title}"?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(`/api/market/${item.id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete item");
+        }
+
+        fetchItems();
+        fetchAllItemsForCounts();
+
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Item has been deleted successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } catch (err) {
+        console.error("Error deleting item:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to delete item. Please try again.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleEditItem = (item) => {
+    setSelectedItem(item);
+    setItemForm({
+      title: item.title || "",
+      description: item.description || "",
+      price: item.price || "",
+      whatsapp_number: item.whatsapp_number || "",
+      is_featured: item.is_featured || false,
+      tag: item.tag || "none",
+    });
+    setImagePreview(item.image ? (item.image.startsWith("http") ? item.image : `/uploads/market/${item.image}`) : null);
+    setSelectedImage(null);
+    setIsEditMode(true);
+    setOpenEditDialog(true);
+  };
+
+  const resetForm = () => {
+    setItemForm({
+      title: "",
+      description: "",
+      price: "",
+      whatsapp_number: "",
+      is_featured: false,
+      tag: "none",
+    });
+    setSelectedImage(null);
+    setImagePreview(null);
+    setSelectedItem(null);
+    setIsEditMode(false);
+    setOpenDialog(false);
+    setOpenEditDialog(false);
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setPage(0);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith("http")) return imagePath;
+    if (imagePath.startsWith("/")) return imagePath;
+    return `/uploads/${imagePath}`;
+  };
+
+  if (error && items.length === 0) {
+    return (
+      <Box p={3}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+        minHeight: "100vh",
+      }}
+    >
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 0,
+          overflow: "hidden",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          border: "none",
+          boxShadow: "none",
+          minHeight: "100vh",
+        }}
+      >
+        {/* Header Section */}
+        <Box
+          sx={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            p: 3,
+            color: "white",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            gap={{ xs: 2, sm: 0 }}
+            position="relative"
+            zIndex={1}
+          >
+            <Box>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 800,
+                  mb: 1,
+                  textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                  fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+                }}
+              >
+                TuVibe Marketplace
+              </Typography>
+              <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                Manage marketplace items and listings
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                resetForm();
+                setOpenDialog(true);
+              }}
+              sx={{
+                background: "linear-gradient(45deg, #FF6B6B, #4ECDC4)",
+                borderRadius: 3,
+                px: { xs: 2, sm: 4 },
+                py: 1.5,
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                fontWeight: 600,
+                textTransform: "none",
+                boxShadow: "0 8px 25px rgba(255, 107, 107, 0.3)",
+                width: { xs: "100%", sm: "auto" },
+                "&:hover": {
+                  background: "linear-gradient(45deg, #FF5252, #26A69A)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 12px 35px rgba(255, 107, 107, 0.4)",
+                },
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              Add New Item
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Content Section */}
+        <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, minHeight: "calc(100vh - 200px)" }}>
+          {/* Tag Tabs */}
+          <Box mb={3}>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                "& .MuiTabs-indicator": {
+                  backgroundColor: "#667eea",
+                  height: 3,
+                  borderRadius: "3px 3px 0 0",
+                },
+                "& .MuiTab-root": {
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  minHeight: 48,
+                  color: "#666",
+                  "&.Mui-selected": {
+                    color: "#667eea",
+                  },
+                  "&:hover": {
+                    color: "#667eea",
+                    backgroundColor: "rgba(102, 126, 234, 0.04)",
+                  },
+                },
+              }}
+            >
+              {tagTabs.map((tab, index) => (
+                <Tab
+                  key={tab.value}
+                  label={
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <span>{tab.label}</span>
+                      <Chip
+                        label={tab.count}
+                        size="small"
+                        sx={{
+                          backgroundColor: activeTab === index ? "#667eea" : "#e0e0e0",
+                          color: activeTab === index ? "white" : "#666",
+                          fontWeight: 600,
+                          fontSize: "0.75rem",
+                          height: 20,
+                          minWidth: 20,
+                        }}
+                      />
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
+          </Box>
+
+          {/* Items Grid */}
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress sx={{ color: "#667eea" }} />
+            </Box>
+          ) : items.length === 0 ? (
+            <Card
+              sx={{
+                p: 4,
+                textAlign: "center",
+                borderRadius: 3,
+                background: "rgba(255, 255, 255, 0.8)",
+              }}
+            >
+              <StoreIcon sx={{ fontSize: 64, color: "#ccc", mb: 2 }} />
+              <Typography variant="h6" sx={{ color: "#999" }}>
+                No items found
+              </Typography>
+            </Card>
+          ) : (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {items.map((item) => (
+                <Card
+                  key={item.id}
+                  sx={{
+                    height: "100%",
+                    minHeight: { xs: "auto", sm: "200px" },
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    borderRadius: 3,
+                    overflow: "hidden",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                    },
+                  }}
+                >
+                  {/* Photo Section */}
+                  <Box
+                    sx={{
+                      position: "relative",
+                      width: { xs: "100%", sm: "200px" },
+                      minWidth: { xs: "100%", sm: "200px" },
+                      height: { xs: "200px", sm: "200px" },
+                      minHeight: { xs: "200px", sm: "200px" },
+                      backgroundColor: "rgba(0, 0, 0, 0.05)",
+                      overflow: "visible",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {/* Image Container */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {item.image ? (
+                        <Box
+                          component="img"
+                          src={getImageUrl(item.image)}
+                          alt={item.title}
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <StoreIcon sx={{ fontSize: 48, color: "#ccc", opacity: 0.5 }} />
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* Featured Badge */}
+                    {item.is_featured && (
+                      <StarIcon
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          color: "#FFD700",
+                          fontSize: 28,
+                          zIndex: 25,
+                          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                        }}
+                      />
+                    )}
+
+                    {/* Tag Badge */}
+                    {item.tag !== "none" && (
+                      <Chip
+                        label={item.tag === "hot_deals" ? "🔥 Hot Deal" : "⭐ Weekend Pick"}
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          bottom: 8,
+                          left: 8,
+                          bgcolor: item.tag === "hot_deals" ? "#ff6b6b" : "#4ecdc4",
+                          color: "white",
+                          fontWeight: 700,
+                          fontSize: "0.65rem",
+                          border: "1px solid rgba(255, 255, 255, 0.3)",
+                          zIndex: 25,
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                        }}
+                      />
+                    )}
+                  </Box>
+
+                  {/* Content Section */}
+                  <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", p: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "1rem",
+                        color: "#1a1a1a",
+                        mb: 1,
+                      }}
+                    >
+                      {item.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "rgba(26, 26, 26, 0.7)",
+                        mb: 2,
+                        flexGrow: 1,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {item.description || "No description"}
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        color: "#667eea",
+                        mb: 2,
+                      }}
+                    >
+                      KES {parseFloat(item.price).toLocaleString()}
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1, mt: "auto" }}>
+                      <Tooltip title="Edit Item">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditItem(item)}
+                          sx={{
+                            color: "#3498db",
+                            backgroundColor: "rgba(52, 152, 219, 0.1)",
+                            "&:hover": {
+                              backgroundColor: "rgba(52, 152, 219, 0.2)",
+                            },
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Item">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteItem(item)}
+                          sx={{
+                            color: "#e74c3c",
+                            backgroundColor: "rgba(231, 76, 60, 0.1)",
+                            "&:hover": {
+                              backgroundColor: "rgba(231, 76, 60, 0.2)",
+                            },
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          )}
+        </Box>
+
+        {/* Create Dialog */}
+        <Dialog
+          open={openDialog}
+          onClose={resetForm}
+          maxWidth="sm"
+          fullWidth
+          sx={{
+            "& .MuiDialog-paper": {
+              borderRadius: 4,
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "white",
+              fontWeight: "bold",
+            }}
+          >
+            Create New Market Item
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2 }}>
+            <Stack spacing={2}>
+              <TextField
+                fullWidth
+                label="Title"
+                value={itemForm.title}
+                onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })}
+                required
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                fullWidth
+                label="Description"
+                value={itemForm.description}
+                onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                multiline
+                rows={3}
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                fullWidth
+                label="Price (KES)"
+                type="number"
+                value={itemForm.price}
+                onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
+                required
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                fullWidth
+                label="WhatsApp Number"
+                value={itemForm.whatsapp_number}
+                onChange={(e) => setItemForm({ ...itemForm, whatsapp_number: e.target.value })}
+                variant="outlined"
+                size="small"
+                placeholder="+254712345678"
+              />
+              <FormControl fullWidth size="small">
+                <InputLabel>Tag</InputLabel>
+                <Select
+                  value={itemForm.tag}
+                  onChange={(e) => setItemForm({ ...itemForm, tag: e.target.value })}
+                  label="Tag"
+                >
+                  <MenuItem value="none">None</MenuItem>
+                  <MenuItem value="hot_deals">Hot Deals</MenuItem>
+                  <MenuItem value="weekend_picks">Weekend Picks</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={itemForm.is_featured}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, is_featured: e.target.checked })
+                    }
+                  />
+                }
+                label="Featured Item"
+              />
+              <Box>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  style={{ display: "none" }}
+                  id="image-upload"
+                />
+                <label htmlFor="image-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<UploadIcon />}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  >
+                    Upload Image
+                  </Button>
+                </label>
+                {imagePreview && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      width: "100%",
+                      height: 200,
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </Box>
+                )}
+              </Box>
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={resetForm} variant="outlined">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateItem}
+              variant="contained"
+              disabled={uploading}
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              }}
+            >
+              {uploading ? <CircularProgress size={24} /> : "Create"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog
+          open={openEditDialog}
+          onClose={resetForm}
+          maxWidth="sm"
+          fullWidth
+          sx={{
+            "& .MuiDialog-paper": {
+              borderRadius: 4,
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "white",
+              fontWeight: "bold",
+            }}
+          >
+            Edit Market Item
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2 }}>
+            <Stack spacing={2}>
+              <TextField
+                fullWidth
+                label="Title"
+                value={itemForm.title}
+                onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })}
+                required
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                fullWidth
+                label="Description"
+                value={itemForm.description}
+                onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                multiline
+                rows={3}
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                fullWidth
+                label="Price (KES)"
+                type="number"
+                value={itemForm.price}
+                onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
+                required
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                fullWidth
+                label="WhatsApp Number"
+                value={itemForm.whatsapp_number}
+                onChange={(e) => setItemForm({ ...itemForm, whatsapp_number: e.target.value })}
+                variant="outlined"
+                size="small"
+                placeholder="+254712345678"
+              />
+              <FormControl fullWidth size="small">
+                <InputLabel>Tag</InputLabel>
+                <Select
+                  value={itemForm.tag}
+                  onChange={(e) => setItemForm({ ...itemForm, tag: e.target.value })}
+                  label="Tag"
+                >
+                  <MenuItem value="none">None</MenuItem>
+                  <MenuItem value="hot_deals">Hot Deals</MenuItem>
+                  <MenuItem value="weekend_picks">Weekend Picks</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={itemForm.is_featured}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, is_featured: e.target.checked })
+                    }
+                  />
+                }
+                label="Featured Item"
+              />
+              <Box>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  style={{ display: "none" }}
+                  id="edit-image-upload"
+                />
+                <label htmlFor="edit-image-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<UploadIcon />}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  >
+                    {selectedImage ? "Change Image" : "Upload New Image"}
+                  </Button>
+                </label>
+                {imagePreview && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      width: "100%",
+                      height: 200,
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </Box>
+                )}
+              </Box>
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={resetForm} variant="outlined">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateItem}
+              variant="contained"
+              disabled={uploading}
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              }}
+            >
+              {uploading ? <CircularProgress size={24} /> : "Update"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
+    </Box>
+  );
+};
+
+export default Marketplace;
+

@@ -4,22 +4,12 @@ import { Box, CircularProgress, Card } from "@mui/material";
 import Navbar from "./Navbar";
 import Settings from "../Pages/Settings";
 import NotFound from "../Pages/NotFound";
-import Projects from "./Projects/Projects";
-import ProjectView from "./Projects/ProjectView";
-import ProjectEdit from "./Projects/ProjectEdit";
-import ProjectCreate from "./Projects/ProjectCreate";
 import Issues from "./Issues/Issues";
-import Testimony from "./Testimony/Testimony";
 import TuvibeMap from "../TuvibeMap";
-import Documents from "./Documents/Documents";
 import UsersTable from "./Users/UsersTable";
 import Analytics from "./Analytics/Analytics";
-import Audit from "./Audit/Audit";
 import Verification from "./Verification/Verification";
-import { lazy, Suspense } from "react";
-
-// Lazy load the Reports component to avoid loading date picker dependencies on every page
-const Reports = lazy(() => import("./Reports/Reports"));
+import Marketplace from "./Marketplace/Marketplace";
 
 function PageRoutes() {
   const [user, setUser] = useState(null);
@@ -63,74 +53,11 @@ function PageRoutes() {
         ) : (
           <Routes>
             <Route path="home" element={<Navigate to="/analytics" replace />} />
-            <Route path="projects" element={<Projects />} />
-            <Route path="projects/create" element={<ProjectCreate />} />
-            <Route path="projects/:id" element={<ProjectView />} />
-            <Route path="projects/:id/edit" element={<ProjectEdit />} />
             <Route path="issues" element={<Issues />} />
-            <Route path="testimonies" element={<Testimony />} />
             <Route path="map" element={<TuvibeMap />} />
-            <Route path="documents" element={<Documents />} />
-            <Route path="audit" element={<Audit />} />
             <Route path="verification" element={<Verification />} />
+            <Route path="marketplace" element={<Marketplace />} />
             <Route path="analytics" element={<Analytics />} />
-            <Route
-              path="reports"
-              element={
-                <Suspense
-                  fallback={
-                    <Box
-                      sx={{
-                        flexGrow: 1,
-                        p: { xs: 1, sm: 1.5 },
-                        minHeight: "100vh",
-                        background: "#f5f7fa",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Card
-                        sx={{
-                          background: "white",
-                          borderRadius: 4,
-                          boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-                          overflow: "hidden",
-                          position: "relative",
-                          "&::before": {
-                            content: '""',
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: "4px",
-                            background:
-                              "linear-gradient(90deg, #667eea, #764ba2, #f093fb)",
-                          },
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            height: "400px",
-                            width: "600px",
-                          }}
-                        >
-                          <CircularProgress
-                            size={60}
-                            sx={{ color: "#667eea" }}
-                          />
-                        </Box>
-                      </Card>
-                    </Box>
-                  }
-                >
-                  <Reports />
-                </Suspense>
-              }
-            />
             <Route path="users" element={<UsersTable />} />
             <Route path="settings" element={<Settings user={user} />} />
             <Route path="*" element={<NotFound />} />
