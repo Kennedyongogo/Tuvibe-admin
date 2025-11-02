@@ -113,6 +113,7 @@ const Analytics = () => {
     marketStats: {},
     engagementStats: {},
     unlocksByCategory: [],
+    boostStats: {},
     newUsersStats: {},
     recentActivity: {},
   });
@@ -307,6 +308,15 @@ const Analytics = () => {
               secondary="Shows chat unlocks and profile views indicating user activity"
             />
           </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingUpIcon color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Boost Stats"
+              secondary="Displays profile boost metrics including total purchases, active boosts, tokens spent, and users who have boosted"
+            />
+          </ListItem>
         </List>
 
         <Alert severity="info" sx={{ mt: 3 }}>
@@ -314,6 +324,7 @@ const Analytics = () => {
             <strong>💡 Tip:</strong> These metrics help you understand your platform's 
             performance, track user engagement, monitor premium membership status, and identify areas 
             needing attention. Use the tabs to dive deeper into specific areas like Tokens, Premium, and Market.
+            Boost statistics show how users are investing in profile visibility, which indicates monetization success.
           </Typography>
         </Alert>
       </DialogContent>
@@ -428,10 +439,80 @@ const Analytics = () => {
           </ListItem>
         </List>
 
+        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
+          🚀 Boost Token Usage
+        </Typography>
+        <List dense>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingUpIcon color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Total Tokens Spent on Boosts"
+              secondary="The cumulative amount of tokens users have spent on profile boosts"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingUp color="success" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Total Boosts Purchased"
+              secondary="The total number of boost purchases made by users across all time periods"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <CheckCircleIcon color="info" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Currently Active Boosts"
+              secondary="Number of profiles that currently have an active boost (is_featured_until > current time)"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <PeopleIcon color="primary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Users with Boost History"
+              secondary="Total number of users who have purchased at least one boost (boost_score > 0)"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <AssessmentIcon color="secondary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Average Boost Score"
+              secondary="The average boost_score across all users, indicating overall boost adoption"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <TrendingUp color="primary" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Boost Purchases by Time Period"
+              secondary="Shows boost purchase counts for today, this week, and this month to track trends"
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemIcon>
+              <AccountBalanceWallet color="warning" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Boost Token Spending by Time Period"
+              secondary="Shows token amounts spent on boosts for today, this week, and this month"
+            />
+          </ListItem>
+        </List>
+
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
             <strong>💡 Tip:</strong> Monitor token circulation to understand user engagement and spending patterns. 
             High token deductions indicate active platform usage, while increasing circulation suggests growing user base or promotional activity.
+            Boost metrics show how effectively the profile boost feature is driving revenue and user investment in visibility.
           </Typography>
         </Alert>
       </DialogContent>
@@ -816,6 +897,115 @@ const Analytics = () => {
           </Card>
         </Box>
       )}
+
+      {/* Boost Token Usage */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+          Boost Token Usage
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: "#D4AF37", mb: 1 }}>
+                {analyticsData.boostStats?.totalTokensSpentOnBoosts || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Tokens Spent on Boosts
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
+                {analyticsData.boostStats?.totalBoostsPurchased || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Boosts Purchased
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: "#4caf50", mb: 1 }}>
+                {analyticsData.boostStats?.activeBoosts || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Currently Active Boosts
+              </Typography>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Time-based Boost Metrics */}
+        <Grid container spacing={3} sx={{ mt: 2 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Boost Purchases (Time Period)
+              </Typography>
+              <Stack spacing={2}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(212, 175, 55, 0.05)", borderRadius: 2 }}>
+                  <Typography fontWeight="500">Today</Typography>
+                  <Chip label={analyticsData.boostStats?.boostsToday || 0} color="warning" />
+                </Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
+                  <Typography fontWeight="500">This Week</Typography>
+                  <Chip label={analyticsData.boostStats?.boostsThisWeek || 0} color="secondary" />
+                </Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
+                  <Typography fontWeight="500">This Month</Typography>
+                  <Chip label={analyticsData.boostStats?.boostsThisMonth || 0} color="success" />
+                </Box>
+              </Stack>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Boost Token Spending (Time Period)
+              </Typography>
+              <Stack spacing={2}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(212, 175, 55, 0.05)", borderRadius: 2 }}>
+                  <Typography fontWeight="500">Tokens Today</Typography>
+                  <Chip label={analyticsData.boostStats?.boostTokensToday || 0} color="warning" />
+                </Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
+                  <Typography fontWeight="500">Tokens This Week</Typography>
+                  <Chip label={analyticsData.boostStats?.boostTokensThisWeek || 0} color="secondary" />
+                </Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
+                  <Typography fontWeight="500">Tokens This Month</Typography>
+                  <Chip label={analyticsData.boostStats?.boostTokensThisMonth || 0} color="success" />
+                </Box>
+              </Stack>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Additional Boost Metrics */}
+        <Grid container spacing={3} sx={{ mt: 2 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: "#2196f3", mb: 1 }}>
+                {analyticsData.boostStats?.usersWithBoostHistory || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Users with Boost History
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: "#ff9800", mb: 1 }}>
+                {analyticsData.boostStats?.averageBoostScore || "0"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Average Boost Score
+              </Typography>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
     </Box>
   );
 
@@ -1855,14 +2045,6 @@ const Analytics = () => {
             textColor: "#7b1fa2",
             iconBg: "rgba(123, 31, 162, 0.1)",
           };
-        case "Total Documents":
-          return {
-            icon: <AssessmentIcon sx={{ fontSize: 40, color: "#388e3c" }} />,
-            bgColor: "linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%)",
-            borderColor: "#388e3c",
-            textColor: "#388e3c",
-            iconBg: "rgba(56, 142, 60, 0.1)",
-          };
         case "Total Users":
           return {
             icon: <PeopleIcon sx={{ fontSize: 40, color: "#f57c00" }} />,
@@ -1870,6 +2052,46 @@ const Analytics = () => {
             borderColor: "#f57c00",
             textColor: "#f57c00",
             iconBg: "rgba(245, 124, 0, 0.1)",
+          };
+        case "Premium Users":
+          return {
+            icon: <VerifiedUser sx={{ fontSize: 40, color: "#9c27b0" }} />,
+            bgColor: "linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%)",
+            borderColor: "#9c27b0",
+            textColor: "#9c27b0",
+            iconBg: "rgba(156, 39, 176, 0.1)",
+          };
+        case "Online Users":
+          return {
+            icon: <AccountCircleIcon sx={{ fontSize: 40, color: "#2196f3" }} />,
+            bgColor: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
+            borderColor: "#2196f3",
+            textColor: "#2196f3",
+            iconBg: "rgba(33, 150, 243, 0.1)",
+          };
+        case "Total Market Items":
+          return {
+            icon: <Store sx={{ fontSize: 40, color: "#4caf50" }} />,
+            bgColor: "linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%)",
+            borderColor: "#4caf50",
+            textColor: "#4caf50",
+            iconBg: "rgba(76, 175, 80, 0.1)",
+          };
+        case "Pending Verifications":
+          return {
+            icon: <CheckCircleIcon sx={{ fontSize: 40, color: "#ff9800" }} />,
+            bgColor: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
+            borderColor: "#ff9800",
+            textColor: "#ff9800",
+            iconBg: "rgba(255, 152, 0, 0.1)",
+          };
+        case "Total Admins":
+          return {
+            icon: <AccountCircleIcon sx={{ fontSize: 40, color: "#607d8b" }} />,
+            bgColor: "linear-gradient(135deg, #ECEFF1 0%, #CFD8DC 100%)",
+            borderColor: "#607d8b",
+            textColor: "#607d8b",
+            iconBg: "rgba(96, 125, 139, 0.1)",
           };
         case "Active Users":
           return {
@@ -1918,18 +2140,21 @@ const Analytics = () => {
     const style = getCardStyle(title);
 
     return (
-      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <Card
           sx={{
-            borderRadius: "16px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            borderRadius: "20px",
+            boxShadow: "0 6px 24px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)",
             background: style.bgColor,
-            border: `1px solid ${style.borderColor}20`,
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            border: `2px solid ${style.borderColor}30`,
+            transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+            cursor: "pointer",
             "&:hover": {
-              transform: "translateY(-8px)",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
+              transform: "translateY(-12px) scale(1.02)",
+              boxShadow: `0 12px 40px ${style.borderColor}40, 0 4px 16px rgba(0,0,0,0.12)`,
               borderColor: style.borderColor,
+              background: style.bgColor,
+              filter: "brightness(1.05)",
             },
             height: "100%",
             display: "flex",
@@ -1942,20 +2167,37 @@ const Analytics = () => {
               top: 0,
               left: 0,
               right: 0,
-              height: "4px",
-              background: `linear-gradient(90deg, ${style.borderColor}, ${style.borderColor}80)`,
+              height: "5px",
+              background: `linear-gradient(90deg, ${style.borderColor}, ${style.borderColor}80, ${style.borderColor})`,
+              opacity: 0.9,
+            },
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              top: -50,
+              right: -50,
+              width: "150px",
+              height: "150px",
+              borderRadius: "50%",
+              background: `radial-gradient(circle, ${style.borderColor}15 0%, transparent 70%)`,
+              opacity: 0.5,
+              transition: "opacity 0.4s ease",
+            },
+            "&:hover::after": {
+              opacity: 0.8,
             },
           }}
         >
           <CardContent
             sx={{
-              p: 3,
+              p: 4,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               textAlign: "center",
               flex: 1,
               position: "relative",
+              zIndex: 1,
             }}
           >
             <Box
@@ -1963,18 +2205,22 @@ const Analytics = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                mb: 2,
-                width: 80,
-                height: 80,
+                mb: 3,
+                width: 90,
+                height: 90,
                 borderRadius: "50%",
                 backgroundColor: style.iconBg,
-                border: `2px solid ${style.borderColor}30`,
-                transition: "all 0.3s ease",
+                border: `3px solid ${style.borderColor}40`,
+                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: `0 4px 12px ${style.borderColor}30`,
                 "&:hover": {
-                  transform: "scale(1.1)",
+                  transform: "scale(1.15) rotate(5deg)",
                   backgroundColor: style.borderColor,
+                  borderColor: style.borderColor,
+                  boxShadow: `0 8px 24px ${style.borderColor}50`,
                   "& .MuiSvgIcon-root": {
                     color: "white",
+                    transform: "scale(1.1)",
                   },
                 },
               }}
@@ -1982,28 +2228,33 @@ const Analytics = () => {
               {style.icon}
             </Box>
             <Typography
-              variant="h3"
-              fontWeight="800"
+              variant="h2"
+              fontWeight="900"
               sx={{
                 color: style.textColor,
-                mb: 1,
-                background: `linear-gradient(135deg, ${style.textColor}, ${style.textColor}80)`,
+                mb: 1.5,
+                fontSize: { xs: "2.5rem", sm: "3rem", md: "3.5rem" },
+                background: `linear-gradient(135deg, ${style.textColor}, ${style.borderColor}CC)`,
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
-                textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                textShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.1,
               }}
             >
               {value?.toLocaleString() || 0}
             </Typography>
             <Typography
               variant="h6"
-              fontWeight="600"
+              fontWeight="700"
               sx={{
                 color: style.textColor,
-                opacity: 0.8,
-                fontSize: "0.9rem",
-                lineHeight: 1.2,
+                opacity: 0.9,
+                fontSize: { xs: "0.95rem", sm: "1rem" },
+                lineHeight: 1.3,
+                letterSpacing: "0.02em",
+                textTransform: "none",
               }}
             >
               {title}
@@ -2090,9 +2341,9 @@ const Analytics = () => {
             />
           </Grid>
 
-          {/* Quick Stats - 3 columns */}
+          {/* Quick Stats - 4 columns */}
           <Grid container spacing={3} sx={{ mt: 3 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card
                 sx={{
                   borderRadius: 3,
@@ -2160,7 +2411,7 @@ const Analytics = () => {
               </Card>
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card
                 sx={{
                   borderRadius: 3,
@@ -2228,7 +2479,7 @@ const Analytics = () => {
               </Card>
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card
                 sx={{
                   borderRadius: 3,
@@ -2245,82 +2496,190 @@ const Analytics = () => {
               >
                 <CardContent
                   sx={{
-                    p: 3,
+                    p: 2,
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
                   }}
                 >
-                  <Typography variant="h6" gutterBottom fontWeight="600">
-                    Engagement Stats
+                  <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 1.5, fontSize: "1rem" }}>
+                    Boost Stats
                   </Typography>
-                  <Stack spacing={2} sx={{ flex: 1 }}>
+                  <Stack spacing={1.2} sx={{ flex: 1 }}>
                     <Box
                       display="flex"
                       justifyContent="space-between"
                       alignItems="center"
-                      p={2}
+                      p={1.2}
                       sx={{
-                        backgroundColor: "rgba(25, 118, 210, 0.05)",
-                        borderRadius: 2,
-                        border: "1px solid rgba(25, 118, 210, 0.1)",
+                        backgroundColor: "rgba(212, 175, 55, 0.05)",
+                        borderRadius: 1.5,
+                        border: "1px solid rgba(212, 175, 55, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Chat Unlocks</Typography>
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Total Purchased</Typography>
                       <Chip
-                        label={analyticsData.engagementStats?.totalChatUnlocks || 0}
-                        color="primary"
-                      />
-                    </Box>
-                    <Box
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      p={2}
-                      sx={{
-                        backgroundColor: "rgba(255, 152, 0, 0.05)",
-                        borderRadius: 2,
-                        border: "1px solid rgba(255, 152, 0, 0.1)",
-                      }}
-                    >
-                      <Typography fontWeight="500">Profile Views</Typography>
-                      <Chip
-                        label={analyticsData.engagementStats?.totalProfileViews || 0}
+                        label={analyticsData.boostStats?.totalBoostsPurchased || 0}
                         color="warning"
+                        size="small"
                       />
                     </Box>
                     <Box
                       display="flex"
                       justifyContent="space-between"
                       alignItems="center"
-                      p={2}
+                      p={1.2}
+                      sx={{
+                        backgroundColor: "rgba(76, 175, 80, 0.05)",
+                        borderRadius: 1.5,
+                        border: "1px solid rgba(76, 175, 80, 0.1)",
+                      }}
+                    >
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Active Boosts</Typography>
+                      <Chip
+                        label={analyticsData.boostStats?.activeBoosts || 0}
+                        color="success"
+                        size="small"
+                      />
+                    </Box>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      p={1.2}
                       sx={{
                         backgroundColor: "rgba(156, 39, 176, 0.05)",
-                        borderRadius: 2,
+                        borderRadius: 1.5,
                         border: "1px solid rgba(156, 39, 176, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Favourites</Typography>
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Tokens Spent</Typography>
                       <Chip
-                        label={analyticsData.engagementStats?.totalFavourites || 0}
+                        label={analyticsData.boostStats?.totalTokensSpentOnBoosts || 0}
                         color="secondary"
+                        size="small"
                       />
                     </Box>
                     <Box
                       display="flex"
                       justifyContent="space-between"
                       alignItems="center"
-                      p={2}
+                      p={1.2}
+                      sx={{
+                        backgroundColor: "rgba(33, 150, 243, 0.05)",
+                        borderRadius: 1.5,
+                        border: "1px solid rgba(33, 150, 243, 0.1)",
+                      }}
+                    >
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Users Boosted</Typography>
+                      <Chip
+                        label={analyticsData.boostStats?.usersWithBoostHistory || 0}
+                        color="primary"
+                        size="small"
+                      />
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                    transform: "translateY(-2px)",
+                  },
+                  height: 280,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <CardContent
+                  sx={{
+                    p: 2,
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 1.5, fontSize: "1rem" }}>
+                    Engagement Stats
+                  </Typography>
+                  <Stack spacing={1.2} sx={{ flex: 1 }}>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      p={1.2}
+                      sx={{
+                        backgroundColor: "rgba(25, 118, 210, 0.05)",
+                        borderRadius: 1.5,
+                        border: "1px solid rgba(25, 118, 210, 0.1)",
+                      }}
+                    >
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Chat Unlocks</Typography>
+                      <Chip
+                        label={analyticsData.engagementStats?.totalChatUnlocks || 0}
+                        color="primary"
+                        size="small"
+                      />
+                    </Box>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      p={1.2}
+                      sx={{
+                        backgroundColor: "rgba(255, 152, 0, 0.05)",
+                        borderRadius: 1.5,
+                        border: "1px solid rgba(255, 152, 0, 0.1)",
+                      }}
+                    >
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Profile Views</Typography>
+                      <Chip
+                        label={analyticsData.engagementStats?.totalProfileViews || 0}
+                        color="warning"
+                        size="small"
+                      />
+                    </Box>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      p={1.2}
+                      sx={{
+                        backgroundColor: "rgba(156, 39, 176, 0.05)",
+                        borderRadius: 1.5,
+                        border: "1px solid rgba(156, 39, 176, 0.1)",
+                      }}
+                    >
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Favourites</Typography>
+                      <Chip
+                        label={analyticsData.engagementStats?.totalFavourites || 0}
+                        color="secondary"
+                        size="small"
+                      />
+                    </Box>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      p={1.2}
                       sx={{
                         backgroundColor: "rgba(0, 188, 212, 0.05)",
-                        borderRadius: 2,
+                        borderRadius: 1.5,
                         border: "1px solid rgba(0, 188, 212, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Notifications</Typography>
+                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Notifications</Typography>
                       <Chip
                         label={analyticsData.engagementStats?.totalNotifications || 0}
                         color="info"
+                        size="small"
                       />
                     </Box>
                   </Stack>
@@ -2331,133 +2690,6 @@ const Analytics = () => {
 
           {/* Additional Analytics Charts */}
           <Grid container spacing={3} sx={{ mt: 3 }}>
-            {/* Documents by Type */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 3, height: 400 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Documents by Type
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  {(analyticsData.documents?.byType || []).length > 0 ? (
-                    <PieChart>
-                      <Pie
-                        data={(analyticsData.documents?.byType || []).map(
-                          (item) => ({
-                            name: item.file_type.toUpperCase(),
-                            value: parseInt(item.count) || 0,
-                          })
-                        )}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius="80%"
-                        fill="#8884d8"
-                      >
-                        {(analyticsData.documents?.byType || []).map(
-                          (entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          )
-                        )}
-                      </Pie>
-                      <Tooltip formatter={(value) => [value, "Documents"]} />
-                      <Legend />
-                    </PieChart>
-                  ) : (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        No document data available
-                      </Typography>
-                    </Box>
-                  )}
-                </ResponsiveContainer>
-              </Card>
-            </Grid>
-
-            {/* Users by Role */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 3, height: 400 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Users by Role
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  {(analyticsData.users?.byRole || []).length > 0 ? (
-                    <BarChart
-                      data={(analyticsData.users?.byRole || []).map(
-                        (item) => ({
-                          name: item.role.replace('-', ' ').toUpperCase(),
-                          count: parseInt(item.count) || 0,
-                        })
-                      )}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [value, "Users"]} />
-                      <Bar dataKey="count" fill="#43e97b" />
-                    </BarChart>
-                  ) : (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        No user role data available
-                      </Typography>
-                    </Box>
-                  )}
-                </ResponsiveContainer>
-              </Card>
-            </Grid>
-
-            {/* Activity by Action - Full Width */}
-            <Grid size={{ xs: 12 }}>
-              <Card sx={{ p: 3, height: 400 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Activity by Action (Last 7 Days)
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  {(analyticsData.activity?.byAction || []).length > 0 ? (
-                    <BarChart
-                      data={(analyticsData.activity?.byAction || []).map(
-                        (item) => ({
-                          name: item.action.toUpperCase(),
-                          count: parseInt(item.count) || 0,
-                        })
-                      )}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [value, "Actions"]} />
-                      <Bar dataKey="count" fill="#f5576c" />
-                    </BarChart>
-                  ) : (
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        No activity data available
-                      </Typography>
-                    </Box>
-                  )}
-                </ResponsiveContainer>
-              </Card>
-            </Grid>
-
             {/* Category Breakdown */}
             {analyticsData.categoryBreakdown && Object.keys(analyticsData.categoryBreakdown).length > 0 && (
               <Grid size={{ xs: 12, md: 6 }}>
@@ -2496,63 +2728,116 @@ const Analytics = () => {
 
             {/* New Users Stats */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
+              <Card sx={{ p: 2.5, height: 400, display: "flex", flexDirection: "column" }}>
+                <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 2, fontSize: "1rem" }}>
                   New Users Statistics
                 </Typography>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Box textAlign="center" p={2}>
-                      <Typography variant="h4" color="primary" fontWeight="bold">
-                        {analyticsData.newUsersStats?.today || 0}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Today
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Box textAlign="center" p={2}>
-                      <Typography variant="h4" color="secondary" fontWeight="bold">
-                        {analyticsData.newUsersStats?.thisWeek || 0}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        This Week
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Box textAlign="center" p={2}>
-                      <Typography variant="h4" color="success.main" fontWeight="bold">
-                        {analyticsData.newUsersStats?.thisMonth || 0}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        This Month
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
+                <Stack spacing={1.5} sx={{ flex: 1, justifyContent: "space-between" }}>
+                  {/* Today Card */}
+                  <Card 
+                    sx={{ 
+                      flex: 1,
+                      minHeight: 0,
+                      p: 2, 
+                      textAlign: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
+                      border: "2px solid rgba(25, 118, 210, 0.3)",
+                      borderRadius: 2,
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
+                      }
+                    }}
+                  >
+                    <Typography variant="h4" color="primary" fontWeight="bold" sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}>
+                      {analyticsData.newUsersStats?.today || 0}
+                    </Typography>
+                    <Typography variant="body2" color="primary" fontWeight="600" sx={{ fontSize: "0.875rem" }}>
+                      Today
+                    </Typography>
+                  </Card>
+                  
+                  {/* This Week Card */}
+                  <Card 
+                    sx={{ 
+                      flex: 1,
+                      minHeight: 0,
+                      p: 2, 
+                      textAlign: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
+                      border: "2px solid rgba(255, 152, 0, 0.3)",
+                      borderRadius: 2,
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
+                      }
+                    }}
+                  >
+                    <Typography variant="h4" color="warning.main" fontWeight="bold" sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}>
+                      {analyticsData.newUsersStats?.thisWeek || 0}
+                    </Typography>
+                    <Typography variant="body2" color="warning.main" fontWeight="600" sx={{ fontSize: "0.875rem" }}>
+                      This Week
+                    </Typography>
+                  </Card>
+                  
+                  {/* This Month Card */}
+                  <Card 
+                    sx={{ 
+                      flex: 1,
+                      minHeight: 0,
+                      p: 2, 
+                      textAlign: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      background: "linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%)",
+                      border: "2px solid rgba(76, 175, 80, 0.3)",
+                      borderRadius: 2,
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 12px rgba(76, 175, 80, 0.3)",
+                      }
+                    }}
+                  >
+                    <Typography variant="h4" color="success.main" fontWeight="bold" sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}>
+                      {analyticsData.newUsersStats?.thisMonth || 0}
+                    </Typography>
+                    <Typography variant="body2" color="success.main" fontWeight="600" sx={{ fontSize: "0.875rem" }}>
+                      This Month
+                    </Typography>
+                  </Card>
+                </Stack>
               </Card>
             </Grid>
 
             {/* Engagement Time-based Metrics */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
+              <Card sx={{ p: 3, height: 400, display: "flex", flexDirection: "column" }}>
+                <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 3 }}>
                   Engagement Time-based Metrics
                 </Typography>
-                <Stack spacing={2} sx={{ mt: 2 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(25, 118, 210, 0.05)", borderRadius: 2 }}>
-                    <Typography fontWeight="500">Unlocks Today</Typography>
-                    <Chip label={analyticsData.engagementStats?.unlocksToday || 0} color="primary" />
+                <Stack spacing={2.5} sx={{ flex: 1, justifyContent: "center" }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2.5} sx={{ backgroundColor: "rgba(25, 118, 210, 0.05)", borderRadius: 2 }}>
+                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>Unlocks Today</Typography>
+                    <Chip label={analyticsData.engagementStats?.unlocksToday || 0} color="primary" size="medium" />
                   </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
-                    <Typography fontWeight="500">Unlocks This Week</Typography>
-                    <Chip label={analyticsData.engagementStats?.unlocksThisWeek || 0} color="secondary" />
+                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2.5} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
+                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>Unlocks This Week</Typography>
+                    <Chip label={analyticsData.engagementStats?.unlocksThisWeek || 0} color="secondary" size="medium" />
                   </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
-                    <Typography fontWeight="500">Unlocks This Month</Typography>
-                    <Chip label={analyticsData.engagementStats?.unlocksThisMonth || 0} color="success" />
+                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2.5} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
+                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>Unlocks This Month</Typography>
+                    <Chip label={analyticsData.engagementStats?.unlocksThisMonth || 0} color="success" size="medium" />
                   </Box>
                 </Stack>
               </Card>
@@ -2643,235 +2928,6 @@ const Analytics = () => {
               </Grid>
             )}
 
-            {/* Trends Summary */}
-            <Grid size={{ xs: 12 }}>
-              <Card 
-                sx={{ 
-                  p: 3,
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 2,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-              >
-                <Typography 
-                  variant="h6" 
-                  gutterBottom 
-                  fontWeight="600"
-                  sx={{ mb: 3, color: '#333' }}
-                >
-                  30-Day Trends Summary
-                </Typography>
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    gap: 2, 
-                    flexWrap: 'nowrap',
-                    justifyContent: 'space-between',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <Card
-                    sx={{
-                      flex: '1',
-                      minWidth: 0,
-                      p: 3,
-                      textAlign: "center",
-                      background: 'linear-gradient(135deg, #f5f5f5 0%, #e8f5e8 100%)',
-                      border: 'none',
-                      borderRadius: 3,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      transition: 'transform 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                  >
-                    <Typography 
-                      variant="h3" 
-                      fontWeight="bold"
-                      sx={{ 
-                        color: '#2e7d32',
-                        mb: 1,
-                        fontSize: '2.5rem'
-                      }}
-                    >
-                      {analyticsData.trends?.last30Days?.inquiries || 0}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#666',
-                        fontWeight: 500,
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      New Inquiries
-                    </Typography>
-                  </Card>
-                  
-                  <Card
-                    sx={{
-                      flex: '1',
-                      minWidth: 0,
-                      p: 3,
-                      textAlign: "center",
-                      background: 'linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%)',
-                      border: 'none',
-                      borderRadius: 3,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      transition: 'transform 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                  >
-                    <Typography 
-                      variant="h3" 
-                      fontWeight="bold"
-                      sx={{ 
-                        color: '#2e7d32',
-                        mb: 1,
-                        fontSize: '2.5rem'
-                      }}
-                    >
-                      {analyticsData.trends?.last30Days?.resolvedInquiries || 0}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#666',
-                        fontWeight: 500,
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      Resolved Inquiries
-                    </Typography>
-                  </Card>
-                  
-                  <Card
-                    sx={{
-                      flex: '1',
-                      minWidth: 0,
-                      p: 3,
-                      textAlign: "center",
-                      background: 'linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%)',
-                      border: 'none',
-                      borderRadius: 3,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      transition: 'transform 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                  >
-                    <Typography 
-                      variant="h3" 
-                      fontWeight="bold"
-                      sx={{ 
-                        color: '#f57c00',
-                        mb: 1,
-                        fontSize: '2.5rem'
-                      }}
-                    >
-                      {analyticsData.trends?.last30Days?.projects || 0}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#666',
-                        fontWeight: 500,
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      New Projects
-                    </Typography>
-                  </Card>
-                  
-                  <Card
-                    sx={{
-                      flex: '1',
-                      minWidth: 0,
-                      p: 3,
-                      textAlign: "center",
-                      background: 'linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%)',
-                      border: 'none',
-                      borderRadius: 3,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      transition: 'transform 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                  >
-                    <Typography 
-                      variant="h3" 
-                      fontWeight="bold"
-                      sx={{ 
-                        color: '#2e7d32',
-                        mb: 1,
-                        fontSize: '2.5rem'
-                      }}
-                    >
-                      {analyticsData.trends?.last30Days?.completedProjects || 0}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#666',
-                        fontWeight: 500,
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      Completed Projects
-                    </Typography>
-                  </Card>
-                  
-                  <Card
-                    sx={{
-                      flex: '1',
-                      minWidth: 0,
-                      p: 3,
-                      textAlign: "center",
-                      background: 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)',
-                      border: 'none',
-                      borderRadius: 3,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                      transition: 'transform 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                  >
-                    <Typography 
-                      variant="h3" 
-                      fontWeight="bold"
-                      sx={{ 
-                        color: '#ef6c00',
-                        mb: 1,
-                        fontSize: '2.5rem'
-                      }}
-                    >
-                      {analyticsData.trends?.last30Days?.documents || 0}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#666',
-                        fontWeight: 500,
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      New Documents
-                    </Typography>
-                  </Card>
-                </Box>
-              </Card>
-            </Grid>
           </Grid>
         </>
       )}
@@ -4573,86 +4629,85 @@ const Analytics = () => {
         </IconButton>
       </Box>
       <Grid container spacing={3}>
+        {/* First Row - 4 cards */}
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#667eea", mb: 1 }}>
               {analyticsData.marketStats?.totalItems || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Total Items
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#FFD700", mb: 1 }}>
               {analyticsData.marketStats?.featuredItems || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Featured Items
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
               {analyticsData.marketStats?.hotDeals || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Hot Deals
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#4ecdc4", mb: 1 }}>
               {analyticsData.marketStats?.weekendPicks || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Weekend Picks
             </Typography>
           </Card>
         </Grid>
+        
+        {/* Second Row - 4 cards */}
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#9e9e9e", mb: 1 }}>
               {analyticsData.marketStats?.regularItems || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Regular Items
             </Typography>
           </Card>
         </Grid>
-      </Grid>
-
-      {/* Growth Metrics */}
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#4caf50", mb: 1 }}>
               {analyticsData.marketStats?.itemsAddedToday || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Items Added Today
             </Typography>
           </Card>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#2196f3", mb: 1 }}>
               {analyticsData.marketStats?.itemsAddedThisWeek || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Items Added This Week
             </Typography>
           </Card>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#ff9800", mb: 1 }}>
               {analyticsData.marketStats?.itemsAddedThisMonth || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
               Items Added This Month
             </Typography>
           </Card>
