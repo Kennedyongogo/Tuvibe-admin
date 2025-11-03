@@ -62,10 +62,12 @@ import {
   PhotoCamera as PhotoIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
 import Swal from "sweetalert2";
 
 const UsersTable = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Helper to build URL for uploaded assets using Vite proxy
   const buildImageUrl = (imageUrl) => {
@@ -447,7 +449,9 @@ const UsersTable = () => {
       Swal.fire({
         icon: "success",
         title: "Success!",
-        text: `${type === "photo" ? "Photo" : "Bio"} ${action === "approve" ? "approved" : "rejected"} successfully.`,
+        text: `${type === "photo" ? "Photo" : "Bio"} ${
+          action === "approve" ? "approved" : "rejected"
+        } successfully.`,
         timer: 2000,
         showConfirmButton: false,
       });
@@ -552,7 +556,7 @@ const UsersTable = () => {
           sx={{
             background:
               "linear-gradient(135deg, #ffffff 0%, #fef5e7 50%, #fff9e6 100%)",
-            p: 3,
+            p: { xs: 2, sm: 3 },
             color: "#2c3e50",
             position: "relative",
             overflow: "hidden",
@@ -597,14 +601,21 @@ const UsersTable = () => {
                 variant="h4"
                 sx={{
                   fontWeight: 600,
-                  mb: 1,
+                  mb: { xs: 0.5, sm: 1 },
                   color: "#2c3e50",
-                  fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+                  fontSize: { xs: "1.25rem", sm: "1.75rem", md: "2.125rem" },
                 }}
               >
                 Tuvibe Users Management
               </Typography>
-              <Typography variant="body1" sx={{ color: "#7f8c8d" }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: "#7f8c8d",
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
+                  display: { xs: "none", sm: "block" },
+                }}
+              >
                 Manage users and their roles
               </Typography>
             </Box>
@@ -654,16 +665,23 @@ const UsersTable = () => {
           sx={{ p: { xs: 1, sm: 2, md: 3 }, minHeight: "calc(100vh - 200px)" }}
         >
           {/* Tabs */}
-          <Box mb={3}>
+          <Box mb={{ xs: 2, sm: 3 }}>
             <Tabs
               value={activeTab}
               onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
               sx={{
+                "& .MuiTabs-scrollButtons": {
+                  "&.Mui-disabled": { opacity: 0.3 },
+                },
                 "& .MuiTab-root": {
                   textTransform: "none",
                   fontWeight: 600,
-                  fontSize: "1rem",
-                  minHeight: 48,
+                  fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
+                  minHeight: { xs: 40, sm: 48 },
+                  px: { xs: 1, sm: 2 },
                   color: "#7f8c8d",
                   "&.Mui-selected": {
                     color: "#FFD700",
@@ -762,7 +780,7 @@ const UsersTable = () => {
               },
             }}
           >
-            <Table sx={{ minWidth: 600 }}>
+            <Table sx={{ minWidth: { xs: 400, sm: 600 } }}>
               <TableHead>
                 <TableRow
                   sx={{
@@ -772,7 +790,7 @@ const UsersTable = () => {
                     "& .MuiTableCell-head": {
                       color: "#2c3e50",
                       fontWeight: 700,
-                      fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                      fontSize: { xs: "0.7rem", sm: "0.85rem", md: "0.95rem" },
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       border: "none",
@@ -780,22 +798,49 @@ const UsersTable = () => {
                     },
                   }}
                 >
-                  <TableCell>No</TableCell>
+                  <TableCell sx={{ width: { xs: "60px", sm: "80px" } }}>
+                    No
+                  </TableCell>
                   <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
+                  <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+                    Email
+                  </TableCell>
                   {userTypeTabs[activeTab]?.value === "admin" ? (
                     <>
-                      <TableCell>Phone</TableCell>
-                      <TableCell>Role</TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", lg: "table-cell" } }}
+                      >
+                        Phone
+                      </TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", md: "table-cell" } }}
+                      >
+                        Role
+                      </TableCell>
                     </>
                   ) : (
                     <>
-                      <TableCell>City</TableCell>
-                      <TableCell>Category</TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", lg: "table-cell" } }}
+                      >
+                        City
+                      </TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", md: "table-cell" } }}
+                      >
+                        Category
+                      </TableCell>
                     </>
                   )}
-                  <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                    Status
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ width: { xs: "100px", sm: "auto" } }}
+                  >
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -842,33 +887,160 @@ const UsersTable = () => {
                       }}
                     >
                       <TableCell sx={{ fontWeight: 600, color: "#FFD700" }}>
-                        {page * rowsPerPage + idx + 1}
-                      </TableCell>
-                      <TableCell>
                         <Typography
                           variant="body2"
-                          fontWeight="600"
-                          sx={{ color: "#2c3e50" }}
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                          }}
                         >
-                          {user.full_name || user.name || "N/A"}
+                          {page * rowsPerPage + idx + 1}
                         </Typography>
                       </TableCell>
                       <TableCell>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight="600"
+                            sx={{
+                              color: "#2c3e50",
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            }}
+                          >
+                            {user.full_name || user.name || "N/A"}
+                          </Typography>
+                          {/* Show email on mobile below name */}
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "#7f8c8d",
+                              fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                              display: { xs: "block", md: "none" },
+                              mt: 0.5,
+                            }}
+                          >
+                            {user.email}
+                          </Typography>
+                          {/* Show status on mobile below name */}
+                          <Box
+                            sx={{
+                              display: { xs: "flex", sm: "none" },
+                              mt: 0.5,
+                              gap: 0.5,
+                            }}
+                          >
+                            <Chip
+                              label={
+                                user.isActive !== undefined
+                                  ? user.isActive
+                                    ? "Active"
+                                    : "Inactive"
+                                  : user.isVerified
+                                  ? "Verified"
+                                  : "Not Verified"
+                              }
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                fontSize: "0.6rem",
+                                height: 18,
+                                textTransform: "capitalize",
+                                fontWeight: 600,
+                                borderRadius: 1,
+                                ...(user.isActive !== undefined
+                                  ? {
+                                      borderColor: user.isActive
+                                        ? "#90EE90"
+                                        : "#FFB6C1",
+                                      color: user.isActive
+                                        ? "#2d8659"
+                                        : "#b85050",
+                                      backgroundColor: user.isActive
+                                        ? "rgba(144, 238, 144, 0.1)"
+                                        : "rgba(255, 182, 193, 0.1)",
+                                    }
+                                  : user.isVerified
+                                  ? {
+                                      borderColor: "#FFD700",
+                                      color: "#b8860b",
+                                      backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                    }
+                                  : {
+                                      borderColor: "#B0E0E6",
+                                      color: "#5a8a93",
+                                      backgroundColor:
+                                        "rgba(176, 224, 230, 0.1)",
+                                    }),
+                                "& .MuiChip-label": {
+                                  px: 0.5,
+                                },
+                              }}
+                            />
+                            {/* Show category/role on mobile if available */}
+                            {userTypeTabs[activeTab]?.value === "admin"
+                              ? user.role && (
+                                  <Chip
+                                    label={formatRole(user.role)}
+                                    color={getRoleColor(user.role)}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                      fontSize: "0.6rem",
+                                      height: 18,
+                                      fontWeight: 600,
+                                      borderRadius: 1,
+                                      "& .MuiChip-label": {
+                                        px: 0.5,
+                                      },
+                                    }}
+                                  />
+                                )
+                              : user.category && (
+                                  <Chip
+                                    label={user.category}
+                                    color="info"
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                      fontSize: "0.6rem",
+                                      height: 18,
+                                      textTransform: "capitalize",
+                                      fontWeight: 600,
+                                      borderRadius: 1,
+                                      "& .MuiChip-label": {
+                                        px: 0.5,
+                                      },
+                                    }}
+                                  />
+                                )}
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", md: "table-cell" } }}
+                      >
                         <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
                           {user.email}
                         </Typography>
                       </TableCell>
                       {userTypeTabs[activeTab]?.value === "admin" ? (
                         <>
-                          <TableCell>
+                          <TableCell
+                            sx={{ display: { xs: "none", lg: "table-cell" } }}
+                          >
                             <Typography
                               variant="body2"
-                              sx={{ color: "#7f8c8d" }}
+                              sx={{
+                                color: "#7f8c8d",
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
                             >
                               {user.phone || "N/A"}
                             </Typography>
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            sx={{ display: { xs: "none", md: "table-cell" } }}
+                          >
                             <Chip
                               label={formatRole(user.role)}
                               color={getRoleColor(user.role)}
@@ -878,21 +1050,29 @@ const UsersTable = () => {
                                 textTransform: "capitalize",
                                 fontWeight: 600,
                                 borderRadius: 2,
+                                fontSize: { xs: "0.7rem", sm: "0.875rem" },
                               }}
                             />
                           </TableCell>
                         </>
                       ) : (
                         <>
-                          <TableCell>
+                          <TableCell
+                            sx={{ display: { xs: "none", lg: "table-cell" } }}
+                          >
                             <Typography
                               variant="body2"
-                              sx={{ color: "#7f8c8d" }}
+                              sx={{
+                                color: "#7f8c8d",
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
                             >
                               {user.city || "N/A"}
                             </Typography>
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            sx={{ display: { xs: "none", md: "table-cell" } }}
+                          >
                             <Chip
                               label={user.category || "N/A"}
                               color="info"
@@ -902,13 +1082,22 @@ const UsersTable = () => {
                                 textTransform: "capitalize",
                                 fontWeight: 600,
                                 borderRadius: 2,
+                                fontSize: { xs: "0.7rem", sm: "0.875rem" },
                               }}
                             />
                           </TableCell>
                         </>
                       )}
-                      <TableCell>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                      <TableCell
+                        sx={{ display: { xs: "none", sm: "table-cell" } }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                          }}
+                        >
                           <Chip
                             label={
                               user.isActive !== undefined
@@ -925,12 +1114,15 @@ const UsersTable = () => {
                               textTransform: "capitalize",
                               fontWeight: 600,
                               borderRadius: 2,
+                              fontSize: { xs: "0.7rem", sm: "0.875rem" },
                               ...(user.isActive !== undefined
                                 ? {
                                     borderColor: user.isActive
                                       ? "#90EE90"
                                       : "#FFB6C1",
-                                    color: user.isActive ? "#2d8659" : "#b85050",
+                                    color: user.isActive
+                                      ? "#2d8659"
+                                      : "#b85050",
                                     backgroundColor: user.isActive
                                       ? "rgba(144, 238, 144, 0.1)"
                                       : "rgba(255, 182, 193, 0.1)",
@@ -950,10 +1142,20 @@ const UsersTable = () => {
                           />
                           {/* Moderation Status Indicators */}
                           {userTypeTabs[activeTab]?.value === "public" && (
-                            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 0.5,
+                                flexWrap: "wrap",
+                              }}
+                            >
                               {user.photo_moderation_status === "pending" && (
                                 <Chip
-                                  icon={<PendingIcon sx={{ fontSize: "0.75rem !important" }} />}
+                                  icon={
+                                    <PendingIcon
+                                      sx={{ fontSize: "0.75rem !important" }}
+                                    />
+                                  }
                                   label="Photo Pending"
                                   size="small"
                                   sx={{
@@ -968,7 +1170,11 @@ const UsersTable = () => {
                               )}
                               {user.bio_moderation_status === "pending" && (
                                 <Chip
-                                  icon={<PendingIcon sx={{ fontSize: "0.75rem !important" }} />}
+                                  icon={
+                                    <PendingIcon
+                                      sx={{ fontSize: "0.75rem !important" }}
+                                    />
+                                  }
                                   label="Bio Pending"
                                   size="small"
                                   sx={{
@@ -985,8 +1191,8 @@ const UsersTable = () => {
                           )}
                         </Box>
                       </TableCell>
-                      <TableCell>
-                        <Box display="flex" gap={0.5}>
+                      <TableCell align="center">
+                        <Box display="flex" gap={0.5} justifyContent="center">
                           <Tooltip title="View User Details" arrow>
                             <IconButton
                               size="small"
@@ -994,6 +1200,8 @@ const UsersTable = () => {
                               sx={{
                                 color: "#5a8a93",
                                 backgroundColor: "rgba(176, 224, 230, 0.15)",
+                                width: { xs: 28, sm: 36 },
+                                height: { xs: 28, sm: 36 },
                                 "&:hover": {
                                   backgroundColor: "rgba(176, 224, 230, 0.25)",
                                   transform: "scale(1.1)",
@@ -1002,7 +1210,9 @@ const UsersTable = () => {
                                 borderRadius: 2,
                               }}
                             >
-                              <ViewIcon fontSize="small" />
+                              <ViewIcon
+                                fontSize={isMobile ? "small" : "small"}
+                              />
                             </IconButton>
                           </Tooltip>
                           {userTypeTabs[activeTab]?.value === "admin" && (
@@ -1014,6 +1224,8 @@ const UsersTable = () => {
                                   sx={{
                                     color: "#b8860b",
                                     backgroundColor: "rgba(255, 215, 0, 0.15)",
+                                    width: { xs: 28, sm: 36 },
+                                    height: { xs: 28, sm: 36 },
                                     "&:hover": {
                                       backgroundColor:
                                         "rgba(255, 215, 0, 0.25)",
@@ -1023,7 +1235,9 @@ const UsersTable = () => {
                                     borderRadius: 2,
                                   }}
                                 >
-                                  <EditIcon fontSize="small" />
+                                  <EditIcon
+                                    fontSize={isMobile ? "small" : "small"}
+                                  />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Delete User" arrow>
@@ -1034,6 +1248,8 @@ const UsersTable = () => {
                                     color: "#b85050",
                                     backgroundColor:
                                       "rgba(255, 182, 193, 0.15)",
+                                    width: { xs: 28, sm: 36 },
+                                    height: { xs: 28, sm: 36 },
                                     "&:hover": {
                                       backgroundColor:
                                         "rgba(255, 182, 193, 0.25)",
@@ -1043,7 +1259,9 @@ const UsersTable = () => {
                                     borderRadius: 2,
                                   }}
                                 >
-                                  <DeleteIcon fontSize="small" />
+                                  <DeleteIcon
+                                    fontSize={isMobile ? "small" : "small"}
+                                  />
                                 </IconButton>
                               </Tooltip>
                             </>
@@ -1102,9 +1320,12 @@ const UsersTable = () => {
           fullWidth
           sx={{
             "& .MuiDialog-paper": {
-              borderRadius: 4,
+              borderRadius: { xs: 2, sm: 4 },
               boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
-              maxHeight: "85vh",
+              m: { xs: 2, sm: 2 },
+              maxWidth: { xs: "calc(100% - 16px)", sm: "600px" },
+              maxHeight: { xs: "calc(100vh - 32px)", sm: "85vh" },
+              width: "100%",
               background: "#ffffff",
               border: "2px solid rgba(255, 215, 0, 0.3)",
               overflow: "hidden",
@@ -1141,13 +1362,20 @@ const UsersTable = () => {
                 zIndex: 0,
               }}
             />
-            <AdminIcon sx={{ position: "relative", zIndex: 1, fontSize: 28 }} />
+            <AdminIcon
+              sx={{
+                position: "relative",
+                zIndex: 1,
+                fontSize: { xs: 20, sm: 28 },
+              }}
+            />
             <Box sx={{ position: "relative", zIndex: 1 }}>
               <Typography
                 variant="h5"
                 sx={{
                   fontWeight: 700,
                   color: "#2c3e50",
+                  fontSize: { xs: "1rem", sm: "1.5rem" },
                 }}
               >
                 {openViewDialog
@@ -1156,7 +1384,15 @@ const UsersTable = () => {
                   ? "Edit User"
                   : "Create New Admin"}
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  opacity: 0.9,
+                  mt: 0.5,
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  display: { xs: "none", sm: "block" },
+                }}
+              >
                 {openViewDialog
                   ? "View user information"
                   : openEditDialog
@@ -1166,7 +1402,12 @@ const UsersTable = () => {
             </Box>
           </DialogTitle>
           <DialogContent
-            sx={{ p: 3, pt: 3, maxHeight: "70vh", overflowY: "auto" }}
+            sx={{
+              p: { xs: 2, sm: 3 },
+              pt: { xs: 2, sm: 3 },
+              maxHeight: { xs: "calc(100vh - 250px)", sm: "70vh" },
+              overflowY: "auto",
+            }}
           >
             {loadingView && userTypeTabs[activeTab]?.value === "public" ? (
               <Box
@@ -1235,7 +1476,14 @@ const UsersTable = () => {
                 {/* Profile Picture Display with Moderation */}
                 {(selectedUser?.profile_image || selectedUser?.photo) && (
                   <Box sx={{ textAlign: "center", mb: 3 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 2,
+                      }}
+                    >
                       <Typography
                         variant="h6"
                         sx={{ color: "#2c3e50", fontWeight: 600 }}
@@ -1244,10 +1492,17 @@ const UsersTable = () => {
                       </Typography>
                       {/* Photo Moderation Status & Actions */}
                       {userTypeTabs[activeTab]?.value === "public" && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          {selectedUser?.photo_moderation_status === "pending" && (
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          {selectedUser?.photo_moderation_status ===
+                            "pending" && (
                             <Chip
-                              icon={<PendingIcon sx={{ fontSize: "0.875rem !important" }} />}
+                              icon={
+                                <PendingIcon
+                                  sx={{ fontSize: "0.875rem !important" }}
+                                />
+                              }
                               label="Pending Approval"
                               size="small"
                               sx={{
@@ -1258,9 +1513,17 @@ const UsersTable = () => {
                               }}
                             />
                           )}
-                          {selectedUser?.photo_moderation_status === "approved" && (
+                          {selectedUser?.photo_moderation_status ===
+                            "approved" && (
                             <Chip
-                              icon={<CheckCircle sx={{ fontSize: "0.875rem !important", color: "#4CAF50 !important" }} />}
+                              icon={
+                                <CheckCircle
+                                  sx={{
+                                    fontSize: "0.875rem !important",
+                                    color: "#4CAF50 !important",
+                                  }}
+                                />
+                              }
                               label="Approved"
                               size="small"
                               sx={{
@@ -1271,9 +1534,17 @@ const UsersTable = () => {
                               }}
                             />
                           )}
-                          {selectedUser?.photo_moderation_status === "rejected" && (
+                          {selectedUser?.photo_moderation_status ===
+                            "rejected" && (
                             <Chip
-                              icon={<CancelIcon sx={{ fontSize: "0.875rem !important", color: "#F44336 !important" }} />}
+                              icon={
+                                <CancelIcon
+                                  sx={{
+                                    fontSize: "0.875rem !important",
+                                    color: "#F44336 !important",
+                                  }}
+                                />
+                              }
                               label="Rejected"
                               size="small"
                               sx={{
@@ -1284,17 +1555,30 @@ const UsersTable = () => {
                               }}
                             />
                           )}
-                          {selectedUser?.photo_moderation_status === "pending" && (
+                          {selectedUser?.photo_moderation_status ===
+                            "pending" && (
                             <Box sx={{ display: "flex", gap: 0.5 }}>
                               <Tooltip title="Approve Photo" arrow>
                                 <IconButton
                                   size="small"
-                                  onClick={() => handleModeration(selectedUser.id, "photo", "approve")}
-                                  disabled={moderationLoading[`${selectedUser.id}-photo`]}
+                                  onClick={() =>
+                                    handleModeration(
+                                      selectedUser.id,
+                                      "photo",
+                                      "approve"
+                                    )
+                                  }
+                                  disabled={
+                                    moderationLoading[
+                                      `${selectedUser.id}-photo`
+                                    ]
+                                  }
                                   sx={{
                                     bgcolor: "rgba(76, 175, 80, 0.1)",
                                     color: "#4CAF50",
-                                    "&:hover": { bgcolor: "rgba(76, 175, 80, 0.2)" },
+                                    "&:hover": {
+                                      bgcolor: "rgba(76, 175, 80, 0.2)",
+                                    },
                                   }}
                                 >
                                   <ThumbUpIcon fontSize="small" />
@@ -1308,7 +1592,8 @@ const UsersTable = () => {
                                       title: "Reject Photo",
                                       input: "textarea",
                                       inputLabel: "Rejection Reason (Optional)",
-                                      inputPlaceholder: "Enter reason for rejection...",
+                                      inputPlaceholder:
+                                        "Enter reason for rejection...",
                                       inputAttributes: {
                                         "aria-label": "Enter rejection reason",
                                       },
@@ -1319,15 +1604,26 @@ const UsersTable = () => {
                                       cancelButtonText: "Cancel",
                                     }).then((result) => {
                                       if (result.isConfirmed) {
-                                        handleModeration(selectedUser.id, "photo", "reject", result.value || "");
+                                        handleModeration(
+                                          selectedUser.id,
+                                          "photo",
+                                          "reject",
+                                          result.value || ""
+                                        );
                                       }
                                     });
                                   }}
-                                  disabled={moderationLoading[`${selectedUser.id}-photo`]}
+                                  disabled={
+                                    moderationLoading[
+                                      `${selectedUser.id}-photo`
+                                    ]
+                                  }
                                   sx={{
                                     bgcolor: "rgba(244, 67, 54, 0.1)",
                                     color: "#F44336",
-                                    "&:hover": { bgcolor: "rgba(244, 67, 54, 0.2)" },
+                                    "&:hover": {
+                                      bgcolor: "rgba(244, 67, 54, 0.2)",
+                                    },
                                   }}
                                 >
                                   <ThumbDownIcon fontSize="small" />
@@ -1359,7 +1655,9 @@ const UsersTable = () => {
                         window.open(fullImageUrl, "_blank");
                       }}
                     >
-                      <Box sx={{ position: "relative", display: "inline-block" }}>
+                      <Box
+                        sx={{ position: "relative", display: "inline-block" }}
+                      >
                         <Box
                           component="img"
                           src={buildImageUrl(
@@ -1375,7 +1673,8 @@ const UsersTable = () => {
                             boxShadow: "0 8px 25px rgba(255, 215, 0, 0.25)",
                             opacity:
                               userTypeTabs[activeTab]?.value === "public" &&
-                              selectedUser?.photo_moderation_status !== "approved" &&
+                              selectedUser?.photo_moderation_status !==
+                                "approved" &&
                               selectedUser?.photo_moderation_status !== null
                                 ? 0.7
                                 : 1,
@@ -1387,7 +1686,8 @@ const UsersTable = () => {
                         />
                         {/* Overlay badge for pending/rejected photos (admin view) */}
                         {userTypeTabs[activeTab]?.value === "public" &&
-                          selectedUser?.photo_moderation_status === "pending" && (
+                          selectedUser?.photo_moderation_status ===
+                            "pending" && (
                             <Box
                               sx={{
                                 position: "absolute",
@@ -1409,7 +1709,8 @@ const UsersTable = () => {
                             </Box>
                           )}
                         {userTypeTabs[activeTab]?.value === "public" &&
-                          selectedUser?.photo_moderation_status === "rejected" && (
+                          selectedUser?.photo_moderation_status ===
+                            "rejected" && (
                             <Box
                               sx={{
                                 position: "absolute",
@@ -1799,13 +2100,30 @@ const UsersTable = () => {
                             },
                           }}
                         >
-                          <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={2}>
-                            <Box display="flex" alignItems="flex-start" gap={2} sx={{ flex: 1 }}>
+                          <Box
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="flex-start"
+                            gap={2}
+                          >
+                            <Box
+                              display="flex"
+                              alignItems="flex-start"
+                              gap={2}
+                              sx={{ flex: 1 }}
+                            >
                               <BioIcon
                                 sx={{ fontSize: 24, color: "#B0E0E6", mt: 0.5 }}
                               />
                               <Box sx={{ flex: 1 }}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    mb: 0.5,
+                                  }}
+                                >
                                   <Typography
                                     variant="caption"
                                     sx={{ color: "#7f8c8d" }}
@@ -1813,11 +2131,19 @@ const UsersTable = () => {
                                     BIO
                                   </Typography>
                                   {/* Bio Moderation Status */}
-                                  {userTypeTabs[activeTab]?.value === "public" && (
+                                  {userTypeTabs[activeTab]?.value ===
+                                    "public" && (
                                     <>
-                                      {selectedUser?.bio_moderation_status === "pending" && (
+                                      {selectedUser?.bio_moderation_status ===
+                                        "pending" && (
                                         <Chip
-                                          icon={<PendingIcon sx={{ fontSize: "0.75rem !important" }} />}
+                                          icon={
+                                            <PendingIcon
+                                              sx={{
+                                                fontSize: "0.75rem !important",
+                                              }}
+                                            />
+                                          }
                                           label="Pending Approval"
                                           size="small"
                                           sx={{
@@ -1826,13 +2152,22 @@ const UsersTable = () => {
                                             bgcolor: "rgba(255, 193, 7, 0.2)",
                                             color: "#B8860B",
                                             fontWeight: 600,
-                                            border: "1px solid rgba(255, 193, 7, 0.4)",
+                                            border:
+                                              "1px solid rgba(255, 193, 7, 0.4)",
                                           }}
                                         />
                                       )}
-                                      {selectedUser?.bio_moderation_status === "approved" && (
+                                      {selectedUser?.bio_moderation_status ===
+                                        "approved" && (
                                         <Chip
-                                          icon={<CheckCircle sx={{ fontSize: "0.75rem !important", color: "#4CAF50 !important" }} />}
+                                          icon={
+                                            <CheckCircle
+                                              sx={{
+                                                fontSize: "0.75rem !important",
+                                                color: "#4CAF50 !important",
+                                              }}
+                                            />
+                                          }
                                           label="Approved"
                                           size="small"
                                           sx={{
@@ -1841,13 +2176,22 @@ const UsersTable = () => {
                                             bgcolor: "rgba(76, 175, 80, 0.15)",
                                             color: "#2E7D32",
                                             fontWeight: 600,
-                                            border: "1px solid rgba(76, 175, 80, 0.3)",
+                                            border:
+                                              "1px solid rgba(76, 175, 80, 0.3)",
                                           }}
                                         />
                                       )}
-                                      {selectedUser?.bio_moderation_status === "rejected" && (
+                                      {selectedUser?.bio_moderation_status ===
+                                        "rejected" && (
                                         <Chip
-                                          icon={<CancelIcon sx={{ fontSize: "0.75rem !important", color: "#F44336 !important" }} />}
+                                          icon={
+                                            <CancelIcon
+                                              sx={{
+                                                fontSize: "0.75rem !important",
+                                                color: "#F44336 !important",
+                                              }}
+                                            />
+                                          }
                                           label="Rejected"
                                           size="small"
                                           sx={{
@@ -1856,7 +2200,8 @@ const UsersTable = () => {
                                             bgcolor: "rgba(244, 67, 54, 0.15)",
                                             color: "#C62828",
                                             fontWeight: 600,
-                                            border: "1px solid rgba(244, 67, 54, 0.3)",
+                                            border:
+                                              "1px solid rgba(244, 67, 54, 0.3)",
                                           }}
                                         />
                                       )}
@@ -1876,57 +2221,85 @@ const UsersTable = () => {
                               </Box>
                             </Box>
                             {/* Bio Moderation Actions */}
-                            {userTypeTabs[activeTab]?.value === "public" && selectedUser?.bio_moderation_status === "pending" && (
-                              <Box sx={{ display: "flex", gap: 0.5 }}>
-                                <Tooltip title="Approve Bio" arrow>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleModeration(selectedUser.id, "bio", "approve")}
-                                    disabled={moderationLoading[`${selectedUser.id}-bio`]}
-                                    sx={{
-                                      bgcolor: "rgba(76, 175, 80, 0.1)",
-                                      color: "#4CAF50",
-                                      "&:hover": { bgcolor: "rgba(76, 175, 80, 0.2)" },
-                                    }}
-                                  >
-                                    <ThumbUpIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Reject Bio" arrow>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => {
-                                      Swal.fire({
-                                        title: "Reject Bio",
-                                        input: "textarea",
-                                        inputLabel: "Rejection Reason (Optional)",
-                                        inputPlaceholder: "Enter reason for rejection...",
-                                        inputAttributes: {
-                                          "aria-label": "Enter rejection reason",
+                            {userTypeTabs[activeTab]?.value === "public" &&
+                              selectedUser?.bio_moderation_status ===
+                                "pending" && (
+                                <Box sx={{ display: "flex", gap: 0.5 }}>
+                                  <Tooltip title="Approve Bio" arrow>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        handleModeration(
+                                          selectedUser.id,
+                                          "bio",
+                                          "approve"
+                                        )
+                                      }
+                                      disabled={
+                                        moderationLoading[
+                                          `${selectedUser.id}-bio`
+                                        ]
+                                      }
+                                      sx={{
+                                        bgcolor: "rgba(76, 175, 80, 0.1)",
+                                        color: "#4CAF50",
+                                        "&:hover": {
+                                          bgcolor: "rgba(76, 175, 80, 0.2)",
                                         },
-                                        showCancelButton: true,
-                                        confirmButtonColor: "#d33",
-                                        cancelButtonColor: "#3085d6",
-                                        confirmButtonText: "Reject",
-                                        cancelButtonText: "Cancel",
-                                      }).then((result) => {
-                                        if (result.isConfirmed) {
-                                          handleModeration(selectedUser.id, "bio", "reject", result.value || "");
-                                        }
-                                      });
-                                    }}
-                                    disabled={moderationLoading[`${selectedUser.id}-bio`]}
-                                    sx={{
-                                      bgcolor: "rgba(244, 67, 54, 0.1)",
-                                      color: "#F44336",
-                                      "&:hover": { bgcolor: "rgba(244, 67, 54, 0.2)" },
-                                    }}
-                                  >
-                                    <ThumbDownIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
-                            )}
+                                      }}
+                                    >
+                                      <ThumbUpIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Reject Bio" arrow>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => {
+                                        Swal.fire({
+                                          title: "Reject Bio",
+                                          input: "textarea",
+                                          inputLabel:
+                                            "Rejection Reason (Optional)",
+                                          inputPlaceholder:
+                                            "Enter reason for rejection...",
+                                          inputAttributes: {
+                                            "aria-label":
+                                              "Enter rejection reason",
+                                          },
+                                          showCancelButton: true,
+                                          confirmButtonColor: "#d33",
+                                          cancelButtonColor: "#3085d6",
+                                          confirmButtonText: "Reject",
+                                          cancelButtonText: "Cancel",
+                                        }).then((result) => {
+                                          if (result.isConfirmed) {
+                                            handleModeration(
+                                              selectedUser.id,
+                                              "bio",
+                                              "reject",
+                                              result.value || ""
+                                            );
+                                          }
+                                        });
+                                      }}
+                                      disabled={
+                                        moderationLoading[
+                                          `${selectedUser.id}-bio`
+                                        ]
+                                      }
+                                      sx={{
+                                        bgcolor: "rgba(244, 67, 54, 0.1)",
+                                        color: "#F44336",
+                                        "&:hover": {
+                                          bgcolor: "rgba(244, 67, 54, 0.2)",
+                                        },
+                                      }}
+                                    >
+                                      <ThumbDownIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              )}
                           </Box>
                         </Card>
                       )}
@@ -2431,7 +2804,12 @@ const UsersTable = () => {
             )}
           </DialogContent>
           <DialogActions
-            sx={{ p: 3, gap: 2, backgroundColor: "rgba(255, 215, 0, 0.05)" }}
+            sx={{
+              p: { xs: 2, sm: 3 },
+              gap: { xs: 1, sm: 2 },
+              flexDirection: { xs: "column-reverse", sm: "row" },
+              backgroundColor: "rgba(255, 215, 0, 0.05)",
+            }}
           >
             <Button
               onClick={() => {
@@ -2450,13 +2828,15 @@ const UsersTable = () => {
                 });
               }}
               variant="outlined"
+              fullWidth={isMobile}
               sx={{
                 borderColor: "#B0E0E6",
                 color: "#5a8a93",
                 fontWeight: 600,
                 borderRadius: 2,
-                px: 3,
-                py: 1,
+                px: { xs: 2, sm: 3 },
+                py: { xs: 1, sm: 1 },
+                fontSize: { xs: "0.875rem", sm: "1rem" },
                 "&:hover": {
                   borderColor: "#90C5CC",
                   backgroundColor: "rgba(176, 224, 230, 0.1)",
@@ -2476,14 +2856,16 @@ const UsersTable = () => {
                     <AddIcon />
                   )
                 }
+                fullWidth={isMobile}
                 sx={{
                   background: "#FFD700",
                   borderRadius: 2,
-                  px: 4,
-                  py: 1,
+                  px: { xs: 2, sm: 4 },
+                  py: { xs: 1, sm: 1 },
                   fontWeight: 600,
                   color: "#2c3e50",
                   textTransform: "none",
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
                   boxShadow: "0 4px 15px rgba(255, 215, 0, 0.3)",
                   "&:hover": {
                     background: "#FFC700",

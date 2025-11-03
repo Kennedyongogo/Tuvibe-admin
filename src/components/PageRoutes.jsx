@@ -4,12 +4,12 @@ import { Box, CircularProgress, Card } from "@mui/material";
 import Navbar from "./Navbar";
 import Settings from "../Pages/Settings";
 import NotFound from "../Pages/NotFound";
-import Issues from "./Issues/Issues";
 import TuvibeMap from "../TuvibeMap";
 import UsersTable from "./Users/UsersTable";
 import Analytics from "./Analytics/Analytics";
 import Verification from "./Verification/Verification";
 import Marketplace from "./Marketplace/Marketplace";
+import Reports from "./Reports/Reports";
 
 function PageRoutes() {
   const [user, setUser] = useState(null);
@@ -53,10 +53,10 @@ function PageRoutes() {
         ) : (
           <Routes>
             <Route path="home" element={<Navigate to="/analytics" replace />} />
-            <Route path="issues" element={<Issues />} />
             <Route path="map" element={<TuvibeMap />} />
             <Route path="verification" element={<Verification />} />
             <Route path="marketplace" element={<Marketplace />} />
+            <Route path="reports" element={<Reports />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="users" element={<UsersTable />} />
             <Route path="settings" element={<Settings user={user} />} />

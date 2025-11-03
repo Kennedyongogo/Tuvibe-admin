@@ -19,7 +19,6 @@ import {
   Description,
   AccountBalance,
   LocationOn,
-  Warning,
   Settings,
   QuestionAnswer,
   Schedule,
@@ -28,6 +27,7 @@ import {
   RateReview,
   VerifiedUser,
   Store,
+  Report,
 } from "@mui/icons-material";
 import { Money } from "@phosphor-icons/react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -181,9 +181,9 @@ const Navbar = (props) => {
           path: "/map",
         },
         {
-          text: "Issues",
-          icon: <Warning />,
-          path: "/issues",
+          text: "Reports",
+          icon: <Report />,
+          path: "/reports",
         },
       ],
     },

@@ -46,13 +46,14 @@ import {
   LocalOffer as TagIcon,
   Star as StarIcon,
 } from "@mui/icons-material";
-import { Tabs, Tab } from "@mui/material";
+import { Tabs, Tab, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import Swal from "sweetalert2";
 
 const Marketplace = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -85,7 +86,11 @@ const Marketplace = () => {
   const tagTabs = [
     { label: "All Items", value: "all", count: tabCounts.all },
     { label: "Hot Deals", value: "hot_deals", count: tabCounts.hot_deals },
-    { label: "Weekend Picks", value: "weekend_picks", count: tabCounts.weekend_picks },
+    {
+      label: "Weekend Picks",
+      value: "weekend_picks",
+      count: tabCounts.weekend_picks,
+    },
     { label: "Featured", value: "featured", count: tabCounts.featured },
   ];
 
@@ -126,7 +131,7 @@ const Marketplace = () => {
 
       if (data.success) {
         let filteredData = data.data || [];
-        
+
         // Filter featured items if "featured" tab is selected
         if (currentTag === "featured") {
           filteredData = filteredData.filter((item) => item.is_featured);
@@ -379,7 +384,13 @@ const Marketplace = () => {
       is_featured: item.is_featured || false,
       tag: item.tag || "none",
     });
-    setImagePreview(item.image ? (item.image.startsWith("http") ? item.image : `/uploads/market/${item.image}`) : null);
+    setImagePreview(
+      item.image
+        ? item.image.startsWith("http")
+          ? item.image
+          : `/uploads/market/${item.image}`
+        : null
+    );
     setSelectedImage(null);
     setIsEditMode(true);
     setOpenEditDialog(true);
@@ -454,7 +465,7 @@ const Marketplace = () => {
         <Box
           sx={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            p: 3,
+            p: { xs: 2, sm: 3 },
             color: "white",
             position: "relative",
             overflow: "hidden",
@@ -469,19 +480,26 @@ const Marketplace = () => {
             position="relative"
             zIndex={1}
           >
-            <Box>
+            <Box sx={{ flex: 1 }}>
               <Typography
                 variant="h4"
                 sx={{
                   fontWeight: 800,
-                  mb: 1,
+                  mb: { xs: 0.5, sm: 1 },
                   textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                  fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+                  fontSize: { xs: "1.25rem", sm: "1.75rem", md: "2.125rem" },
                 }}
               >
                 TuVibe Marketplace
               </Typography>
-              <Typography variant="body1" sx={{ opacity: 0.9 }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  opacity: 0.9,
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
+                  display: { xs: "none", sm: "block" },
+                }}
+              >
                 Manage marketplace items and listings
               </Typography>
             </Box>
@@ -496,12 +514,13 @@ const Marketplace = () => {
                 background: "linear-gradient(45deg, #FF6B6B, #4ECDC4)",
                 borderRadius: 3,
                 px: { xs: 2, sm: 4 },
-                py: 1.5,
-                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.5 },
+                fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
                 fontWeight: 600,
                 textTransform: "none",
                 boxShadow: "0 8px 25px rgba(255, 107, 107, 0.3)",
                 width: { xs: "100%", sm: "auto" },
+                minWidth: { xs: "100%", sm: "auto" },
                 "&:hover": {
                   background: "linear-gradient(45deg, #FF5252, #26A69A)",
                   transform: "translateY(-2px)",
@@ -516,25 +535,32 @@ const Marketplace = () => {
         </Box>
 
         {/* Content Section */}
-        <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, minHeight: "calc(100vh - 200px)" }}>
+        <Box
+          sx={{ p: { xs: 1, sm: 2, md: 3 }, minHeight: "calc(100vh - 200px)" }}
+        >
           {/* Tag Tabs */}
-          <Box mb={3}>
+          <Box mb={{ xs: 2, sm: 3 }}>
             <Tabs
               value={activeTab}
               onChange={handleTabChange}
               variant="scrollable"
               scrollButtons="auto"
+              allowScrollButtonsMobile
               sx={{
                 "& .MuiTabs-indicator": {
                   backgroundColor: "#667eea",
                   height: 3,
                   borderRadius: "3px 3px 0 0",
                 },
+                "& .MuiTabs-scrollButtons": {
+                  "&.Mui-disabled": { opacity: 0.3 },
+                },
                 "& .MuiTab-root": {
                   textTransform: "none",
                   fontWeight: 600,
-                  fontSize: "0.95rem",
-                  minHeight: 48,
+                  fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.95rem" },
+                  minHeight: { xs: 40, sm: 48 },
+                  px: { xs: 1, sm: 2 },
                   color: "#666",
                   "&.Mui-selected": {
                     color: "#667eea",
@@ -556,12 +582,16 @@ const Marketplace = () => {
                         label={tab.count}
                         size="small"
                         sx={{
-                          backgroundColor: activeTab === index ? "#667eea" : "#e0e0e0",
+                          backgroundColor:
+                            activeTab === index ? "#667eea" : "#e0e0e0",
                           color: activeTab === index ? "white" : "#666",
                           fontWeight: 600,
-                          fontSize: "0.75rem",
-                          height: 20,
-                          minWidth: 20,
+                          fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                          height: { xs: 18, sm: 20 },
+                          minWidth: { xs: 18, sm: 20 },
+                          "& .MuiChip-label": {
+                            px: { xs: 0.5, sm: 1 },
+                          },
                         }}
                       />
                     </Box>
@@ -613,10 +643,10 @@ const Marketplace = () => {
                   <Box
                     sx={{
                       position: "relative",
-                      width: { xs: "100%", sm: "200px" },
-                      minWidth: { xs: "100%", sm: "200px" },
-                      height: { xs: "200px", sm: "200px" },
-                      minHeight: { xs: "200px", sm: "200px" },
+                      width: { xs: "100%", sm: "200px", md: "250px" },
+                      minWidth: { xs: "100%", sm: "200px", md: "250px" },
+                      height: { xs: "180px", sm: "200px", md: "250px" },
+                      minHeight: { xs: "180px", sm: "200px", md: "250px" },
                       backgroundColor: "rgba(0, 0, 0, 0.05)",
                       overflow: "visible",
                       flexShrink: 0,
@@ -657,7 +687,9 @@ const Marketplace = () => {
                             justifyContent: "center",
                           }}
                         >
-                          <StoreIcon sx={{ fontSize: 48, color: "#ccc", opacity: 0.5 }} />
+                          <StoreIcon
+                            sx={{ fontSize: 48, color: "#ccc", opacity: 0.5 }}
+                          />
                         </Box>
                       )}
                     </Box>
@@ -680,13 +712,18 @@ const Marketplace = () => {
                     {/* Tag Badge */}
                     {item.tag !== "none" && (
                       <Chip
-                        label={item.tag === "hot_deals" ? "🔥 Hot Deal" : "⭐ Weekend Pick"}
+                        label={
+                          item.tag === "hot_deals"
+                            ? "🔥 Hot Deal"
+                            : "⭐ Weekend Pick"
+                        }
                         size="small"
                         sx={{
                           position: "absolute",
                           bottom: 8,
                           left: 8,
-                          bgcolor: item.tag === "hot_deals" ? "#ff6b6b" : "#4ecdc4",
+                          bgcolor:
+                            item.tag === "hot_deals" ? "#ff6b6b" : "#4ecdc4",
                           color: "white",
                           fontWeight: 700,
                           fontSize: "0.65rem",
@@ -699,14 +736,22 @@ const Marketplace = () => {
                   </Box>
 
                   {/* Content Section */}
-                  <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", p: 3 }}>
+                  <CardContent
+                    sx={{
+                      flexGrow: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      p: { xs: 2, sm: 3 },
+                    }}
+                  >
                     <Typography
                       variant="h6"
                       sx={{
                         fontWeight: 700,
-                        fontSize: "1rem",
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
                         color: "#1a1a1a",
-                        mb: 1,
+                        mb: { xs: 0.5, sm: 1 },
+                        lineHeight: 1.3,
                       }}
                     >
                       {item.title}
@@ -715,12 +760,13 @@ const Marketplace = () => {
                       variant="body2"
                       sx={{
                         color: "rgba(26, 26, 26, 0.7)",
-                        mb: 2,
+                        mb: { xs: 1, sm: 2 },
                         flexGrow: 1,
                         display: "-webkit-box",
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: { xs: 2, sm: 3 },
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
                       }}
                     >
                       {item.description || "No description"}
@@ -730,12 +776,20 @@ const Marketplace = () => {
                       sx={{
                         fontWeight: 700,
                         color: "#667eea",
-                        mb: 2,
+                        mb: { xs: 1, sm: 2 },
+                        fontSize: { xs: "0.875rem", sm: "1rem" },
                       }}
                     >
                       KES {parseFloat(item.price).toLocaleString()}
                     </Typography>
-                    <Box sx={{ display: "flex", gap: 1, mt: "auto" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: { xs: 0.5, sm: 1 },
+                        mt: "auto",
+                        justifyContent: { xs: "flex-start", sm: "flex-start" },
+                      }}
+                    >
                       <Tooltip title="Edit Item">
                         <IconButton
                           size="small"
@@ -743,6 +797,8 @@ const Marketplace = () => {
                           sx={{
                             color: "#3498db",
                             backgroundColor: "rgba(52, 152, 219, 0.1)",
+                            width: { xs: 32, sm: 40 },
+                            height: { xs: 32, sm: 40 },
                             "&:hover": {
                               backgroundColor: "rgba(52, 152, 219, 0.2)",
                             },
@@ -758,6 +814,8 @@ const Marketplace = () => {
                           sx={{
                             color: "#e74c3c",
                             backgroundColor: "rgba(231, 76, 60, 0.1)",
+                            width: { xs: 32, sm: 40 },
+                            height: { xs: 32, sm: 40 },
                             "&:hover": {
                               backgroundColor: "rgba(231, 76, 60, 0.2)",
                             },
@@ -782,8 +840,12 @@ const Marketplace = () => {
           fullWidth
           sx={{
             "& .MuiDialog-paper": {
-              borderRadius: 4,
+              borderRadius: { xs: 2, sm: 4 },
               boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+              m: { xs: 2, sm: 2 },
+              maxWidth: { xs: "calc(100% - 16px)", sm: "600px" },
+              maxHeight: { xs: "calc(100vh - 32px)", sm: "90vh" },
+              width: "100%",
             },
           }}
         >
@@ -792,17 +854,29 @@ const Marketplace = () => {
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               color: "white",
               fontWeight: "bold",
+              fontSize: { xs: "0.9375rem", sm: "1.25rem" },
+              py: { xs: 1.25, sm: 2 },
+              px: { xs: 2, sm: 3 },
             }}
           >
             Create New Market Item
           </DialogTitle>
-          <DialogContent sx={{ mt: 2 }}>
-            <Stack spacing={2}>
+          <DialogContent
+            sx={{
+              mt: { xs: 1, sm: 2 },
+              p: { xs: 2, sm: 3 },
+              maxHeight: { xs: "calc(100vh - 200px)", sm: "none" },
+              overflow: "auto",
+            }}
+          >
+            <Stack spacing={{ xs: 1.5, sm: 2 }}>
               <TextField
                 fullWidth
                 label="Title"
                 value={itemForm.title}
-                onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, title: e.target.value })
+                }
                 required
                 variant="outlined"
                 size="small"
@@ -811,7 +885,9 @@ const Marketplace = () => {
                 fullWidth
                 label="Description"
                 value={itemForm.description}
-                onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, description: e.target.value })
+                }
                 multiline
                 rows={3}
                 variant="outlined"
@@ -822,7 +898,9 @@ const Marketplace = () => {
                 label="Price (KES)"
                 type="number"
                 value={itemForm.price}
-                onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, price: e.target.value })
+                }
                 required
                 variant="outlined"
                 size="small"
@@ -831,7 +909,9 @@ const Marketplace = () => {
                 fullWidth
                 label="WhatsApp Number"
                 value={itemForm.whatsapp_number}
-                onChange={(e) => setItemForm({ ...itemForm, whatsapp_number: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, whatsapp_number: e.target.value })
+                }
                 variant="outlined"
                 size="small"
                 placeholder="+254712345678"
@@ -840,7 +920,9 @@ const Marketplace = () => {
                 <InputLabel>Tag</InputLabel>
                 <Select
                   value={itemForm.tag}
-                  onChange={(e) => setItemForm({ ...itemForm, tag: e.target.value })}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, tag: e.target.value })
+                  }
                   label="Tag"
                 >
                   <MenuItem value="none">None</MenuItem>
@@ -853,7 +935,10 @@ const Marketplace = () => {
                   <Switch
                     checked={itemForm.is_featured}
                     onChange={(e) =>
-                      setItemForm({ ...itemForm, is_featured: e.target.checked })
+                      setItemForm({
+                        ...itemForm,
+                        is_featured: e.target.checked,
+                      })
                     }
                   />
                 }
@@ -883,7 +968,7 @@ const Marketplace = () => {
                     sx={{
                       mt: 2,
                       width: "100%",
-                      height: 200,
+                      height: { xs: 150, sm: 200 },
                       borderRadius: 2,
                       overflow: "hidden",
                       border: "1px solid #e0e0e0",
@@ -892,23 +977,47 @@ const Marketplace = () => {
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
                   </Box>
                 )}
               </Box>
             </Stack>
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={resetForm} variant="outlined">
+          <DialogActions
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              px: { xs: 2, sm: 3 },
+              flexDirection: { xs: "column-reverse", sm: "row" },
+              gap: { xs: 1, sm: 1 },
+            }}
+          >
+            <Button
+              onClick={resetForm}
+              variant="outlined"
+              fullWidth={isMobile}
+              sx={{
+                m: { xs: 0, sm: 0 },
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
+              }}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleCreateItem}
               variant="contained"
               disabled={uploading}
+              fullWidth={isMobile}
               sx={{
                 background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                m: { xs: 0, sm: 0 },
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
               }}
             >
               {uploading ? <CircularProgress size={24} /> : "Create"}
@@ -924,8 +1033,12 @@ const Marketplace = () => {
           fullWidth
           sx={{
             "& .MuiDialog-paper": {
-              borderRadius: 4,
+              borderRadius: { xs: 2, sm: 4 },
               boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+              m: { xs: 2, sm: 2 },
+              maxWidth: { xs: "calc(100% - 16px)", sm: "600px" },
+              maxHeight: { xs: "calc(100vh - 32px)", sm: "90vh" },
+              width: "100%",
             },
           }}
         >
@@ -934,17 +1047,29 @@ const Marketplace = () => {
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               color: "white",
               fontWeight: "bold",
+              fontSize: { xs: "0.9375rem", sm: "1.25rem" },
+              py: { xs: 1.25, sm: 2 },
+              px: { xs: 2, sm: 3 },
             }}
           >
             Edit Market Item
           </DialogTitle>
-          <DialogContent sx={{ mt: 2 }}>
-            <Stack spacing={2}>
+          <DialogContent
+            sx={{
+              mt: { xs: 1, sm: 2 },
+              p: { xs: 2, sm: 3 },
+              maxHeight: { xs: "calc(100vh - 200px)", sm: "none" },
+              overflow: "auto",
+            }}
+          >
+            <Stack spacing={{ xs: 1.5, sm: 2 }}>
               <TextField
                 fullWidth
                 label="Title"
                 value={itemForm.title}
-                onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, title: e.target.value })
+                }
                 required
                 variant="outlined"
                 size="small"
@@ -953,7 +1078,9 @@ const Marketplace = () => {
                 fullWidth
                 label="Description"
                 value={itemForm.description}
-                onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, description: e.target.value })
+                }
                 multiline
                 rows={3}
                 variant="outlined"
@@ -964,7 +1091,9 @@ const Marketplace = () => {
                 label="Price (KES)"
                 type="number"
                 value={itemForm.price}
-                onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, price: e.target.value })
+                }
                 required
                 variant="outlined"
                 size="small"
@@ -973,7 +1102,9 @@ const Marketplace = () => {
                 fullWidth
                 label="WhatsApp Number"
                 value={itemForm.whatsapp_number}
-                onChange={(e) => setItemForm({ ...itemForm, whatsapp_number: e.target.value })}
+                onChange={(e) =>
+                  setItemForm({ ...itemForm, whatsapp_number: e.target.value })
+                }
                 variant="outlined"
                 size="small"
                 placeholder="+254712345678"
@@ -982,7 +1113,9 @@ const Marketplace = () => {
                 <InputLabel>Tag</InputLabel>
                 <Select
                   value={itemForm.tag}
-                  onChange={(e) => setItemForm({ ...itemForm, tag: e.target.value })}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, tag: e.target.value })
+                  }
                   label="Tag"
                 >
                   <MenuItem value="none">None</MenuItem>
@@ -995,7 +1128,10 @@ const Marketplace = () => {
                   <Switch
                     checked={itemForm.is_featured}
                     onChange={(e) =>
-                      setItemForm({ ...itemForm, is_featured: e.target.checked })
+                      setItemForm({
+                        ...itemForm,
+                        is_featured: e.target.checked,
+                      })
                     }
                   />
                 }
@@ -1025,7 +1161,7 @@ const Marketplace = () => {
                     sx={{
                       mt: 2,
                       width: "100%",
-                      height: 200,
+                      height: { xs: 150, sm: 200 },
                       borderRadius: 2,
                       overflow: "hidden",
                       border: "1px solid #e0e0e0",
@@ -1034,23 +1170,47 @@ const Marketplace = () => {
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
                   </Box>
                 )}
               </Box>
             </Stack>
           </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={resetForm} variant="outlined">
+          <DialogActions
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              px: { xs: 2, sm: 3 },
+              flexDirection: { xs: "column-reverse", sm: "row" },
+              gap: { xs: 1, sm: 1 },
+            }}
+          >
+            <Button
+              onClick={resetForm}
+              variant="outlined"
+              fullWidth={isMobile}
+              sx={{
+                m: { xs: 0, sm: 0 },
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
+              }}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleUpdateItem}
               variant="contained"
               disabled={uploading}
+              fullWidth={isMobile}
               sx={{
                 background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                m: { xs: 0, sm: 0 },
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
               }}
             >
               {uploading ? <CircularProgress size={24} /> : "Update"}
@@ -1063,4 +1223,3 @@ const Marketplace = () => {
 };
 
 export default Marketplace;
-

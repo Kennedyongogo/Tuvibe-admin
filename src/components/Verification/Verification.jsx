@@ -35,10 +35,12 @@ import {
   Person as PersonIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
 import Swal from "sweetalert2";
 
 const Verification = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [allVerificationRequests, setAllVerificationRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -99,7 +101,8 @@ const Verification = () => {
         setAllVerificationRequests(data.data || []);
       } else {
         setError(
-          "Failed to fetch verification requests: " + (data.message || "Unknown error")
+          "Failed to fetch verification requests: " +
+            (data.message || "Unknown error")
         );
       }
     } catch (err) {
@@ -155,14 +158,17 @@ const Verification = () => {
 
     try {
       console.log("Approving verification request:", selectedRequest.id);
-      const response = await fetch(`/api/verification/${selectedRequest.id}/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ notes: notes || null }),
-      });
+      const response = await fetch(
+        `/api/verification/${selectedRequest.id}/approve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ notes: notes || null }),
+        }
+      );
 
       const data = await response.json();
       console.log("Approve response:", data);
@@ -180,14 +186,16 @@ const Verification = () => {
         Swal.fire({
           icon: "success",
           title: "Approved!",
-          text: data.message || "Verification request has been approved successfully. User is now verified.",
+          text:
+            data.message ||
+            "Verification request has been approved successfully. User is now verified.",
           confirmButtonColor: "#667eea",
         });
         setOpenApproveDialog(false);
         setOpenViewDialog(false);
         setSelectedRequest(null);
         setNotes("");
-        
+
         // Refresh the list to get updated data
         await fetchVerificationRequests();
       } else {
@@ -219,14 +227,17 @@ const Verification = () => {
 
     try {
       console.log("Rejecting verification request:", selectedRequest.id);
-      const response = await fetch(`/api/verification/${selectedRequest.id}/reject`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ notes: notes || null }),
-      });
+      const response = await fetch(
+        `/api/verification/${selectedRequest.id}/reject`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ notes: notes || null }),
+        }
+      );
 
       const data = await response.json();
       console.log("Reject response:", data);
@@ -251,7 +262,7 @@ const Verification = () => {
         setOpenViewDialog(false);
         setSelectedRequest(null);
         setNotes("");
-        
+
         // Refresh the list to get updated data
         await fetchVerificationRequests();
       } else {
@@ -328,7 +339,7 @@ const Verification = () => {
         <Box
           sx={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            p: 3,
+            p: { xs: 2, sm: 3 },
             color: "white",
             position: "relative",
             overflow: "hidden",
@@ -363,14 +374,21 @@ const Verification = () => {
               variant="h4"
               sx={{
                 fontWeight: 800,
-                mb: 1,
+                mb: { xs: 0.5, sm: 1 },
                 textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+                fontSize: { xs: "1.25rem", sm: "1.75rem", md: "2.125rem" },
               }}
             >
               Premium User Verification
             </Typography>
-            <Typography variant="body1" sx={{ opacity: 0.9 }}>
+            <Typography
+              variant="body1"
+              sx={{
+                opacity: 0.9,
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                display: { xs: "none", sm: "block" },
+              }}
+            >
               Review and manage premium user verification requests
             </Typography>
           </Box>
@@ -396,11 +414,17 @@ const Verification = () => {
               onChange={handleTabChange}
               variant="scrollable"
               scrollButtons="auto"
+              allowScrollButtonsMobile
               sx={{
+                "& .MuiTabs-scrollButtons": {
+                  "&.Mui-disabled": { opacity: 0.3 },
+                },
                 "& .MuiTab-root": {
                   textTransform: "none",
                   fontWeight: 600,
-                  minHeight: 48,
+                  minHeight: { xs: 40, sm: 48 },
+                  px: { xs: 1, sm: 2 },
+                  fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.95rem" },
                   color: "#667eea",
                   "&.Mui-selected": {
                     color: "#667eea",
@@ -427,9 +451,12 @@ const Verification = () => {
                             selectedTab === index ? "#667eea" : "#e0e0e0",
                           color: selectedTab === index ? "white" : "#666",
                           fontWeight: 600,
-                          fontSize: "0.75rem",
-                          height: 20,
-                          minWidth: 20,
+                          fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                          height: { xs: 18, sm: 20 },
+                          minWidth: { xs: 18, sm: 20 },
+                          "& .MuiChip-label": {
+                            px: { xs: 0.5, sm: 1 },
+                          },
                         }}
                       />
                     </Box>
@@ -448,7 +475,7 @@ const Verification = () => {
               border: "1px solid rgba(102, 126, 234, 0.1)",
             }}
           >
-            <Table sx={{ minWidth: 800 }}>
+            <Table sx={{ minWidth: { xs: 400, sm: 800 } }}>
               <TableHead>
                 <TableRow
                   sx={{
@@ -457,7 +484,7 @@ const Verification = () => {
                     "& .MuiTableCell-head": {
                       color: "white",
                       fontWeight: 700,
-                      fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                      fontSize: { xs: "0.7rem", sm: "0.85rem", md: "0.95rem" },
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
                       border: "none",
@@ -465,12 +492,25 @@ const Verification = () => {
                     },
                   }}
                 >
-                  <TableCell>No</TableCell>
-                  <TableCell>User</TableCell>
+                  <TableCell sx={{ width: { xs: "60px", sm: "80px" } }}>
+                    No
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+                    User
+                  </TableCell>
                   <TableCell>Category</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Request Date</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+                    Status
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: "none", lg: "table-cell" } }}>
+                    Request Date
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ width: { xs: "100px", sm: "auto" } }}
+                  >
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -490,7 +530,8 @@ const Verification = () => {
                         variant="contained"
                         onClick={fetchVerificationRequests}
                         sx={{
-                          background: "linear-gradient(45deg, #667eea, #764ba2)",
+                          background:
+                            "linear-gradient(45deg, #667eea, #764ba2)",
                         }}
                       >
                         Retry
@@ -524,9 +565,19 @@ const Verification = () => {
                       }}
                     >
                       <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>
-                        {page * rowsPerPage + idx + 1}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                          }}
+                        >
+                          {page * rowsPerPage + idx + 1}
+                        </Typography>
                       </TableCell>
-                      <TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", md: "table-cell" } }}
+                      >
                         <Box display="flex" alignItems="center" gap={1}>
                           <Avatar
                             src={
@@ -534,19 +585,32 @@ const Verification = () => {
                                 ? `/api/uploads/${request.publicUser.photo}`
                                 : undefined
                             }
-                            sx={{ width: 32, height: 32 }}
+                            sx={{
+                              width: { xs: 28, sm: 32 },
+                              height: { xs: 28, sm: 32 },
+                            }}
                           >
-                            <PersonIcon />
+                            <PersonIcon fontSize="small" />
                           </Avatar>
                           <Box>
                             <Typography
                               variant="body2"
                               fontWeight="600"
-                              sx={{ color: "#2c3e50" }}
+                              sx={{
+                                color: "#2c3e50",
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
                             >
                               {request.publicUser?.name || "Unknown"}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: "#7f8c8d" }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "#7f8c8d",
+                                fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                                display: { xs: "none", sm: "block" },
+                              }}
+                            >
                               {request.publicUser?.email || "N/A"}
                             </Typography>
                           </Box>
@@ -562,10 +626,13 @@ const Verification = () => {
                             borderRadius: 2,
                             backgroundColor: "#667eea",
                             color: "white",
+                            fontSize: { xs: "0.7rem", sm: "0.875rem" },
                           }}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", md: "table-cell" } }}
+                      >
                         <Chip
                           label={request.verification_status}
                           color={getStatusColor(request.verification_status)}
@@ -577,16 +644,22 @@ const Verification = () => {
                           }}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell
+                        sx={{ display: { xs: "none", lg: "table-cell" } }}
+                      >
                         <Typography
                           variant="body2"
-                          sx={{ color: "#7f8c8d", fontWeight: 600 }}
+                          sx={{
+                            color: "#7f8c8d",
+                            fontWeight: 600,
+                            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                          }}
                         >
                           {formatDate(request.createdAt)}
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Box display="flex" gap={0.5}>
+                      <TableCell align="center">
+                        <Box display="flex" gap={0.5} justifyContent="center">
                           <Tooltip title="View Details" arrow>
                             <IconButton
                               size="small"
@@ -594,6 +667,8 @@ const Verification = () => {
                               sx={{
                                 color: "#27ae60",
                                 backgroundColor: "rgba(39, 174, 96, 0.1)",
+                                width: { xs: 28, sm: 36 },
+                                height: { xs: 28, sm: 36 },
                                 "&:hover": {
                                   backgroundColor: "rgba(39, 174, 96, 0.2)",
                                   transform: "scale(1.1)",
@@ -602,7 +677,9 @@ const Verification = () => {
                                 borderRadius: 2,
                               }}
                             >
-                              <ViewIcon fontSize="small" />
+                              <ViewIcon
+                                fontSize={isMobile ? "small" : "small"}
+                              />
                             </IconButton>
                           </Tooltip>
                           {request.verification_status === "pending" && (
@@ -617,6 +694,8 @@ const Verification = () => {
                                   sx={{
                                     color: "#27ae60",
                                     backgroundColor: "rgba(39, 174, 96, 0.1)",
+                                    width: { xs: 28, sm: 36 },
+                                    height: { xs: 28, sm: 36 },
                                     "&:hover": {
                                       backgroundColor: "rgba(39, 174, 96, 0.2)",
                                       transform: "scale(1.1)",
@@ -625,7 +704,9 @@ const Verification = () => {
                                     borderRadius: 2,
                                   }}
                                 >
-                                  <CheckIcon fontSize="small" />
+                                  <CheckIcon
+                                    fontSize={isMobile ? "small" : "small"}
+                                  />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Reject" arrow>
@@ -638,6 +719,8 @@ const Verification = () => {
                                   sx={{
                                     color: "#e74c3c",
                                     backgroundColor: "rgba(231, 76, 60, 0.1)",
+                                    width: { xs: 28, sm: 36 },
+                                    height: { xs: 28, sm: 36 },
                                     "&:hover": {
                                       backgroundColor: "rgba(231, 76, 60, 0.2)",
                                       transform: "scale(1.1)",
@@ -646,7 +729,9 @@ const Verification = () => {
                                     borderRadius: 2,
                                   }}
                                 >
-                                  <CancelIcon fontSize="small" />
+                                  <CancelIcon
+                                    fontSize={isMobile ? "small" : "small"}
+                                  />
                                 </IconButton>
                               </Tooltip>
                             </>
@@ -685,9 +770,12 @@ const Verification = () => {
           fullWidth
           sx={{
             "& .MuiDialog-paper": {
-              borderRadius: 4,
+              borderRadius: { xs: 2, sm: 4 },
               boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-              maxHeight: "85vh",
+              m: { xs: 2, sm: 2 },
+              maxWidth: { xs: "calc(100% - 16px)", sm: "600px" },
+              maxHeight: { xs: "calc(100vh - 32px)", sm: "85vh" },
+              width: "100%",
               background: "rgba(255, 255, 255, 0.95)",
               backdropFilter: "blur(10px)",
               border: "1px solid rgba(102, 126, 234, 0.2)",
@@ -701,18 +789,31 @@ const Verification = () => {
               fontWeight: "bold",
               display: "flex",
               alignItems: "center",
-              gap: 2,
-              p: 3,
+              gap: { xs: 1, sm: 2 },
+              p: { xs: 2, sm: 3 },
             }}
           >
-            <VerifiedUserIcon sx={{ fontSize: 28 }} />
+            <VerifiedUserIcon sx={{ fontSize: { xs: 20, sm: 28 } }} />
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: "1rem", sm: "1.5rem" },
+                }}
+              >
                 Verification Request Details
               </Typography>
             </Box>
           </DialogTitle>
-          <DialogContent sx={{ p: 3, pt: 3, maxHeight: "70vh", overflowY: "auto" }}>
+          <DialogContent
+            sx={{
+              p: { xs: 2, sm: 3 },
+              pt: { xs: 2, sm: 3 },
+              maxHeight: { xs: "calc(100vh - 250px)", sm: "70vh" },
+              overflowY: "auto",
+            }}
+          >
             {selectedRequest && (
               <Stack spacing={2}>
                 <Box>
@@ -746,7 +847,11 @@ const Verification = () => {
 
                 <Divider />
 
-                <Box display="flex" flexDirection={{ xs: "column", sm: "row" }} gap={2}>
+                <Box
+                  display="flex"
+                  flexDirection={{ xs: "column", sm: "row" }}
+                  gap={2}
+                >
                   <Box flex={1}>
                     <Typography variant="subtitle2" color="text.secondary">
                       Category
@@ -763,7 +868,9 @@ const Verification = () => {
                     </Typography>
                     <Chip
                       label={selectedRequest.verification_status}
-                      color={getStatusColor(selectedRequest.verification_status)}
+                      color={getStatusColor(
+                        selectedRequest.verification_status
+                      )}
                       size="small"
                       sx={{ mt: 0.5 }}
                     />
@@ -821,7 +928,12 @@ const Verification = () => {
             )}
           </DialogContent>
           <DialogActions
-            sx={{ p: 3, gap: 2, backgroundColor: "rgba(102, 126, 234, 0.05)" }}
+            sx={{
+              p: { xs: 2, sm: 3 },
+              gap: { xs: 1, sm: 2 },
+              flexDirection: { xs: "column", sm: "row" },
+              backgroundColor: "rgba(102, 126, 234, 0.05)",
+            }}
           >
             {selectedRequest?.verification_status === "pending" && (
               <>
@@ -833,8 +945,11 @@ const Verification = () => {
                   }}
                   variant="contained"
                   startIcon={<CheckIcon />}
+                  fullWidth={isMobile}
                   sx={{
                     background: "linear-gradient(45deg, #27ae60, #229954)",
+                    fontSize: { xs: "0.875rem", sm: "1rem" },
+                    py: { xs: 1, sm: 1.25 },
                     "&:hover": {
                       background: "linear-gradient(45deg, #229954, #27ae60)",
                     },
@@ -850,8 +965,11 @@ const Verification = () => {
                   }}
                   variant="contained"
                   startIcon={<CancelIcon />}
+                  fullWidth={isMobile}
                   sx={{
                     background: "linear-gradient(45deg, #e74c3c, #c0392b)",
+                    fontSize: { xs: "0.875rem", sm: "1rem" },
+                    py: { xs: 1, sm: 1.25 },
                     "&:hover": {
                       background: "linear-gradient(45deg, #c0392b, #e74c3c)",
                     },
@@ -867,10 +985,13 @@ const Verification = () => {
                 setSelectedRequest(null);
               }}
               variant="outlined"
+              fullWidth={isMobile}
               sx={{
                 borderColor: "#667eea",
                 color: "#667eea",
                 fontWeight: 600,
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
               }}
             >
               Close
@@ -887,9 +1008,33 @@ const Verification = () => {
           }}
           maxWidth="sm"
           fullWidth
+          sx={{
+            "& .MuiDialog-paper": {
+              borderRadius: { xs: 2, sm: 4 },
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+              m: { xs: 2, sm: 2 },
+              maxWidth: { xs: "calc(100% - 16px)", sm: "600px" },
+              maxHeight: { xs: "calc(100vh - 32px)", sm: "90vh" },
+              width: "100%",
+            },
+          }}
         >
-          <DialogTitle>Approve Verification Request</DialogTitle>
-          <DialogContent>
+          <DialogTitle
+            sx={{
+              fontSize: { xs: "0.9375rem", sm: "1.25rem" },
+              py: { xs: 1.25, sm: 2 },
+              px: { xs: 2, sm: 3 },
+            }}
+          >
+            Approve Verification Request
+          </DialogTitle>
+          <DialogContent
+            sx={{
+              p: { xs: 2, sm: 3 },
+              maxHeight: { xs: "calc(100vh - 200px)", sm: "none" },
+              overflow: "auto",
+            }}
+          >
             <TextField
               fullWidth
               multiline
@@ -898,14 +1043,27 @@ const Verification = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any notes about this approval..."
-              sx={{ mt: 2 }}
+              sx={{ mt: { xs: 1, sm: 2 } }}
+              size={isMobile ? "small" : "medium"}
             />
           </DialogContent>
-          <DialogActions>
+          <DialogActions
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              px: { xs: 2, sm: 3 },
+              flexDirection: { xs: "column-reverse", sm: "row" },
+              gap: { xs: 1, sm: 1 },
+            }}
+          >
             <Button
               onClick={() => {
                 setOpenApproveDialog(false);
                 setNotes("");
+              }}
+              fullWidth={isMobile}
+              sx={{
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
               }}
             >
               Cancel
@@ -914,8 +1072,11 @@ const Verification = () => {
               onClick={handleApprove}
               variant="contained"
               disabled={actionLoading}
+              fullWidth={isMobile}
               sx={{
                 background: "linear-gradient(45deg, #27ae60, #229954)",
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
               }}
             >
               {actionLoading ? <CircularProgress size={20} /> : "Approve"}
@@ -932,9 +1093,33 @@ const Verification = () => {
           }}
           maxWidth="sm"
           fullWidth
+          sx={{
+            "& .MuiDialog-paper": {
+              borderRadius: { xs: 2, sm: 4 },
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+              m: { xs: 2, sm: 2 },
+              maxWidth: { xs: "calc(100% - 16px)", sm: "600px" },
+              maxHeight: { xs: "calc(100vh - 32px)", sm: "90vh" },
+              width: "100%",
+            },
+          }}
         >
-          <DialogTitle>Reject Verification Request</DialogTitle>
-          <DialogContent>
+          <DialogTitle
+            sx={{
+              fontSize: { xs: "0.9375rem", sm: "1.25rem" },
+              py: { xs: 1.25, sm: 2 },
+              px: { xs: 2, sm: 3 },
+            }}
+          >
+            Reject Verification Request
+          </DialogTitle>
+          <DialogContent
+            sx={{
+              p: { xs: 2, sm: 3 },
+              maxHeight: { xs: "calc(100vh - 200px)", sm: "none" },
+              overflow: "auto",
+            }}
+          >
             <TextField
               fullWidth
               multiline
@@ -943,14 +1128,27 @@ const Verification = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add reason for rejection..."
-              sx={{ mt: 2 }}
+              sx={{ mt: { xs: 1, sm: 2 } }}
+              size={isMobile ? "small" : "medium"}
             />
           </DialogContent>
-          <DialogActions>
+          <DialogActions
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              px: { xs: 2, sm: 3 },
+              flexDirection: { xs: "column-reverse", sm: "row" },
+              gap: { xs: 1, sm: 1 },
+            }}
+          >
             <Button
               onClick={() => {
                 setOpenRejectDialog(false);
                 setNotes("");
+              }}
+              fullWidth={isMobile}
+              sx={{
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
               }}
             >
               Cancel
@@ -959,8 +1157,11 @@ const Verification = () => {
               onClick={handleReject}
               variant="contained"
               disabled={actionLoading}
+              fullWidth={isMobile}
               sx={{
                 background: "linear-gradient(45deg, #e74c3c, #c0392b)",
+                fontSize: { xs: "0.875rem", sm: "1rem" },
+                py: { xs: 1, sm: 1.25 },
               }}
             >
               {actionLoading ? <CircularProgress size={20} /> : "Reject"}
