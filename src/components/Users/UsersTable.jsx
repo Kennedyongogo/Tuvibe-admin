@@ -832,9 +832,13 @@ const UsersTable = () => {
                       </TableCell>
                     </>
                   )}
-                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                    Status
-                  </TableCell>
+                  {userTypeTabs[activeTab]?.value === "public" && (
+                    <TableCell
+                      sx={{ display: { xs: "none", sm: "table-cell" } }}
+                    >
+                      Status
+                    </TableCell>
+                  )}
                   <TableCell
                     align="center"
                     sx={{ width: { xs: "100px", sm: "auto" } }}
@@ -846,13 +850,25 @@ const UsersTable = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <TableCell
+                      colSpan={
+                        userTypeTabs[activeTab]?.value === "admin" ? 6 : 7
+                      }
+                      align="center"
+                      sx={{ py: 4 }}
+                    >
                       <CircularProgress sx={{ color: "#FFD700" }} />
                     </TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <TableCell
+                      colSpan={
+                        userTypeTabs[activeTab]?.value === "admin" ? 6 : 7
+                      }
+                      align="center"
+                      sx={{ py: 4 }}
+                    >
                       <Typography color="error" variant="h6">
                         {error}
                       </Typography>
@@ -860,7 +876,13 @@ const UsersTable = () => {
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <TableCell
+                      colSpan={
+                        userTypeTabs[activeTab]?.value === "admin" ? 6 : 7
+                      }
+                      align="center"
+                      sx={{ py: 4 }}
+                    >
                       <Typography variant="h6" color="text.secondary">
                         No users found.
                       </Typography>
@@ -921,99 +943,111 @@ const UsersTable = () => {
                           >
                             {user.email}
                           </Typography>
-                          {/* Show status on mobile below name */}
-                          <Box
-                            sx={{
-                              display: { xs: "flex", sm: "none" },
-                              mt: 0.5,
-                              gap: 0.5,
-                            }}
-                          >
-                            <Chip
-                              label={
-                                user.isActive !== undefined
-                                  ? user.isActive
-                                    ? "Active"
-                                    : "Inactive"
-                                  : user.isVerified
-                                  ? "Verified"
-                                  : "Not Verified"
-                              }
-                              size="small"
-                              variant="outlined"
+                          {/* Show status on mobile below name - only for public users */}
+                          {userTypeTabs[activeTab]?.value === "public" && (
+                            <Box
                               sx={{
-                                fontSize: "0.6rem",
-                                height: 18,
-                                textTransform: "capitalize",
-                                fontWeight: 600,
-                                borderRadius: 1,
-                                ...(user.isActive !== undefined
-                                  ? {
-                                      borderColor: user.isActive
-                                        ? "#90EE90"
-                                        : "#FFB6C1",
-                                      color: user.isActive
-                                        ? "#2d8659"
-                                        : "#b85050",
-                                      backgroundColor: user.isActive
-                                        ? "rgba(144, 238, 144, 0.1)"
-                                        : "rgba(255, 182, 193, 0.1)",
-                                    }
-                                  : user.isVerified
-                                  ? {
-                                      borderColor: "#FFD700",
-                                      color: "#b8860b",
-                                      backgroundColor: "rgba(255, 215, 0, 0.1)",
-                                    }
-                                  : {
-                                      borderColor: "#B0E0E6",
-                                      color: "#5a8a93",
-                                      backgroundColor:
-                                        "rgba(176, 224, 230, 0.1)",
-                                    }),
-                                "& .MuiChip-label": {
-                                  px: 0.5,
-                                },
+                                display: { xs: "flex", sm: "none" },
+                                mt: 0.5,
+                                gap: 0.5,
                               }}
-                            />
-                            {/* Show category/role on mobile if available */}
-                            {userTypeTabs[activeTab]?.value === "admin"
-                              ? user.role && (
-                                  <Chip
-                                    label={formatRole(user.role)}
-                                    color={getRoleColor(user.role)}
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{
-                                      fontSize: "0.6rem",
-                                      height: 18,
-                                      fontWeight: 600,
-                                      borderRadius: 1,
-                                      "& .MuiChip-label": {
-                                        px: 0.5,
-                                      },
-                                    }}
-                                  />
-                                )
-                              : user.category && (
-                                  <Chip
-                                    label={user.category}
-                                    color="info"
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{
-                                      fontSize: "0.6rem",
-                                      height: 18,
-                                      textTransform: "capitalize",
-                                      fontWeight: 600,
-                                      borderRadius: 1,
-                                      "& .MuiChip-label": {
-                                        px: 0.5,
-                                      },
-                                    }}
-                                  />
-                                )}
-                          </Box>
+                            >
+                              <Chip
+                                label={
+                                  user.isActive !== undefined
+                                    ? user.isActive
+                                      ? "Active"
+                                      : "Inactive"
+                                    : user.isVerified
+                                    ? "Verified"
+                                    : "Not Verified"
+                                }
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                  fontSize: "0.6rem",
+                                  height: 18,
+                                  textTransform: "capitalize",
+                                  fontWeight: 600,
+                                  borderRadius: 1,
+                                  ...(user.isActive !== undefined
+                                    ? {
+                                        borderColor: user.isActive
+                                          ? "#90EE90"
+                                          : "#FFB6C1",
+                                        color: user.isActive
+                                          ? "#2d8659"
+                                          : "#b85050",
+                                        backgroundColor: user.isActive
+                                          ? "rgba(144, 238, 144, 0.1)"
+                                          : "rgba(255, 182, 193, 0.1)",
+                                      }
+                                    : user.isVerified
+                                    ? {
+                                        borderColor: "#FFD700",
+                                        color: "#b8860b",
+                                        backgroundColor:
+                                          "rgba(255, 215, 0, 0.1)",
+                                      }
+                                    : {
+                                        borderColor: "#B0E0E6",
+                                        color: "#5a8a93",
+                                        backgroundColor:
+                                          "rgba(176, 224, 230, 0.1)",
+                                      }),
+                                  "& .MuiChip-label": {
+                                    px: 0.5,
+                                  },
+                                }}
+                              />
+                              {/* Show category on mobile if available */}
+                              {user.category && (
+                                <Chip
+                                  label={user.category}
+                                  color="info"
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{
+                                    fontSize: "0.6rem",
+                                    height: 18,
+                                    textTransform: "capitalize",
+                                    fontWeight: 600,
+                                    borderRadius: 1,
+                                    "& .MuiChip-label": {
+                                      px: 0.5,
+                                    },
+                                  }}
+                                />
+                              )}
+                            </Box>
+                          )}
+                          {/* Show role on mobile for admin users */}
+                          {userTypeTabs[activeTab]?.value === "admin" &&
+                            user.role && (
+                              <Box
+                                sx={{
+                                  display: { xs: "flex", sm: "none" },
+                                  mt: 0.5,
+                                  gap: 0.5,
+                                }}
+                              >
+                                <Chip
+                                  label={formatRole(user.role)}
+                                  color={getRoleColor(user.role)}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{
+                                    fontSize: "0.6rem",
+                                    height: 18,
+                                    fontWeight: 600,
+                                    borderRadius: 1,
+                                    "& .MuiChip-label": {
+                                      px: 0.5,
+                                    },
+                                  }}
+                                />
+                              </Box>
+                            )}
                         </Box>
                       </TableCell>
                       <TableCell
@@ -1088,60 +1122,61 @@ const UsersTable = () => {
                           </TableCell>
                         </>
                       )}
-                      <TableCell
-                        sx={{ display: { xs: "none", sm: "table-cell" } }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 0.5,
-                          }}
+                      {userTypeTabs[activeTab]?.value === "public" && (
+                        <TableCell
+                          sx={{ display: { xs: "none", sm: "table-cell" } }}
                         >
-                          <Chip
-                            label={
-                              user.isActive !== undefined
-                                ? user.isActive
-                                  ? "Active"
-                                  : "Inactive"
-                                : user.isVerified
-                                ? "Verified"
-                                : "Not Verified"
-                            }
-                            size="small"
-                            variant="outlined"
+                          <Box
                             sx={{
-                              textTransform: "capitalize",
-                              fontWeight: 600,
-                              borderRadius: 2,
-                              fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                              ...(user.isActive !== undefined
-                                ? {
-                                    borderColor: user.isActive
-                                      ? "#90EE90"
-                                      : "#FFB6C1",
-                                    color: user.isActive
-                                      ? "#2d8659"
-                                      : "#b85050",
-                                    backgroundColor: user.isActive
-                                      ? "rgba(144, 238, 144, 0.1)"
-                                      : "rgba(255, 182, 193, 0.1)",
-                                  }
-                                : user.isVerified
-                                ? {
-                                    borderColor: "#FFD700",
-                                    color: "#b8860b",
-                                    backgroundColor: "rgba(255, 215, 0, 0.1)",
-                                  }
-                                : {
-                                    borderColor: "#B0E0E6",
-                                    color: "#5a8a93",
-                                    backgroundColor: "rgba(176, 224, 230, 0.1)",
-                                  }),
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 0.5,
                             }}
-                          />
-                          {/* Moderation Status Indicators */}
-                          {userTypeTabs[activeTab]?.value === "public" && (
+                          >
+                            <Chip
+                              label={
+                                user.isActive !== undefined
+                                  ? user.isActive
+                                    ? "Active"
+                                    : "Inactive"
+                                  : user.isVerified
+                                  ? "Verified"
+                                  : "Not Verified"
+                              }
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                textTransform: "capitalize",
+                                fontWeight: 600,
+                                borderRadius: 2,
+                                fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                                ...(user.isActive !== undefined
+                                  ? {
+                                      borderColor: user.isActive
+                                        ? "#90EE90"
+                                        : "#FFB6C1",
+                                      color: user.isActive
+                                        ? "#2d8659"
+                                        : "#b85050",
+                                      backgroundColor: user.isActive
+                                        ? "rgba(144, 238, 144, 0.1)"
+                                        : "rgba(255, 182, 193, 0.1)",
+                                    }
+                                  : user.isVerified
+                                  ? {
+                                      borderColor: "#FFD700",
+                                      color: "#b8860b",
+                                      backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                    }
+                                  : {
+                                      borderColor: "#B0E0E6",
+                                      color: "#5a8a93",
+                                      backgroundColor:
+                                        "rgba(176, 224, 230, 0.1)",
+                                    }),
+                              }}
+                            />
+                            {/* Moderation Status Indicators */}
                             <Box
                               sx={{
                                 display: "flex",
@@ -1188,9 +1223,9 @@ const UsersTable = () => {
                                 />
                               )}
                             </Box>
-                          )}
-                        </Box>
-                      </TableCell>
+                          </Box>
+                        </TableCell>
+                      )}
                       <TableCell align="center">
                         <Box display="flex" gap={0.5} justifyContent="center">
                           <Tooltip title="View User Details" arrow>
