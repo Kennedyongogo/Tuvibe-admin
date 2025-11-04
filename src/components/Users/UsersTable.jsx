@@ -905,7 +905,7 @@ const UsersTable = () => {
                       <TableCell
                         sx={{ display: { xs: "none", lg: "table-cell" } }}
                       >
-                        City
+                        County
                       </TableCell>
                       <TableCell
                         sx={{ display: { xs: "none", md: "table-cell" } }}
@@ -1183,7 +1183,7 @@ const UsersTable = () => {
                                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
                               }}
                             >
-                              {user.city || "N/A"}
+                              {user.county || "N/A"}
                             </Typography>
                           </TableCell>
                           <TableCell
@@ -1266,25 +1266,37 @@ const UsersTable = () => {
                                 flexWrap: "wrap",
                               }}
                             >
-                              {user.photo_moderation_status === "pending" && (
-                                <Chip
-                                  icon={
-                                    <PendingIcon
-                                      sx={{ fontSize: "0.75rem !important" }}
-                                    />
-                                  }
-                                  label="Photo Pending"
-                                  size="small"
-                                  sx={{
-                                    fontSize: "0.65rem",
-                                    height: "20px",
-                                    bgcolor: "rgba(255, 193, 7, 0.2)",
-                                    color: "#B8860B",
-                                    fontWeight: 600,
-                                    border: "1px solid rgba(255, 193, 7, 0.4)",
-                                  }}
-                                />
-                              )}
+                              {(() => {
+                                // Check if profile picture is pending
+                                const profilePhotoPending = user.photo_moderation_status === "pending";
+                                
+                                // Check if any gallery photo is pending
+                                const hasGalleryPhotosPending = 
+                                  user.photos && 
+                                  Array.isArray(user.photos) && 
+                                  user.photos.some(photo => photo.moderation_status === "pending");
+                                
+                                // Show chip if either profile photo or any gallery photo is pending
+                                return (profilePhotoPending || hasGalleryPhotosPending) ? (
+                                  <Chip
+                                    icon={
+                                      <PendingIcon
+                                        sx={{ fontSize: "0.75rem !important" }}
+                                      />
+                                    }
+                                    label="Photo Pending"
+                                    size="small"
+                                    sx={{
+                                      fontSize: "0.65rem",
+                                      height: "20px",
+                                      bgcolor: "rgba(255, 193, 7, 0.2)",
+                                      color: "#B8860B",
+                                      fontWeight: 600,
+                                      border: "1px solid rgba(255, 193, 7, 0.4)",
+                                    }}
+                                  />
+                                ) : null;
+                              })()}
                               {user.bio_moderation_status === "pending" && (
                                 <Chip
                                   icon={
@@ -2239,13 +2251,13 @@ const UsersTable = () => {
                               variant="caption"
                               sx={{ color: "#7f8c8d" }}
                             >
-                              CITY
+                              COUNTY
                             </Typography>
                             <Typography
                               variant="body1"
                               sx={{ fontWeight: 600, color: "#2c3e50" }}
                             >
-                              {selectedUser?.city || "N/A"}
+                              {selectedUser?.county || "N/A"}
                             </Typography>
                           </Box>
                         </Box>
