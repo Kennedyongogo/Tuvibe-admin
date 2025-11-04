@@ -468,6 +468,88 @@ const UsersTable = () => {
     }
   };
 
+  // Gallery photo moderation handler
+  const handleGalleryPhotoModeration = async (
+    userId,
+    photoIndex,
+    action,
+    notes = ""
+  ) => {
+    try {
+      const key = `${userId}-gallery-${photoIndex}`;
+      setModerationLoading((prev) => ({ ...prev, [key]: true }));
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No authentication token found.",
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `/api/moderation/gallery-photo/${userId}/${photoIndex}/${action}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ notes }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Moderation action failed");
+      }
+
+      // Refresh user data
+      if (selectedUser?.id === userId) {
+        const refreshResponse = await fetch(
+          `/api/admin-users/public-users/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const refreshData = await refreshResponse.json();
+        if (refreshData.success) {
+          setSelectedUser(refreshData.data);
+        }
+      }
+
+      // Refresh users list
+      fetchUsers();
+
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: `Gallery photo ${
+          action === "approve" ? "approved" : "rejected"
+        } successfully.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      console.error("Gallery photo moderation error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "Failed to perform moderation action.",
+      });
+    } finally {
+      const key = `${userId}-gallery-${photoIndex}`;
+      setModerationLoading((prev) => ({ ...prev, [key]: false }));
+    }
+  };
+
   const handleCreateUser = async () => {
     try {
       setIsCreating(true);
@@ -1803,6 +1885,262 @@ const UsersTable = () => {
                     </Box>
                   </Box>
                 )}
+
+                {/* Gallery Photos Display with Moderation */}
+                {userTypeTabs[activeTab]?.value === "public" &&
+                  selectedUser?.photos &&
+                  Array.isArray(selectedUser.photos) &&
+                  selectedUser.photos.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mb: 2,
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          sx={{ color: "#2c3e50", fontWeight: 600 }}
+                        >
+                          Gallery Photos ({selectedUser.photos.length})
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "repeat(2, 1fr)",
+                            sm: "repeat(3, 1fr)",
+                            md: "repeat(4, 1fr)",
+                          },
+                          gap: 2,
+                        }}
+                      >
+                        {selectedUser.photos.map((photo, index) => {
+                          const photoStatus =
+                            photo.moderation_status || "pending";
+                          const isPending = photoStatus === "pending";
+                          const isApproved = photoStatus === "approved";
+                          const isRejected = photoStatus === "rejected";
+                          const loadingKey = `${selectedUser.id}-gallery-${index}`;
+                          const isLoading =
+                            moderationLoading[loadingKey] || false;
+
+                          return (
+                            <Box
+                              key={index}
+                              sx={{
+                                position: "relative",
+                                p: 1.5,
+                                backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                borderRadius: 2,
+                                border: "2px solid rgba(255, 215, 0, 0.3)",
+                                transition: "transform 0.2s ease-in-out",
+                                "&:hover": {
+                                  transform: "scale(1.02)",
+                                },
+                              }}
+                            >
+                              {/* Photo Image */}
+                              <Box
+                                component="img"
+                                src={buildImageUrl(photo.path)}
+                                alt={`Gallery Photo ${index + 1}`}
+                                sx={{
+                                  width: "100%",
+                                  height: 150,
+                                  objectFit: "cover",
+                                  borderRadius: 1,
+                                  border: "2px solid #FFD700",
+                                  cursor: "pointer",
+                                  opacity: isPending || isRejected ? 0.7 : 1,
+                                  mb: 1,
+                                }}
+                                onClick={() => {
+                                  const fullImageUrl = buildImageUrl(
+                                    photo.path
+                                  );
+                                  window.open(fullImageUrl, "_blank");
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                }}
+                              />
+
+                              {/* Moderation Status Badge */}
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  mb: 1,
+                                }}
+                              >
+                                {isPending && (
+                                  <Chip
+                                    icon={
+                                      <PendingIcon
+                                        sx={{ fontSize: "0.75rem !important" }}
+                                      />
+                                    }
+                                    label="Pending"
+                                    size="small"
+                                    sx={{
+                                      fontSize: "0.65rem",
+                                      height: "20px",
+                                      bgcolor: "rgba(255, 193, 7, 0.2)",
+                                      color: "#B8860B",
+                                      fontWeight: 600,
+                                      border:
+                                        "1px solid rgba(255, 193, 7, 0.4)",
+                                    }}
+                                  />
+                                )}
+                                {isApproved && (
+                                  <Chip
+                                    icon={
+                                      <CheckCircle
+                                        sx={{
+                                          fontSize: "0.75rem !important",
+                                          color: "#4CAF50 !important",
+                                        }}
+                                      />
+                                    }
+                                    label="Approved"
+                                    size="small"
+                                    sx={{
+                                      fontSize: "0.65rem",
+                                      height: "20px",
+                                      bgcolor: "rgba(76, 175, 80, 0.15)",
+                                      color: "#2E7D32",
+                                      fontWeight: 600,
+                                      border:
+                                        "1px solid rgba(76, 175, 80, 0.3)",
+                                    }}
+                                  />
+                                )}
+                                {isRejected && (
+                                  <Chip
+                                    icon={
+                                      <CancelIcon
+                                        sx={{
+                                          fontSize: "0.75rem !important",
+                                          color: "#F44336 !important",
+                                        }}
+                                      />
+                                    }
+                                    label="Rejected"
+                                    size="small"
+                                    sx={{
+                                      fontSize: "0.65rem",
+                                      height: "20px",
+                                      bgcolor: "rgba(244, 67, 54, 0.15)",
+                                      color: "#C62828",
+                                      fontWeight: 600,
+                                      border:
+                                        "1px solid rgba(244, 67, 54, 0.3)",
+                                    }}
+                                  />
+                                )}
+                              </Box>
+
+                              {/* Moderation Actions */}
+                              {isPending && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    gap: 0.5,
+                                  }}
+                                >
+                                  <Tooltip title="Approve Photo" arrow>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        handleGalleryPhotoModeration(
+                                          selectedUser.id,
+                                          index,
+                                          "approve"
+                                        )
+                                      }
+                                      disabled={isLoading}
+                                      sx={{
+                                        bgcolor: "rgba(76, 175, 80, 0.1)",
+                                        color: "#4CAF50",
+                                        "&:hover": {
+                                          bgcolor: "rgba(76, 175, 80, 0.2)",
+                                        },
+                                        "&:disabled": {
+                                          opacity: 0.5,
+                                        },
+                                      }}
+                                    >
+                                      {isLoading ? (
+                                        <CircularProgress size={16} />
+                                      ) : (
+                                        <ThumbUpIcon fontSize="small" />
+                                      )}
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Reject Photo" arrow>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => {
+                                        Swal.fire({
+                                          title: "Reject Gallery Photo",
+                                          input: "textarea",
+                                          inputLabel:
+                                            "Rejection Reason (Optional)",
+                                          inputPlaceholder:
+                                            "Enter reason for rejection...",
+                                          inputAttributes: {
+                                            "aria-label":
+                                              "Enter rejection reason",
+                                          },
+                                          showCancelButton: true,
+                                          confirmButtonColor: "#d33",
+                                          cancelButtonColor: "#3085d6",
+                                          confirmButtonText: "Reject",
+                                          cancelButtonText: "Cancel",
+                                        }).then((result) => {
+                                          if (result.isConfirmed) {
+                                            handleGalleryPhotoModeration(
+                                              selectedUser.id,
+                                              index,
+                                              "reject",
+                                              result.value || ""
+                                            );
+                                          }
+                                        });
+                                      }}
+                                      disabled={isLoading}
+                                      sx={{
+                                        bgcolor: "rgba(244, 67, 54, 0.1)",
+                                        color: "#F44336",
+                                        "&:hover": {
+                                          bgcolor: "rgba(244, 67, 54, 0.2)",
+                                        },
+                                        "&:disabled": {
+                                          opacity: 0.5,
+                                        },
+                                      }}
+                                    >
+                                      {isLoading ? (
+                                        <CircularProgress size={16} />
+                                      ) : (
+                                        <ThumbDownIcon fontSize="small" />
+                                      )}
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              )}
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    </Box>
+                  )}
 
                 <Stack spacing={2} sx={{ mb: 3 }}>
                   {userTypeTabs[activeTab]?.value === "admin" ? (
