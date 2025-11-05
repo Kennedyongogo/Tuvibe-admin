@@ -78,10 +78,12 @@ const Marketplace = () => {
     is_featured: false,
     tag: "none",
   });
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState({}); // Track current image index for each item
 
   const tagTabs = [
     { label: "All Items", value: "all", count: tabCounts.all },
@@ -101,6 +103,50 @@ const Marketplace = () => {
   useEffect(() => {
     fetchAllItemsForCounts();
   }, []);
+
+  // Auto-transition images for each market item
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const intervals = {};
+    const newIndices = {};
+
+    items.forEach((item) => {
+      const images = item.images || [];
+      const itemId = item.id;
+
+      // Preload all images for smooth transitions
+      images.forEach((imagePath) => {
+        const img = new Image();
+        img.src = getImageUrl(imagePath);
+      });
+
+      // Always reset to 0 for new items
+      newIndices[itemId] = 0;
+
+      if (images.length > 1) {
+        const imageCount = images.length;
+
+        // Set up interval for this item
+        intervals[itemId] = setInterval(() => {
+          setCurrentImageIndex((prev) => {
+            const currentIdx = prev[itemId] || 0;
+            const nextIdx = (currentIdx + 1) % imageCount;
+            return { ...prev, [itemId]: nextIdx };
+          });
+        }, 3000); // Change image every 3 seconds
+      }
+    });
+
+    // Set all indices to 0
+    setCurrentImageIndex(newIndices);
+
+    // Cleanup intervals on unmount or when items change
+    return () => {
+      Object.values(intervals).forEach((interval) => clearInterval(interval));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
 
   const fetchItems = async () => {
     try {
@@ -189,12 +235,42 @@ const Marketplace = () => {
   };
 
   const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target.result);
-      reader.readAsDataURL(file);
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      setSelectedImages((prev) => [...prev, ...files]);
+      const previews = [];
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previews.push(e.target.result);
+          if (previews.length === files.length) {
+            setImagePreviews((prev) => [...prev, ...previews]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImagePreview = (index) => {
+    const newPreviews = [...imagePreviews];
+    const newSelected = [...selectedImages];
+
+    // Determine if it's an existing image or new image
+    if (index < existingImages.length) {
+      // Remove existing image
+      const newExisting = [...existingImages];
+      newExisting.splice(index, 1);
+      setExistingImages(newExisting);
+      newPreviews.splice(index, 1);
+      setImagePreviews(newPreviews);
+    } else {
+      // Remove new image
+      const newIndex = index - existingImages.length;
+      newSelected.splice(newIndex, 1);
+      setSelectedImages(newSelected);
+      newPreviews.splice(index, 1);
+      setImagePreviews(newPreviews);
     }
   };
 
@@ -220,8 +296,11 @@ const Marketplace = () => {
       formData.append("is_featured", itemForm.is_featured);
       formData.append("tag", itemForm.tag);
 
-      if (selectedImage) {
-        formData.append("image", selectedImage);
+      // Append multiple images
+      if (selectedImages && selectedImages.length > 0) {
+        selectedImages.forEach((file) => {
+          formData.append("market_images", file);
+        });
       }
 
       const response = await fetch("/api/market", {
@@ -282,8 +361,23 @@ const Marketplace = () => {
       formData.append("is_featured", itemForm.is_featured);
       formData.append("tag", itemForm.tag);
 
-      if (selectedImage) {
-        formData.append("image", selectedImage);
+      // If new images are uploaded, send them (they will replace all existing ones)
+      if (selectedImages && selectedImages.length > 0) {
+        selectedImages.forEach((file) => {
+          formData.append("market_images", file);
+        });
+      } else if (existingImages.length > 0) {
+        // If no new images but images were removed, send the remaining images array
+        // Convert existing images back to their original paths
+        const currentImages = existingImages.map((img) => {
+          // Remove the /uploads/ prefix if present to get the original path
+          if (img.startsWith("/uploads/")) {
+            return img.replace("/uploads/", "");
+          }
+          return img;
+        });
+        // Send as JSON string - backend will parse it
+        formData.append("images", JSON.stringify(currentImages));
       }
 
       const response = await fetch(`/api/market/${selectedItem.id}`, {
@@ -384,14 +478,16 @@ const Marketplace = () => {
       is_featured: item.is_featured || false,
       tag: item.tag || "none",
     });
-    setImagePreview(
-      item.image
-        ? item.image.startsWith("http")
-          ? item.image
-          : `/uploads/market/${item.image}`
-        : null
-    );
-    setSelectedImage(null);
+
+    // Load existing images
+    const existing = (item.images || []).map((img) => {
+      if (img.startsWith("http")) return img;
+      if (img.startsWith("/")) return img;
+      return `/uploads/${img}`;
+    });
+    setExistingImages(existing);
+    setImagePreviews(existing);
+    setSelectedImages([]);
     setIsEditMode(true);
     setOpenEditDialog(true);
   };
@@ -405,8 +501,9 @@ const Marketplace = () => {
       is_featured: false,
       tag: "none",
     });
-    setSelectedImage(null);
-    setImagePreview(null);
+    setSelectedImages([]);
+    setImagePreviews([]);
+    setExistingImages([]);
     setSelectedItem(null);
     setIsEditMode(false);
     setOpenDialog(false);
@@ -663,20 +760,53 @@ const Marketplace = () => {
                         overflow: "hidden",
                       }}
                     >
-                      {item.image ? (
-                        <Box
-                          component="img"
-                          src={getImageUrl(item.image)}
-                          alt={item.title}
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                          onError={(e) => {
-                            e.target.style.display = "none";
-                          }}
-                        />
+                      {item.images && item.images.length > 0 ? (
+                        <>
+                          {item.images.map((imagePath, index) => {
+                            const currentIdx = currentImageIndex[item.id] || 0;
+                            return (
+                              <Box
+                                key={`${item.id}-img-${index}`}
+                                component="img"
+                                src={getImageUrl(imagePath)}
+                                alt={item.title}
+                                sx={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                  opacity: currentIdx === index ? 1 : 0,
+                                  transition: "opacity 1.5s ease-in-out",
+                                  zIndex: currentIdx === index ? 1 : 0,
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                }}
+                              />
+                            );
+                          })}
+                          {item.images.length > 1 && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 8,
+                                left: 8,
+                                backgroundColor: "rgba(0, 0, 0, 0.7)",
+                                color: "white",
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 1,
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                zIndex: 2,
+                              }}
+                            >
+                              +{item.images.length - 1} more
+                            </Box>
+                          )}
+                        </>
                       ) : (
                         <Box
                           sx={{
@@ -948,6 +1078,7 @@ const Marketplace = () => {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageSelect}
                   style={{ display: "none" }}
                   id="image-upload"
@@ -960,29 +1091,59 @@ const Marketplace = () => {
                     fullWidth
                     sx={{ mb: 2 }}
                   >
-                    Upload Image
+                    Upload Images
                   </Button>
                 </label>
-                {imagePreview && (
+                {imagePreviews.length > 0 && (
                   <Box
                     sx={{
                       mt: 2,
-                      width: "100%",
-                      height: { xs: 150, sm: 200 },
-                      borderRadius: 2,
-                      overflow: "hidden",
-                      border: "1px solid #e0e0e0",
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(2, 1fr)",
+                        sm: "repeat(3, 1fr)",
+                      },
+                      gap: 2,
                     }}
                   >
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
+                    {imagePreviews.map((preview, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          position: "relative",
+                          width: "100%",
+                          height: { xs: 120, sm: 150 },
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      >
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => removeImagePreview(index)}
+                          sx={{
+                            position: "absolute",
+                            top: 4,
+                            right: 4,
+                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            "&:hover": {
+                              backgroundColor: "rgba(255, 255, 255, 1)",
+                            },
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
                   </Box>
                 )}
               </Box>
@@ -1141,6 +1302,7 @@ const Marketplace = () => {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageSelect}
                   style={{ display: "none" }}
                   id="edit-image-upload"
@@ -1153,29 +1315,61 @@ const Marketplace = () => {
                     fullWidth
                     sx={{ mb: 2 }}
                   >
-                    {selectedImage ? "Change Image" : "Upload New Image"}
+                    {selectedImages.length > 0
+                      ? `Add ${selectedImages.length} More Image(s)`
+                      : "Add More Images"}
                   </Button>
                 </label>
-                {imagePreview && (
+                {imagePreviews.length > 0 && (
                   <Box
                     sx={{
                       mt: 2,
-                      width: "100%",
-                      height: { xs: 150, sm: 200 },
-                      borderRadius: 2,
-                      overflow: "hidden",
-                      border: "1px solid #e0e0e0",
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(2, 1fr)",
+                        sm: "repeat(3, 1fr)",
+                      },
+                      gap: 2,
                     }}
                   >
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
+                    {imagePreviews.map((preview, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          position: "relative",
+                          width: "100%",
+                          height: { xs: 120, sm: 150 },
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      >
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => removeImagePreview(index)}
+                          sx={{
+                            position: "absolute",
+                            top: 4,
+                            right: 4,
+                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            "&:hover": {
+                              backgroundColor: "rgba(255, 255, 255, 1)",
+                            },
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    ))}
                   </Box>
                 )}
               </Box>

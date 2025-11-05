@@ -25,7 +25,6 @@ import {
   Folder,
   History,
   RateReview,
-  VerifiedUser,
   Store,
   Report,
 } from "@mui/icons-material";
@@ -160,11 +159,6 @@ const Navbar = (props) => {
       text: "Users",
       icon: <PeopleAlt />,
       path: "/users",
-    },
-    {
-      text: "Verification",
-      icon: <VerifiedUser />,
-      path: "/verification",
     },
     {
       text: "Marketplace",
