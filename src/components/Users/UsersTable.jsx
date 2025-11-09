@@ -196,6 +196,15 @@ const UsersTable = () => {
       .join(" ");
   };
 
+const displayValue = (value, fallback = "Not provided") => {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : fallback;
+  }
+  return value;
+};
+
   const getStatusColor = (isActive) => {
     return isActive ? "success" : "error";
   };
@@ -1176,15 +1185,15 @@ const UsersTable = () => {
                           <TableCell
                             sx={{ display: { xs: "none", lg: "table-cell" } }}
                           >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "#7f8c8d",
-                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                              }}
-                            >
-                              {user.county || "N/A"}
-                            </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#7f8c8d",
+                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                            }}
+                          >
+                            {displayValue(user.county)}
+                          </Typography>
                           </TableCell>
                           <TableCell
                             sx={{ display: { xs: "none", md: "table-cell" } }}
@@ -2257,7 +2266,7 @@ const UsersTable = () => {
                               variant="body1"
                               sx={{ fontWeight: 600, color: "#2c3e50" }}
                             >
-                              {selectedUser?.county || "N/A"}
+                              {displayValue(selectedUser?.county)}
                             </Typography>
                           </Box>
                         </Box>

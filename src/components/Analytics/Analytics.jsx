@@ -2332,10 +2332,6 @@ const Analytics = () => {
               value={analyticsData.overview?.totalMarketItems || 0}
             />
             <CardItem
-              title="Pending Verifications"
-              value={analyticsData.overview?.pendingVerifications || 0}
-            />
-            <CardItem
               title="Total Admins"
               value={analyticsData.overview?.totalAdmins || 0}
             />
@@ -2463,15 +2459,15 @@ const Analytics = () => {
                       alignItems="center"
                       p={2}
                       sx={{
-                        backgroundColor: "rgba(0, 188, 212, 0.05)",
+                        backgroundColor: "rgba(33, 150, 243, 0.05)",
                         borderRadius: 2,
-                        border: "1px solid rgba(0, 188, 212, 0.1)",
+                        border: "1px solid rgba(33, 150, 243, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Pending Requests</Typography>
+                      <Typography fontWeight="500">Looking For Posts</Typography>
                       <Chip
-                        label={analyticsData.premiumStats?.pendingRequests || 0}
-                        color="info"
+                        label={analyticsData.premiumStats?.totalLookingForPosts || 0}
+                        color="primary"
                       />
                     </Box>
                   </Stack>
@@ -4513,6 +4509,7 @@ const Analytics = () => {
           <HelpIcon />
         </IconButton>
       </Box>
+
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 3 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
@@ -4556,38 +4553,7 @@ const Analytics = () => {
         </Grid>
       </Grid>
 
-      {/* Verification Requests & Additional Stats */}
       <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#ff9800", mb: 1 }}>
-              {analyticsData.premiumStats?.pendingRequests || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Pending Requests
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4caf50", mb: 1 }}>
-              {analyticsData.premiumStats?.approvedRequests || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Approved Requests
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f44336", mb: 1 }}>
-              {analyticsData.premiumStats?.rejectedRequests || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Rejected Requests
-            </Typography>
-          </Card>
-        </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#9c27b0", mb: 1 }}>

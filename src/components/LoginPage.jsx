@@ -954,7 +954,7 @@ export default function LoginPage(props) {
               label="Email Address"
               fullWidth
               margin="normal"
-              placeholder="admin@mwalimuhope.org"
+              placeholder="admin@tuvibe.com"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
