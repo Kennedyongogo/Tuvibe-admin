@@ -1029,7 +1029,7 @@ export default function LoginPage(props) {
                   )
                 }
               >
-                {resetLoading ? "Sending..." : "Send Reset Link"}
+                {resetLoading ? "Sending..." : "Send Reset Password"}
               </Button>
             </DialogActions>
           </form>

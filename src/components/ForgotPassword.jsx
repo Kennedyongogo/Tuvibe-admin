@@ -40,7 +40,7 @@ export default function ForgotPassword(props) {
 
     if (validateEmail(body.Email)) {
       setIsLoading(true);
-      fetch("api/auth/forgot", {
+      fetch("/api/auth/forgot", {
         method: "POST",
         credentials: "include",
         headers: {
