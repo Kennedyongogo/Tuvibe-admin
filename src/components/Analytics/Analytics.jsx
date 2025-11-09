@@ -2140,7 +2140,7 @@ const Analytics = () => {
     const style = getCardStyle(title);
 
     return (
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+      <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
         <Card
           sx={{
             borderRadius: "20px",
@@ -2190,7 +2190,7 @@ const Analytics = () => {
         >
           <CardContent
             sx={{
-              p: 4,
+              p: 3,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -2205,12 +2205,12 @@ const Analytics = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                mb: 3,
-                width: 90,
-                height: 90,
+                mb: 2.5,
+                width: 72,
+                height: 72,
                 borderRadius: "50%",
                 backgroundColor: style.iconBg,
-                border: `3px solid ${style.borderColor}40`,
+                border: `2px solid ${style.borderColor}40`,
                 transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                 boxShadow: `0 4px 12px ${style.borderColor}30`,
                 "&:hover": {
@@ -2228,12 +2228,12 @@ const Analytics = () => {
               {style.icon}
             </Box>
             <Typography
-              variant="h2"
+              variant="h3"
               fontWeight="900"
               sx={{
                 color: style.textColor,
-                mb: 1.5,
-                fontSize: { xs: "2.5rem", sm: "3rem", md: "3.5rem" },
+                mb: 1,
+                fontSize: { xs: "2rem", sm: "2.25rem", md: "2.5rem" },
                 background: `linear-gradient(135deg, ${style.textColor}, ${style.borderColor}CC)`,
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
@@ -2251,7 +2251,7 @@ const Analytics = () => {
               sx={{
                 color: style.textColor,
                 opacity: 0.9,
-                fontSize: { xs: "0.95rem", sm: "1rem" },
+                fontSize: { xs: "0.85rem", sm: "0.9rem" },
                 lineHeight: 1.3,
                 letterSpacing: "0.02em",
                 textTransform: "none",
@@ -2314,7 +2314,7 @@ const Analytics = () => {
       {dataLoaded && (
         <>
           {/* Key Metrics Cards */}
-          <Grid container spacing={3}>
+          <Grid container spacing={3} columns={{ xs: 1, sm: 2, md: 5, lg: 5 }}>
             <CardItem
               title="Total Users"
               value={analyticsData.overview?.totalUsers || 0}
@@ -4510,9 +4510,25 @@ const Analytics = () => {
         </IconButton>
       </Box>
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+      <Grid container spacing={3} columns={{ xs: 1, sm: 2, md: 5, lg: 5 }}>
+        {(() => {
+          const premiumCardStyle = {
+            p: 3,
+            textAlign: "center",
+            height: "100%",
+            borderRadius: 2,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            transition: "transform 0.3s ease, box-shadow 0.3s ease",
+            backgroundColor: "#ffffff",
+            "&:hover": {
+              transform: "translateY(-6px)",
+              boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
+            },
+          };
+          return (
+            <>
+        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+          <Card sx={premiumCardStyle}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#667eea", mb: 1 }}>
               {analyticsData.premiumStats?.totalVerified || 0}
             </Typography>
@@ -4521,8 +4537,8 @@ const Analytics = () => {
             </Typography>
           </Card>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+          <Card sx={premiumCardStyle}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
               {analyticsData.premiumStats?.sugarMummys || 0}
             </Typography>
@@ -4531,8 +4547,8 @@ const Analytics = () => {
             </Typography>
           </Card>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+          <Card sx={premiumCardStyle}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#764ba2", mb: 1 }}>
               {analyticsData.premiumStats?.sponsors || 0}
             </Typography>
@@ -4541,8 +4557,8 @@ const Analytics = () => {
             </Typography>
           </Card>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+          <Card sx={premiumCardStyle}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#4facfe", mb: 1 }}>
               {analyticsData.premiumStats?.ben10s || 0}
             </Typography>
@@ -4551,11 +4567,8 @@ const Analytics = () => {
             </Typography>
           </Card>
         </Grid>
-      </Grid>
-
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center" }}>
+        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+          <Card sx={premiumCardStyle}>
             <Typography variant="h4" fontWeight="bold" sx={{ color: "#9c27b0", mb: 1 }}>
               {analyticsData.premiumStats?.totalLookingForPosts || 0}
             </Typography>
@@ -4564,6 +4577,9 @@ const Analytics = () => {
             </Typography>
           </Card>
         </Grid>
+            </>
+          );
+        })()}
       </Grid>
     </Box>
   );
