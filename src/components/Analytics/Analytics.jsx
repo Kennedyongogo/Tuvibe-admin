@@ -226,7 +226,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Total Users"
-              secondary="The total number of registered users on the platform"
+              secondary="Total number of people registered on TuVibe"
             />
           </ListItem>
           <ListItem>
@@ -235,7 +235,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Premium Users"
-              secondary="The total number of users with premium category membership (Sugar Mummy, Sponsor, Ben 10)"
+              secondary="How many users currently hold a premium category (Sugar Mummy, Sponsor, Ben 10)"
             />
           </ListItem>
           <ListItem>
@@ -244,7 +244,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Online Users"
-              secondary="The number of currently active users on the platform"
+              secondary="Users who are online within the last active window"
             />
           </ListItem>
           <ListItem>
@@ -253,16 +253,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Total Market Items"
-              secondary="The total number of items listed in the marketplace"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="secondary" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Pending Verifications"
-              secondary="The number of premium users awaiting verification"
+              secondary="Marketplace listings that are live right now"
             />
           </ListItem>
           <ListItem>
@@ -324,7 +315,7 @@ const Analytics = () => {
             <strong>💡 Tip:</strong> These metrics help you understand your platform's 
             performance, track user engagement, monitor premium membership status, and identify areas 
             needing attention. Use the tabs to dive deeper into specific areas like Tokens, Premium, and Market.
-            Boost statistics show how users are investing in profile visibility, which indicates monetization success.
+            Boost and engagement statistics reveal how members are spending tokens and interacting with profiles.
           </Typography>
         </Alert>
       </DialogContent>
@@ -354,8 +345,9 @@ const Analytics = () => {
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The Tokens tab provides comprehensive insights into the token economy of your TuVibe platform, 
-          including token circulation, deductions, and distribution by payment method. Here's what each metric means:
+          The Tokens tab explains how tokens are moving through TuVibe—what is available,
+          what has been spent, and how members are paying for boosts and other actions.
+          Use these notes to interpret each card and table.
         </Typography>
 
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
@@ -368,7 +360,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Tokens in Circulation"
-              secondary="The total number of tokens currently available in the system across all users"
+              secondary="Total tokens currently held by users across the entire platform"
             />
           </ListItem>
           <ListItem>
@@ -377,7 +369,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Tokens Deducted"
-              secondary="The total number of tokens that have been spent or deducted from user accounts"
+              secondary="Tokens spent or deducted from user balances (boosts, unlocks, fees)"
             />
           </ListItem>
           <ListItem>
@@ -386,7 +378,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Tokens Bonus"
-              secondary="The total number of bonus tokens given to users (promotions, referrals, etc.)"
+              secondary="Bonus tokens awarded through promos or manual credits (currently zero when none were issued)"
             />
           </ListItem>
         </List>
@@ -401,7 +393,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Tokens Today"
-              secondary="Number of tokens added or circulated in the system today"
+              secondary="Net token change recorded today (can be negative if members spent more than they earned)"
             />
           </ListItem>
           <ListItem>
@@ -410,7 +402,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Tokens This Week"
-              secondary="Total tokens added or circulated in the current week"
+              secondary="Net token increase across the current week"
             />
           </ListItem>
           <ListItem>
@@ -419,7 +411,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Tokens This Month"
-              secondary="Total tokens added or circulated in the current month"
+              secondary="Net token increase across the current month"
             />
           </ListItem>
         </List>
@@ -434,7 +426,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Payment Method Distribution"
-              secondary="Shows how tokens were acquired (e.g., system credits, purchases, bonuses)"
+              secondary="Breakdown of how tokens were credited (for example card payments vs. system grants)"
             />
           </ListItem>
         </List>
@@ -449,7 +441,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Total Tokens Spent on Boosts"
-              secondary="The cumulative amount of tokens users have spent on profile boosts"
+              secondary="Total amount of tokens consumed by boost purchases"
             />
           </ListItem>
           <ListItem>
@@ -458,7 +450,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Total Boosts Purchased"
-              secondary="The total number of boost purchases made by users across all time periods"
+              secondary="All boost purchases completed to date"
             />
           </ListItem>
           <ListItem>
@@ -467,7 +459,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Currently Active Boosts"
-              secondary="Number of profiles that currently have an active boost (is_featured_until > current time)"
+              secondary="Boosts still active right now (0 means none are running)"
             />
           </ListItem>
           <ListItem>
@@ -476,7 +468,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Users with Boost History"
-              secondary="Total number of users who have purchased at least one boost (boost_score > 0)"
+              secondary="How many unique users have ever bought boosts"
             />
           </ListItem>
           <ListItem>
@@ -485,7 +477,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Average Boost Score"
-              secondary="The average boost_score across all users, indicating overall boost adoption"
+              secondary="Average boost score per user, useful for monitoring adoption intensity"
             />
           </ListItem>
           <ListItem>
@@ -494,7 +486,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Boost Purchases by Time Period"
-              secondary="Shows boost purchase counts for today, this week, and this month to track trends"
+              secondary="Daily, weekly, and monthly counts to spot spikes in boost demand"
             />
           </ListItem>
           <ListItem>
@@ -503,7 +495,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Boost Token Spending by Time Period"
-              secondary="Shows token amounts spent on boosts for today, this week, and this month"
+              secondary="Tokens consumed by boosts today, this week, and this month"
             />
           </ListItem>
         </List>
@@ -511,8 +503,8 @@ const Analytics = () => {
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
             <strong>💡 Tip:</strong> Monitor token circulation to understand user engagement and spending patterns. 
-            High token deductions indicate active platform usage, while increasing circulation suggests growing user base or promotional activity.
-            Boost metrics show how effectively the profile boost feature is driving revenue and user investment in visibility.
+            Negative daily values simply mean members spent more than they bought. 
+            Boost metrics show how effectively profile boosts convert into token spending.
           </Typography>
         </Alert>
       </DialogContent>
@@ -589,39 +581,6 @@ const Analytics = () => {
         </List>
 
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
-          📋 Verification Requests
-        </Typography>
-        <List dense>
-          <ListItem>
-            <ListItemIcon>
-              <DescriptionIcon color="warning" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Pending Requests"
-              secondary="Number of premium verification requests awaiting admin review"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <CheckCircleIcon color="success" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Approved Requests"
-              secondary="Total number of premium verification requests that have been approved"
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <TrendingDown color="error" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Rejected Requests"
-              secondary="Total number of premium verification requests that have been rejected"
-            />
-          </ListItem>
-        </List>
-
-        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
           📝 Additional Premium Metrics
         </Typography>
         <List dense>
@@ -638,8 +597,8 @@ const Analytics = () => {
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> Monitor pending verification requests regularly to ensure timely processing. 
-            Track category distribution to understand which premium types are most popular among your users.
+            <strong>💡 Tip:</strong> Watch premium category counts and the number of Looking For posts to see how your premium members are engaging.
+            A balanced mix of categories helps maintain a healthy marketplace for connections.
           </Typography>
         </Alert>
       </DialogContent>
@@ -669,8 +628,8 @@ const Analytics = () => {
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The Market tab provides insights into your marketplace, including item counts, special collections, 
-          and growth metrics. Here's what each metric means:
+          The Market tab highlights how many items are available and which collections are active so you
+          can spot promotions that need attention. Review each section to interpret the live cards.
         </Typography>
 
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
@@ -683,7 +642,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Total Items"
-              secondary="The total number of items listed in the marketplace"
+              secondary="All marketplace listings that are currently visible"
             />
           </ListItem>
           <ListItem>
@@ -692,7 +651,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Regular Items"
-              secondary="Standard marketplace items without special tags or promotions"
+              secondary="Listings without a featured, hot deal, or weekend tag"
             />
           </ListItem>
         </List>
@@ -707,7 +666,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Featured Items"
-              secondary="Items that have been featured by administrators for special promotion"
+              secondary="Items highlighted for added visibility (featured flag)"
             />
           </ListItem>
           <ListItem>
@@ -716,7 +675,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Hot Deals"
-              secondary="Items marked as hot deals with special pricing or promotions"
+              secondary="Listings marked as hot deals (often with discounts)"
             />
           </ListItem>
           <ListItem>
@@ -725,7 +684,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Weekend Picks"
-              secondary="Items specially curated for weekend shopping"
+              secondary="Items tagged for weekend curation (0 when no picks are scheduled)"
             />
           </ListItem>
         </List>
@@ -740,7 +699,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Items Added Today"
-              secondary="Number of new items added to the marketplace today"
+              secondary="New listings created today (shows 0 when no additions happened)"
             />
           </ListItem>
           <ListItem>
@@ -749,7 +708,7 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Items Added This Week"
-              secondary="Total number of items added to the marketplace in the current week"
+              secondary="Listings created during the current week"
             />
           </ListItem>
           <ListItem>
@@ -758,15 +717,15 @@ const Analytics = () => {
             </ListItemIcon>
             <ListItemText
               primary="Items Added This Month"
-              secondary="Total number of items added to the marketplace in the current month"
+              secondary="Listings created during the current month"
             />
           </ListItem>
         </List>
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> Track special collections to see which promotional strategies are working. 
-            Monitor growth metrics to understand marketplace activity and seller engagement patterns.
+            <strong>💡 Tip:</strong> Compare featured, hot deals, and regular counts to keep promotions balanced. 
+            If daily additions stay at zero while weekly totals rise, the inventory likely came from earlier in the week.
           </Typography>
         </Alert>
       </DialogContent>
