@@ -192,7 +192,6 @@ const Analytics = () => {
     }
   };
 
-
   // Overview Help Dialog Component
   const OverviewHelpDialog = () => (
     <Dialog
@@ -211,8 +210,9 @@ const Analytics = () => {
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          This overview provides comprehensive insights about your TuVibe platform, 
-          including users, tokens, premium members, market items, and engagement metrics. Here's what each section means:
+          This overview provides comprehensive insights about your TuVibe
+          platform, including users, tokens, premium members, market items, and
+          engagement metrics. Here's what each section means:
         </Typography>
 
         {/* Key Metrics Cards */}
@@ -312,10 +312,12 @@ const Analytics = () => {
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> These metrics help you understand your platform's 
-            performance, track user engagement, monitor premium membership status, and identify areas 
-            needing attention. Use the tabs to dive deeper into specific areas like Tokens, Premium, and Market.
-            Boost and engagement statistics reveal how members are spending tokens and interacting with profiles.
+            <strong>💡 Tip:</strong> These metrics help you understand your
+            platform's performance, track user engagement, monitor premium
+            membership status, and identify areas needing attention. Use the
+            tabs to dive deeper into specific areas like Tokens, Premium, and
+            Market. Boost and engagement statistics reveal how members are
+            spending tokens and interacting with profiles.
           </Typography>
         </Alert>
       </DialogContent>
@@ -345,9 +347,9 @@ const Analytics = () => {
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The Tokens tab explains how tokens are moving through TuVibe—what is available,
-          what has been spent, and how members are paying for boosts and other actions.
-          Use these notes to interpret each card and table.
+          The Tokens tab explains how tokens are moving through TuVibe—what is
+          available, what has been spent, and how members are paying for boosts
+          and other actions. Use these notes to interpret each card and table.
         </Typography>
 
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
@@ -502,9 +504,10 @@ const Analytics = () => {
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> Monitor token circulation to understand user engagement and spending patterns. 
-            Negative daily values simply mean members spent more than they bought. 
-            Boost metrics show how effectively profile boosts convert into token spending.
+            <strong>💡 Tip:</strong> Monitor token circulation to understand
+            user engagement and spending patterns. Negative daily values simply
+            mean members spent more than they bought. Boost metrics show how
+            effectively profile boosts convert into token spending.
           </Typography>
         </Alert>
       </DialogContent>
@@ -534,8 +537,9 @@ const Analytics = () => {
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The Premium tab provides insights into premium membership on your TuVibe platform, 
-          including verified users, premium categories, and verification requests. Here's what each metric means:
+          The Premium tab provides insights into premium membership on your
+          TuVibe platform, including verified users, premium categories, and
+          verification requests. Here's what each metric means:
         </Typography>
 
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
@@ -597,8 +601,10 @@ const Analytics = () => {
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> Watch premium category counts and the number of Looking For posts to see how your premium members are engaging.
-            A balanced mix of categories helps maintain a healthy marketplace for connections.
+            <strong>💡 Tip:</strong> Watch premium category counts and the
+            number of Looking For posts to see how your premium members are
+            engaging. A balanced mix of categories helps maintain a healthy
+            marketplace for connections.
           </Typography>
         </Alert>
       </DialogContent>
@@ -628,8 +634,9 @@ const Analytics = () => {
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The Market tab highlights how many items are available and which collections are active so you
-          can spot promotions that need attention. Review each section to interpret the live cards.
+          The Market tab highlights how many items are available and which
+          collections are active so you can spot promotions that need attention.
+          Review each section to interpret the live cards.
         </Typography>
 
         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, mt: 3 }}>
@@ -724,8 +731,10 @@ const Analytics = () => {
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> Compare featured, hot deals, and regular counts to keep promotions balanced. 
-            If daily additions stay at zero while weekly totals rise, the inventory likely came from earlier in the week.
+            <strong>💡 Tip:</strong> Compare featured, hot deals, and regular
+            counts to keep promotions balanced. If daily additions stay at zero
+            while weekly totals rise, the inventory likely came from earlier in
+            the week.
           </Typography>
         </Alert>
       </DialogContent>
@@ -766,7 +775,11 @@ const Analytics = () => {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#D4AF37", mb: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#D4AF37", mb: 1 }}
+            >
               {analyticsData.tokenStats?.totalTokensInCirculation || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -776,7 +789,11 @@ const Analytics = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#f5576c", mb: 1 }}
+            >
               {analyticsData.tokenStats?.totalTokensDeducted || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -786,7 +803,11 @@ const Analytics = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4facfe", mb: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#4facfe", mb: 1 }}
+            >
               {analyticsData.tokenStats?.totalTokensBonus || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -796,7 +817,11 @@ const Analytics = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#43e97b", mb: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#43e97b", mb: 1 }}
+            >
               {analyticsData.tokenStats?.tokensToday || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -806,7 +831,11 @@ const Analytics = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#00f2fe", mb: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#00f2fe", mb: 1 }}
+            >
               {analyticsData.tokenStats?.tokensThisWeek || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -816,7 +845,11 @@ const Analytics = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#764ba2", mb: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#764ba2", mb: 1 }}
+            >
               {analyticsData.tokenStats?.tokensThisMonth || 0}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -837,17 +870,27 @@ const Analytics = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell><strong>Payment Method</strong></TableCell>
-                    <TableCell align="right"><strong>Total Tokens</strong></TableCell>
-                    <TableCell align="right"><strong>Count</strong></TableCell>
+                    <TableCell>
+                      <strong>Payment Method</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Total Tokens</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Count</strong>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {analyticsData.tokensByMethod.map((method, index) => (
                     <TableRow key={index}>
-                      <TableCell>{method.payment_method || 'N/A'}</TableCell>
-                      <TableCell align="right">{parseFloat(method.total || 0).toLocaleString()}</TableCell>
-                      <TableCell align="right">{parseInt(method.count || 0)}</TableCell>
+                      <TableCell>{method.payment_method || "N/A"}</TableCell>
+                      <TableCell align="right">
+                        {parseFloat(method.total || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell align="right">
+                        {parseInt(method.count || 0)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -865,7 +908,11 @@ const Analytics = () => {
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ p: 3, textAlign: "center" }}>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: "#D4AF37", mb: 1 }}>
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                sx={{ color: "#D4AF37", mb: 1 }}
+              >
                 {analyticsData.boostStats?.totalTokensSpentOnBoosts || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -875,7 +922,11 @@ const Analytics = () => {
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ p: 3, textAlign: "center" }}>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                sx={{ color: "#f5576c", mb: 1 }}
+              >
                 {analyticsData.boostStats?.totalBoostsPurchased || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -885,7 +936,11 @@ const Analytics = () => {
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ p: 3, textAlign: "center" }}>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: "#4caf50", mb: 1 }}>
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                sx={{ color: "#4caf50", mb: 1 }}
+              >
                 {analyticsData.boostStats?.activeBoosts || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -903,17 +958,53 @@ const Analytics = () => {
                 Boost Purchases (Time Period)
               </Typography>
               <Stack spacing={2}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(212, 175, 55, 0.05)", borderRadius: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  p={2}
+                  sx={{
+                    backgroundColor: "rgba(212, 175, 55, 0.05)",
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography fontWeight="500">Today</Typography>
-                  <Chip label={analyticsData.boostStats?.boostsToday || 0} color="warning" />
+                  <Chip
+                    label={analyticsData.boostStats?.boostsToday || 0}
+                    color="warning"
+                  />
                 </Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  p={2}
+                  sx={{
+                    backgroundColor: "rgba(156, 39, 176, 0.05)",
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography fontWeight="500">This Week</Typography>
-                  <Chip label={analyticsData.boostStats?.boostsThisWeek || 0} color="secondary" />
+                  <Chip
+                    label={analyticsData.boostStats?.boostsThisWeek || 0}
+                    color="secondary"
+                  />
                 </Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  p={2}
+                  sx={{
+                    backgroundColor: "rgba(76, 175, 80, 0.05)",
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography fontWeight="500">This Month</Typography>
-                  <Chip label={analyticsData.boostStats?.boostsThisMonth || 0} color="success" />
+                  <Chip
+                    label={analyticsData.boostStats?.boostsThisMonth || 0}
+                    color="success"
+                  />
                 </Box>
               </Stack>
             </Card>
@@ -924,17 +1015,53 @@ const Analytics = () => {
                 Boost Token Spending (Time Period)
               </Typography>
               <Stack spacing={2}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(212, 175, 55, 0.05)", borderRadius: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  p={2}
+                  sx={{
+                    backgroundColor: "rgba(212, 175, 55, 0.05)",
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography fontWeight="500">Tokens Today</Typography>
-                  <Chip label={analyticsData.boostStats?.boostTokensToday || 0} color="warning" />
+                  <Chip
+                    label={analyticsData.boostStats?.boostTokensToday || 0}
+                    color="warning"
+                  />
                 </Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  p={2}
+                  sx={{
+                    backgroundColor: "rgba(156, 39, 176, 0.05)",
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography fontWeight="500">Tokens This Week</Typography>
-                  <Chip label={analyticsData.boostStats?.boostTokensThisWeek || 0} color="secondary" />
+                  <Chip
+                    label={analyticsData.boostStats?.boostTokensThisWeek || 0}
+                    color="secondary"
+                  />
                 </Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center" p={2} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  p={2}
+                  sx={{
+                    backgroundColor: "rgba(76, 175, 80, 0.05)",
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography fontWeight="500">Tokens This Month</Typography>
-                  <Chip label={analyticsData.boostStats?.boostTokensThisMonth || 0} color="success" />
+                  <Chip
+                    label={analyticsData.boostStats?.boostTokensThisMonth || 0}
+                    color="success"
+                  />
                 </Box>
               </Stack>
             </Card>
@@ -945,7 +1072,11 @@ const Analytics = () => {
         <Grid container spacing={3} sx={{ mt: 2 }}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Card sx={{ p: 3, textAlign: "center" }}>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: "#2196f3", mb: 1 }}>
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                sx={{ color: "#2196f3", mb: 1 }}
+              >
                 {analyticsData.boostStats?.usersWithBoostHistory || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -955,7 +1086,11 @@ const Analytics = () => {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Card sx={{ p: 3, textAlign: "center" }}>
-              <Typography variant="h4" fontWeight="bold" sx={{ color: "#ff9800", mb: 1 }}>
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                sx={{ color: "#ff9800", mb: 1 }}
+              >
                 {analyticsData.boostStats?.averageBoostScore || "0"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -986,8 +1121,10 @@ const Analytics = () => {
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The Inquiries tab provides comprehensive insights into all inquiries received by the foundation, 
-          including status distribution, category breakdown, and resolution performance. Here's how to understand what you're seeing:
+          The Inquiries tab provides comprehensive insights into all inquiries
+          received by the foundation, including status distribution, category
+          breakdown, and resolution performance. Here's how to understand what
+          you're seeing:
         </Typography>
 
         {/* Summary Cards */}
@@ -1164,9 +1301,10 @@ const Analytics = () => {
 
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            <strong>💡 Tip:</strong> Monitor these metrics regularly to ensure timely responses to inquiries, 
-            identify popular inquiry categories, and improve your foundation's response times. 
-            A lower average resolution time indicates better service quality and responsiveness.
+            <strong>💡 Tip:</strong> Monitor these metrics regularly to ensure
+            timely responses to inquiries, identify popular inquiry categories,
+            and improve your foundation's response times. A lower average
+            resolution time indicates better service quality and responsiveness.
           </Typography>
         </Alert>
       </DialogContent>
@@ -2338,7 +2476,10 @@ const Analytics = () => {
                     >
                       <Typography fontWeight="500">In Circulation</Typography>
                       <Chip
-                        label={analyticsData.tokenStats?.totalTokensInCirculation || 0}
+                        label={
+                          analyticsData.tokenStats?.totalTokensInCirculation ||
+                          0
+                        }
                         color="warning"
                       />
                     </Box>
@@ -2353,11 +2494,11 @@ const Analytics = () => {
                         border: "1px solid rgba(156, 39, 176, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">
-                        Deducted
-                      </Typography>
+                      <Typography fontWeight="500">Deducted</Typography>
                       <Chip
-                        label={analyticsData.tokenStats?.totalTokensDeducted || 0}
+                        label={
+                          analyticsData.tokenStats?.totalTokensDeducted || 0
+                        }
                         color="secondary"
                       />
                     </Box>
@@ -2404,9 +2545,7 @@ const Analytics = () => {
                         border: "1px solid rgba(76, 175, 80, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">
-                        Verified Users
-                      </Typography>
+                      <Typography fontWeight="500">Verified Users</Typography>
                       <Chip
                         label={analyticsData.premiumStats?.totalVerified || 0}
                         color="success"
@@ -2423,9 +2562,13 @@ const Analytics = () => {
                         border: "1px solid rgba(33, 150, 243, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500">Looking For Posts</Typography>
+                      <Typography fontWeight="500">
+                        Looking For Posts
+                      </Typography>
                       <Chip
-                        label={analyticsData.premiumStats?.totalLookingForPosts || 0}
+                        label={
+                          analyticsData.premiumStats?.totalLookingForPosts || 0
+                        }
                         color="primary"
                       />
                     </Box>
@@ -2457,7 +2600,12 @@ const Analytics = () => {
                     flexDirection: "column",
                   }}
                 >
-                  <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 1.5, fontSize: "1rem" }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    fontWeight="600"
+                    sx={{ mb: 1.5, fontSize: "1rem" }}
+                  >
                     Boost Stats
                   </Typography>
                   <Stack spacing={1.2} sx={{ flex: 1 }}>
@@ -2472,9 +2620,16 @@ const Analytics = () => {
                         border: "1px solid rgba(212, 175, 55, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Total Purchased</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Total Purchased
+                      </Typography>
                       <Chip
-                        label={analyticsData.boostStats?.totalBoostsPurchased || 0}
+                        label={
+                          analyticsData.boostStats?.totalBoostsPurchased || 0
+                        }
                         color="warning"
                         size="small"
                       />
@@ -2490,7 +2645,12 @@ const Analytics = () => {
                         border: "1px solid rgba(76, 175, 80, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Active Boosts</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Active Boosts
+                      </Typography>
                       <Chip
                         label={analyticsData.boostStats?.activeBoosts || 0}
                         color="success"
@@ -2508,9 +2668,17 @@ const Analytics = () => {
                         border: "1px solid rgba(156, 39, 176, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Tokens Spent</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Tokens Spent
+                      </Typography>
                       <Chip
-                        label={analyticsData.boostStats?.totalTokensSpentOnBoosts || 0}
+                        label={
+                          analyticsData.boostStats?.totalTokensSpentOnBoosts ||
+                          0
+                        }
                         color="secondary"
                         size="small"
                       />
@@ -2526,9 +2694,16 @@ const Analytics = () => {
                         border: "1px solid rgba(33, 150, 243, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Users Boosted</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Users Boosted
+                      </Typography>
                       <Chip
-                        label={analyticsData.boostStats?.usersWithBoostHistory || 0}
+                        label={
+                          analyticsData.boostStats?.usersWithBoostHistory || 0
+                        }
                         color="primary"
                         size="small"
                       />
@@ -2561,7 +2736,12 @@ const Analytics = () => {
                     flexDirection: "column",
                   }}
                 >
-                  <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 1.5, fontSize: "1rem" }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    fontWeight="600"
+                    sx={{ mb: 1.5, fontSize: "1rem" }}
+                  >
                     Engagement Stats
                   </Typography>
                   <Stack spacing={1.2} sx={{ flex: 1 }}>
@@ -2576,9 +2756,16 @@ const Analytics = () => {
                         border: "1px solid rgba(25, 118, 210, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Chat Unlocks</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Chat Unlocks
+                      </Typography>
                       <Chip
-                        label={analyticsData.engagementStats?.totalChatUnlocks || 0}
+                        label={
+                          analyticsData.engagementStats?.totalChatUnlocks || 0
+                        }
                         color="primary"
                         size="small"
                       />
@@ -2594,9 +2781,16 @@ const Analytics = () => {
                         border: "1px solid rgba(255, 152, 0, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Profile Views</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Profile Views
+                      </Typography>
                       <Chip
-                        label={analyticsData.engagementStats?.totalProfileViews || 0}
+                        label={
+                          analyticsData.engagementStats?.totalProfileViews || 0
+                        }
                         color="warning"
                         size="small"
                       />
@@ -2612,9 +2806,16 @@ const Analytics = () => {
                         border: "1px solid rgba(156, 39, 176, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Favourites</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Favourites
+                      </Typography>
                       <Chip
-                        label={analyticsData.engagementStats?.totalFavourites || 0}
+                        label={
+                          analyticsData.engagementStats?.totalFavourites || 0
+                        }
                         color="secondary"
                         size="small"
                       />
@@ -2630,9 +2831,16 @@ const Analytics = () => {
                         border: "1px solid rgba(0, 188, 212, 0.1)",
                       }}
                     >
-                      <Typography fontWeight="500" sx={{ fontSize: "0.875rem" }}>Notifications</Typography>
+                      <Typography
+                        fontWeight="500"
+                        sx={{ fontSize: "0.875rem" }}
+                      >
+                        Notifications
+                      </Typography>
                       <Chip
-                        label={analyticsData.engagementStats?.totalNotifications || 0}
+                        label={
+                          analyticsData.engagementStats?.totalNotifications || 0
+                        }
                         color="info"
                         size="small"
                       />
@@ -2646,128 +2854,181 @@ const Analytics = () => {
           {/* Additional Analytics Charts */}
           <Grid container spacing={3} sx={{ mt: 3 }}>
             {/* Category Breakdown */}
-            {analyticsData.categoryBreakdown && Object.keys(analyticsData.categoryBreakdown).length > 0 && (
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card sx={{ p: 3, height: 400 }}>
-                  <Typography variant="h6" gutterBottom fontWeight="600">
-                    User Category Breakdown
-                  </Typography>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(analyticsData.categoryBreakdown).map(([category, count]) => ({
-                          name: category,
-                          value: parseInt(count) || 0,
-                        }))}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius="80%"
-                        fill="#8884d8"
-                      >
-                        {Object.entries(analyticsData.categoryBreakdown).map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => [value, "Users"]} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Card>
-              </Grid>
-            )}
+            {analyticsData.categoryBreakdown &&
+              Object.keys(analyticsData.categoryBreakdown).length > 0 && (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Card sx={{ p: 3, height: 400 }}>
+                    <Typography variant="h6" gutterBottom fontWeight="600">
+                      User Category Breakdown
+                    </Typography>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={Object.entries(
+                            analyticsData.categoryBreakdown
+                          ).map(([category, count]) => ({
+                            name: category,
+                            value: parseInt(count) || 0,
+                          }))}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius="80%"
+                          fill="#8884d8"
+                        >
+                          {Object.entries(analyticsData.categoryBreakdown).map(
+                            (entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            )
+                          )}
+                        </Pie>
+                        <Tooltip formatter={(value) => [value, "Users"]} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </Card>
+                </Grid>
+              )}
 
             {/* New Users Stats */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 2.5, height: 400, display: "flex", flexDirection: "column" }}>
-                <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 2, fontSize: "1rem" }}>
+              <Card
+                sx={{
+                  p: 2.5,
+                  height: 400,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  fontWeight="600"
+                  sx={{ mb: 2, fontSize: "1rem" }}
+                >
                   New Users Statistics
                 </Typography>
-                <Stack spacing={1.5} sx={{ flex: 1, justifyContent: "space-between" }}>
+                <Stack
+                  spacing={1.5}
+                  sx={{ flex: 1, justifyContent: "space-between" }}
+                >
                   {/* Today Card */}
-                  <Card 
-                    sx={{ 
+                  <Card
+                    sx={{
                       flex: 1,
                       minHeight: 0,
-                      p: 2, 
+                      p: 2,
                       textAlign: "center",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
-                      background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
+                      background:
+                        "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
                       border: "2px solid rgba(25, 118, 210, 0.3)",
                       borderRadius: 2,
                       transition: "all 0.3s ease",
                       "&:hover": {
                         transform: "translateY(-2px)",
                         boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
-                      }
+                      },
                     }}
                   >
-                    <Typography variant="h4" color="primary" fontWeight="bold" sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}>
+                    <Typography
+                      variant="h4"
+                      color="primary"
+                      fontWeight="bold"
+                      sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}
+                    >
                       {analyticsData.newUsersStats?.today || 0}
                     </Typography>
-                    <Typography variant="body2" color="primary" fontWeight="600" sx={{ fontSize: "0.875rem" }}>
+                    <Typography
+                      variant="body2"
+                      color="primary"
+                      fontWeight="600"
+                      sx={{ fontSize: "0.875rem" }}
+                    >
                       Today
                     </Typography>
                   </Card>
-                  
+
                   {/* This Week Card */}
-                  <Card 
-                    sx={{ 
+                  <Card
+                    sx={{
                       flex: 1,
                       minHeight: 0,
-                      p: 2, 
+                      p: 2,
                       textAlign: "center",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
-                      background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
+                      background:
+                        "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
                       border: "2px solid rgba(255, 152, 0, 0.3)",
                       borderRadius: 2,
                       transition: "all 0.3s ease",
                       "&:hover": {
                         transform: "translateY(-2px)",
                         boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
-                      }
+                      },
                     }}
                   >
-                    <Typography variant="h4" color="warning.main" fontWeight="bold" sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}>
+                    <Typography
+                      variant="h4"
+                      color="warning.main"
+                      fontWeight="bold"
+                      sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}
+                    >
                       {analyticsData.newUsersStats?.thisWeek || 0}
                     </Typography>
-                    <Typography variant="body2" color="warning.main" fontWeight="600" sx={{ fontSize: "0.875rem" }}>
+                    <Typography
+                      variant="body2"
+                      color="warning.main"
+                      fontWeight="600"
+                      sx={{ fontSize: "0.875rem" }}
+                    >
                       This Week
                     </Typography>
                   </Card>
-                  
+
                   {/* This Month Card */}
-                  <Card 
-                    sx={{ 
+                  <Card
+                    sx={{
                       flex: 1,
                       minHeight: 0,
-                      p: 2, 
+                      p: 2,
                       textAlign: "center",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
-                      background: "linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%)",
+                      background:
+                        "linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%)",
                       border: "2px solid rgba(76, 175, 80, 0.3)",
                       borderRadius: 2,
                       transition: "all 0.3s ease",
                       "&:hover": {
                         transform: "translateY(-2px)",
                         boxShadow: "0 4px 12px rgba(76, 175, 80, 0.3)",
-                      }
+                      },
                     }}
                   >
-                    <Typography variant="h4" color="success.main" fontWeight="bold" sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}>
+                    <Typography
+                      variant="h4"
+                      color="success.main"
+                      fontWeight="bold"
+                      sx={{ mb: 0.5, fontSize: { xs: "1.75rem", md: "2rem" } }}
+                    >
                       {analyticsData.newUsersStats?.thisMonth || 0}
                     </Typography>
-                    <Typography variant="body2" color="success.main" fontWeight="600" sx={{ fontSize: "0.875rem" }}>
+                    <Typography
+                      variant="body2"
+                      color="success.main"
+                      fontWeight="600"
+                      sx={{ fontSize: "0.875rem" }}
+                    >
                       This Month
                     </Typography>
                   </Card>
@@ -2777,22 +3038,83 @@ const Analytics = () => {
 
             {/* Engagement Time-based Metrics */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card sx={{ p: 3, height: 400, display: "flex", flexDirection: "column" }}>
-                <Typography variant="h6" gutterBottom fontWeight="600" sx={{ mb: 3 }}>
+              <Card
+                sx={{
+                  p: 3,
+                  height: 400,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  fontWeight="600"
+                  sx={{ mb: 3 }}
+                >
                   Engagement Time-based Metrics
                 </Typography>
                 <Stack spacing={2.5} sx={{ flex: 1, justifyContent: "center" }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2.5} sx={{ backgroundColor: "rgba(25, 118, 210, 0.05)", borderRadius: 2 }}>
-                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>Unlocks Today</Typography>
-                    <Chip label={analyticsData.engagementStats?.unlocksToday || 0} color="primary" size="medium" />
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    p={2.5}
+                    sx={{
+                      backgroundColor: "rgba(25, 118, 210, 0.05)",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>
+                      Unlocks Today
+                    </Typography>
+                    <Chip
+                      label={analyticsData.engagementStats?.unlocksToday || 0}
+                      color="primary"
+                      size="medium"
+                    />
                   </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2.5} sx={{ backgroundColor: "rgba(156, 39, 176, 0.05)", borderRadius: 2 }}>
-                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>Unlocks This Week</Typography>
-                    <Chip label={analyticsData.engagementStats?.unlocksThisWeek || 0} color="secondary" size="medium" />
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    p={2.5}
+                    sx={{
+                      backgroundColor: "rgba(156, 39, 176, 0.05)",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>
+                      Unlocks This Week
+                    </Typography>
+                    <Chip
+                      label={
+                        analyticsData.engagementStats?.unlocksThisWeek || 0
+                      }
+                      color="secondary"
+                      size="medium"
+                    />
                   </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" p={2.5} sx={{ backgroundColor: "rgba(76, 175, 80, 0.05)", borderRadius: 2 }}>
-                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>Unlocks This Month</Typography>
-                    <Chip label={analyticsData.engagementStats?.unlocksThisMonth || 0} color="success" size="medium" />
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    p={2.5}
+                    sx={{
+                      backgroundColor: "rgba(76, 175, 80, 0.05)",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Typography fontWeight="500" sx={{ fontSize: "1rem" }}>
+                      Unlocks This Month
+                    </Typography>
+                    <Chip
+                      label={
+                        analyticsData.engagementStats?.unlocksThisMonth || 0
+                      }
+                      color="success"
+                      size="medium"
+                    />
                   </Box>
                 </Stack>
               </Card>
@@ -2807,10 +3129,12 @@ const Analytics = () => {
                   </Typography>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
-                      data={(analyticsData.unlocksByCategory || []).map((item) => ({
-                        name: item["target.category"] || "Unknown",
-                        count: parseInt(item.count) || 0,
-                      }))}
+                      data={(analyticsData.unlocksByCategory || []).map(
+                        (item) => ({
+                          name: item["target.category"] || "Unknown",
+                          count: parseInt(item.count) || 0,
+                        })
+                      )}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
@@ -2824,65 +3148,88 @@ const Analytics = () => {
             )}
 
             {/* Recent Activity - Recent Users */}
-            {analyticsData.recentActivity?.recentUsers && analyticsData.recentActivity.recentUsers.length > 0 && (
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card sx={{ p: 3, maxHeight: 400, overflow: "auto" }}>
-                  <Typography variant="h6" gutterBottom fontWeight="600">
-                    Recent Users
-                  </Typography>
-                  <List>
-                    {analyticsData.recentActivity.recentUsers.slice(0, 5).map((user) => (
-                      <ListItem key={user.id}>
-                        <ListItemIcon>
-                          <Avatar sx={{ bgcolor: user.isVerified ? "#4caf50" : "#9e9e9e" }}>
-                            {user.name?.charAt(0) || "U"}
-                          </Avatar>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={user.name}
-                          secondary={`${user.category} • ${user.email}`}
-                        />
-                        <Chip
-                          label={user.isVerified ? "Verified" : "Not Verified"}
-                          color={user.isVerified ? "success" : "default"}
-                          size="small"
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Card>
-              </Grid>
-            )}
+            {analyticsData.recentActivity?.recentUsers &&
+              analyticsData.recentActivity.recentUsers.length > 0 && (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Card sx={{ p: 3, maxHeight: 400, overflow: "auto" }}>
+                    <Typography variant="h6" gutterBottom fontWeight="600">
+                      Recent Users
+                    </Typography>
+                    <List>
+                      {analyticsData.recentActivity.recentUsers
+                        .slice(0, 5)
+                        .map((user) => (
+                          <ListItem key={user.id}>
+                            <ListItemIcon>
+                              <Avatar
+                                sx={{
+                                  bgcolor: user.isVerified
+                                    ? "#4caf50"
+                                    : "#9e9e9e",
+                                }}
+                              >
+                                {user.name?.charAt(0) || "U"}
+                              </Avatar>
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={user.name}
+                              secondary={`${user.category} • ${user.email}`}
+                            />
+                            <Chip
+                              label={
+                                user.isVerified ? "Verified" : "Not Verified"
+                              }
+                              color={user.isVerified ? "success" : "default"}
+                              size="small"
+                            />
+                          </ListItem>
+                        ))}
+                    </List>
+                  </Card>
+                </Grid>
+              )}
 
             {/* Recent Activity - Recent Unlocks */}
-            {analyticsData.recentActivity?.recentUnlocks && analyticsData.recentActivity.recentUnlocks.length > 0 && (
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card sx={{ p: 3, maxHeight: 400, overflow: "auto" }}>
-                  <Typography variant="h6" gutterBottom fontWeight="600">
-                    Recent Unlocks
-                  </Typography>
-                  <List>
-                    {analyticsData.recentActivity.recentUnlocks.slice(0, 5).map((unlock) => (
-                      <ListItem key={unlock.id}>
-                        <ListItemIcon>
-                          <AccountBalanceWallet color="primary" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={`${unlock.initiator?.name || "Unknown"} unlocked ${unlock.target?.name || "Unknown"}`}
-                          secondary={`${unlock.token_cost} tokens • ${new Date(unlock.createdAt).toLocaleDateString()}`}
-                        />
-                        <Chip
-                          label={unlock.status}
-                          color={unlock.status === "success" ? "success" : "default"}
-                          size="small"
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Card>
-              </Grid>
-            )}
-
+            {analyticsData.recentActivity?.recentUnlocks &&
+              analyticsData.recentActivity.recentUnlocks.length > 0 && (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Card sx={{ p: 3, maxHeight: 400, overflow: "auto" }}>
+                    <Typography variant="h6" gutterBottom fontWeight="600">
+                      Recent Unlocks
+                    </Typography>
+                    <List>
+                      {analyticsData.recentActivity.recentUnlocks
+                        .slice(0, 5)
+                        .map((unlock) => (
+                          <ListItem key={unlock.id}>
+                            <ListItemIcon>
+                              <AccountBalanceWallet color="primary" />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={`${
+                                unlock.initiator?.name || "Unknown"
+                              } unlocked ${unlock.target?.name || "Unknown"}`}
+                              secondary={`${
+                                unlock.token_cost
+                              } tokens • ${new Date(
+                                unlock.createdAt
+                              ).toLocaleDateString()}`}
+                            />
+                            <Chip
+                              label={unlock.status}
+                              color={
+                                unlock.status === "success"
+                                  ? "success"
+                                  : "default"
+                              }
+                              size="small"
+                            />
+                          </ListItem>
+                        ))}
+                    </List>
+                  </Card>
+                </Grid>
+              )}
           </Grid>
         </>
       )}
@@ -2975,10 +3322,11 @@ const Analytics = () => {
                 sx={{
                   p: 3,
                   textAlign: "center",
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white",
                   borderRadius: 3,
-                  boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+                  boxShadow: "0 4px 20px rgba(102, 126, 234, 0.3)",
                 }}
               >
                 <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
@@ -2994,10 +3342,11 @@ const Analytics = () => {
                 sx={{
                   p: 3,
                   textAlign: "center",
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  color: 'white',
+                  background:
+                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                  color: "white",
                   borderRadius: 3,
-                  boxShadow: '0 4px 20px rgba(240, 147, 251, 0.3)',
+                  boxShadow: "0 4px 20px rgba(240, 147, 251, 0.3)",
                 }}
               >
                 <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
@@ -3013,10 +3362,11 @@ const Analytics = () => {
                 sx={{
                   p: 3,
                   textAlign: "center",
-                  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                  color: 'white',
+                  background:
+                    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                  color: "white",
                   borderRadius: 3,
-                  boxShadow: '0 4px 20px rgba(79, 172, 254, 0.3)',
+                  boxShadow: "0 4px 20px rgba(79, 172, 254, 0.3)",
                 }}
               >
                 <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
@@ -3032,10 +3382,11 @@ const Analytics = () => {
                 sx={{
                   p: 3,
                   textAlign: "center",
-                  background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                  color: 'white',
+                  background:
+                    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                  color: "white",
                   borderRadius: 3,
-                  boxShadow: '0 4px 20px rgba(67, 233, 123, 0.3)',
+                  boxShadow: "0 4px 20px rgba(67, 233, 123, 0.3)",
                 }}
               >
                 <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
@@ -3056,31 +3407,49 @@ const Analytics = () => {
                   Progress Statistics
                 </Typography>
                 <Stack spacing={2}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
                     <Typography variant="body2" color="text.secondary">
                       Minimum Progress
                     </Typography>
-                    <Chip 
-                      label={`${analyticsData.projects?.progress?.minimum || 0}%`} 
-                      color="info" 
+                    <Chip
+                      label={`${
+                        analyticsData.projects?.progress?.minimum || 0
+                      }%`}
+                      color="info"
                     />
                   </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
                     <Typography variant="body2" color="text.secondary">
                       Maximum Progress
                     </Typography>
-                    <Chip 
-                      label={`${analyticsData.projects?.progress?.maximum || 0}%`} 
-                      color="success" 
+                    <Chip
+                      label={`${
+                        analyticsData.projects?.progress?.maximum || 0
+                      }%`}
+                      color="success"
                     />
                   </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
                     <Typography variant="body2" color="text.secondary">
                       Average Progress
                     </Typography>
-                    <Chip 
-                      label={`${analyticsData.projects?.progress?.average || 0}%`} 
-                      color="primary" 
+                    <Chip
+                      label={`${
+                        analyticsData.projects?.progress?.average || 0
+                      }%`}
+                      color="primary"
                     />
                   </Box>
                 </Stack>
@@ -3092,21 +3461,36 @@ const Analytics = () => {
                   Project Status Summary
                 </Typography>
                 <Stack spacing={2}>
-                  {(analyticsData.projects?.byStatus || []).map((status, index) => (
-                    <Box key={index} display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
-                        {status.status.replace('_', ' ')}
-                      </Typography>
-                      <Chip 
-                        label={status.count} 
-                        color={
-                          status.status === 'completed' ? 'success' :
-                          status.status === 'in_progress' ? 'primary' :
-                          status.status === 'pending' ? 'warning' : 'default'
-                        } 
-                      />
-                    </Box>
-                  ))}
+                  {(analyticsData.projects?.byStatus || []).map(
+                    (status, index) => (
+                      <Box
+                        key={index}
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ textTransform: "capitalize" }}
+                        >
+                          {status.status.replace("_", " ")}
+                        </Typography>
+                        <Chip
+                          label={status.count}
+                          color={
+                            status.status === "completed"
+                              ? "success"
+                              : status.status === "in_progress"
+                              ? "primary"
+                              : status.status === "pending"
+                              ? "warning"
+                              : "default"
+                          }
+                        />
+                      </Box>
+                    )
+                  )}
                 </Stack>
               </Card>
             </Grid>
@@ -3116,17 +3500,21 @@ const Analytics = () => {
                   County Distribution
                 </Typography>
                 <Stack spacing={2}>
-                  {(analyticsData.projects?.byCounty || []).map((county, index) => (
-                    <Box key={index} display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary">
-                        {county.county}
-                      </Typography>
-                      <Chip 
-                        label={county.count} 
-                        color="secondary" 
-                      />
-                    </Box>
-                  ))}
+                  {(analyticsData.projects?.byCounty || []).map(
+                    (county, index) => (
+                      <Box
+                        key={index}
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          {county.county}
+                        </Typography>
+                        <Chip label={county.count} color="secondary" />
+                      </Box>
+                    )
+                  )}
                 </Stack>
               </Card>
             </Grid>
@@ -4486,56 +4874,90 @@ const Analytics = () => {
           };
           return (
             <>
-        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
-          <Card sx={premiumCardStyle}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#667eea", mb: 1 }}>
-              {analyticsData.premiumStats?.totalVerified || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Verified Users
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
-          <Card sx={premiumCardStyle}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
-              {analyticsData.premiumStats?.sugarMummys || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Sugar Mummies
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
-          <Card sx={premiumCardStyle}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#764ba2", mb: 1 }}>
-              {analyticsData.premiumStats?.sponsors || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Sponsors
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
-          <Card sx={premiumCardStyle}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4facfe", mb: 1 }}>
-              {analyticsData.premiumStats?.ben10s || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Ben 10s
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
-          <Card sx={premiumCardStyle}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#9c27b0", mb: 1 }}>
-              {analyticsData.premiumStats?.totalLookingForPosts || 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Looking For Posts
-            </Typography>
-          </Card>
-        </Grid>
+              <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+                <Card sx={premiumCardStyle}>
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ color: "#667eea", mb: 1 }}
+                  >
+                    {analyticsData.premiumStats?.totalVerified || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Verified Users
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+                <Card sx={premiumCardStyle}>
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ color: "#f5576c", mb: 1 }}
+                  >
+                    {analyticsData.premiumStats?.sugarMummys || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Sugar Mummies
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+                <Card sx={premiumCardStyle}>
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ color: "#764ba2", mb: 1 }}
+                  >
+                    {analyticsData.premiumStats?.sponsors || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Sponsors
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+                <Card sx={premiumCardStyle}>
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ color: "#4facfe", mb: 1 }}
+                  >
+                    {analyticsData.premiumStats?.ben10s || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Ben 10s
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+                <Card sx={premiumCardStyle}>
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ color: "#ff9800", mb: 1 }}
+                  >
+                    {analyticsData.premiumStats?.urbanChics || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Urban Chics
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 1, sm: 1, md: 1, lg: 1 }}>
+                <Card sx={premiumCardStyle}>
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ color: "#9c27b0", mb: 1 }}
+                  >
+                    {analyticsData.premiumStats?.totalLookingForPosts || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Looking For Posts
+                  </Typography>
+                </Card>
+              </Grid>
             </>
           );
         })()}
@@ -4572,83 +4994,211 @@ const Analytics = () => {
       <Grid container spacing={3}>
         {/* First Row - 4 cards */}
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#667eea", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#667eea", mb: 1 }}
+            >
               {analyticsData.marketStats?.totalItems || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Total Items
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#FFD700", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#FFD700", mb: 1 }}
+            >
               {analyticsData.marketStats?.featuredItems || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Featured Items
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#f5576c", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#f5576c", mb: 1 }}
+            >
               {analyticsData.marketStats?.hotDeals || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Hot Deals
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4ecdc4", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#4ecdc4", mb: 1 }}
+            >
               {analyticsData.marketStats?.weekendPicks || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Weekend Picks
             </Typography>
           </Card>
         </Grid>
-        
+
         {/* Second Row - 4 cards */}
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#9e9e9e", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#9e9e9e", mb: 1 }}
+            >
               {analyticsData.marketStats?.regularItems || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Regular Items
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#4caf50", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#4caf50", mb: 1 }}
+            >
               {analyticsData.marketStats?.itemsAddedToday || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Items Added Today
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#2196f3", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#2196f3", mb: 1 }}
+            >
               {analyticsData.marketStats?.itemsAddedThisWeek || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Items Added This Week
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ p: 3, textAlign: "center", height: "100%", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#ff9800", mb: 1 }}>
+          <Card
+            sx={{
+              p: 3,
+              textAlign: "center",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{ color: "#ff9800", mb: 1 }}
+            >
               {analyticsData.marketStats?.itemsAddedThisMonth || 0}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ wordBreak: "break-word" }}
+            >
               Items Added This Month
             </Typography>
           </Card>
@@ -4772,4 +5322,3 @@ const Analytics = () => {
 };
 
 export default Analytics;
-

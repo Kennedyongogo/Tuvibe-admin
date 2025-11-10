@@ -49,6 +49,7 @@ import {
 import { Tabs, Tab, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import Swal from "sweetalert2";
+import { evaluatePhoneInput } from "../../utils/phoneValidation";
 
 const Marketplace = () => {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ const Marketplace = () => {
     is_featured: false,
     tag: "none",
   });
+  const [whatsappError, setWhatsappError] = useState("");
   const [selectedImages, setSelectedImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
@@ -285,6 +287,23 @@ const Marketplace = () => {
         return;
       }
 
+      const trimmedWhatsapp = (itemForm.whatsapp_number || "").trim();
+      let normalizedWhatsapp = "";
+      if (trimmedWhatsapp) {
+        const { normalized, error } = evaluatePhoneInput(trimmedWhatsapp);
+        if (error) {
+          setWhatsappError(error);
+          Swal.fire({
+            icon: "error",
+            title: "Invalid WhatsApp Number",
+            text: error,
+          });
+          return;
+        }
+        setWhatsappError("");
+        normalizedWhatsapp = normalized;
+      }
+
       setUploading(true);
       const token = localStorage.getItem("token");
 
@@ -292,7 +311,7 @@ const Marketplace = () => {
       formData.append("title", itemForm.title);
       formData.append("description", itemForm.description || "");
       formData.append("price", itemForm.price);
-      formData.append("whatsapp_number", itemForm.whatsapp_number || "");
+      formData.append("whatsapp_number", normalizedWhatsapp);
       formData.append("is_featured", itemForm.is_featured);
       formData.append("tag", itemForm.tag);
 
@@ -353,11 +372,28 @@ const Marketplace = () => {
       setUploading(true);
       const token = localStorage.getItem("token");
 
+      const trimmedWhatsapp = (itemForm.whatsapp_number || "").trim();
+      let normalizedWhatsapp = "";
+      if (trimmedWhatsapp) {
+        const { normalized, error } = evaluatePhoneInput(trimmedWhatsapp);
+        if (error) {
+          setWhatsappError(error);
+          Swal.fire({
+            icon: "error",
+            title: "Invalid WhatsApp Number",
+            text: error,
+          });
+          return;
+        }
+        setWhatsappError("");
+        normalizedWhatsapp = normalized;
+      }
+
       const formData = new FormData();
       formData.append("title", itemForm.title);
       formData.append("description", itemForm.description || "");
       formData.append("price", itemForm.price);
-      formData.append("whatsapp_number", itemForm.whatsapp_number || "");
+      formData.append("whatsapp_number", normalizedWhatsapp);
       formData.append("is_featured", itemForm.is_featured);
       formData.append("tag", itemForm.tag);
 
@@ -478,6 +514,7 @@ const Marketplace = () => {
       is_featured: item.is_featured || false,
       tag: item.tag || "none",
     });
+    setWhatsappError("");
 
     // Load existing images
     const existing = (item.images || []).map((img) => {
@@ -501,6 +538,7 @@ const Marketplace = () => {
       is_featured: false,
       tag: "none",
     });
+    setWhatsappError("");
     setSelectedImages([]);
     setImagePreviews([]);
     setExistingImages([]);
@@ -1039,12 +1077,26 @@ const Marketplace = () => {
                 fullWidth
                 label="WhatsApp Number"
                 value={itemForm.whatsapp_number}
-                onChange={(e) =>
-                  setItemForm({ ...itemForm, whatsapp_number: e.target.value })
-                }
+                onChange={(e) => {
+                  const rawValue = e.target.value;
+                  setItemForm({
+                    ...itemForm,
+                    whatsapp_number: rawValue,
+                  });
+                  if (!rawValue.trim()) {
+                    setWhatsappError("");
+                  } else {
+                    const { error } = evaluatePhoneInput(rawValue.trim());
+                    setWhatsappError(error);
+                  }
+                }}
                 variant="outlined"
                 size="small"
                 placeholder="+254712345678"
+                error={Boolean(whatsappError)}
+                helperText={
+                  whatsappError || "Include country code, e.g., +254712345678."
+                }
               />
               <FormControl fullWidth size="small">
                 <InputLabel>Tag</InputLabel>
@@ -1263,12 +1315,26 @@ const Marketplace = () => {
                 fullWidth
                 label="WhatsApp Number"
                 value={itemForm.whatsapp_number}
-                onChange={(e) =>
-                  setItemForm({ ...itemForm, whatsapp_number: e.target.value })
-                }
+                onChange={(e) => {
+                  const rawValue = e.target.value;
+                  setItemForm({
+                    ...itemForm,
+                    whatsapp_number: rawValue,
+                  });
+                  if (!rawValue.trim()) {
+                    setWhatsappError("");
+                  } else {
+                    const { error } = evaluatePhoneInput(rawValue.trim());
+                    setWhatsappError(error);
+                  }
+                }}
                 variant="outlined"
                 size="small"
                 placeholder="+254712345678"
+                error={Boolean(whatsappError)}
+                helperText={
+                  whatsappError || "Include country code, e.g., +254712345678."
+                }
               />
               <FormControl fullWidth size="small">
                 <InputLabel>Tag</InputLabel>
