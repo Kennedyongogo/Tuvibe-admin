@@ -1608,6 +1608,23 @@ const displayValue = (value, fallback = "Not provided") => {
                     >
                       {selectedUser?.email}
                     </Typography>
+                  {userTypeTabs[activeTab]?.value === "public" && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#7f8c8d",
+                          lineHeight: 1.6,
+                          fontSize: "0.95rem",
+                        }}
+                      >
+                        {`Username: ${displayValue(
+                          selectedUser?.username,
+                          "N/A"
+                        )}`}
+                      </Typography>
+                    </Box>
+                  )}
                   </Box>
                 </Box>
 
