@@ -89,6 +89,7 @@ const TuvibeMap = () => {
     "Sugar Mummy": true,
     Sponsor: true,
     "Ben 10": true,
+    "Urban Chics": true,
   });
 
   // Search and filter states
@@ -772,6 +773,7 @@ const TuvibeMap = () => {
     "Sugar Mummy": { label: "Sugar Mummy", color: "#e91e63" },
     Sponsor: { label: "Sponsor", color: "#2196f3" },
     "Ben 10": { label: "Ben 10", color: "#ff9800" },
+    "Urban Chics": { label: "Urban Chics", color: "#9c27b0" },
   };
 
   // Gold accent color (primary brand color)
@@ -839,6 +841,19 @@ const TuvibeMap = () => {
           </svg>
         `;
         break;
+      case "Urban Chics":
+        svgIcon = `
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="${outerRadius}" fill="${categoryColor}" stroke="white" stroke-width="${strokeWidth}"/>
+            ${
+              isSearchResult
+                ? `<circle cx="12" cy="12" r="14" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.8"/>`
+                : ""
+            }
+            <path d="M12 4c1.66 0 3 1.34 3 3 0 1.25-.77 2.32-1.86 2.77l1.36 1.73c.32.41.5.92.5 1.45v2.05c0 .64-.52 1.16-1.16 1.16H11v1.34c0 .37-.3.67-.67.67H9.83c-.37 0-.67-.3-.67-.67V16.2H8.16C7.52 16.2 7 15.68 7 15.04V13c0-.53.18-1.04.5-1.45l1.36-1.73C7.77 9.32 7 8.25 7 7c0-1.66 1.34-3 3-3h2z" fill="white"/>
+          </svg>
+        `;
+        break;
       default:
         svgIcon = `
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -872,6 +887,7 @@ const TuvibeMap = () => {
       "Sugar Mummy": true,
       Sponsor: true,
       "Ben 10": true,
+      "Urban Chics": true,
     });
   };
 
@@ -881,6 +897,7 @@ const TuvibeMap = () => {
       "Sugar Mummy": false,
       Sponsor: false,
       "Ben 10": false,
+      "Urban Chics": false,
     });
   };
 
@@ -1127,20 +1144,21 @@ const TuvibeMap = () => {
             <Select
               value={categoryFilter}
               onChange={(e) => {
-                const newFilter = e.target.value;
-                setCategoryFilter(newFilter);
+                const nextFilter = e.target.value;
+                setCategoryFilter(nextFilter);
                 setSearchResults([]); // Clear search results when filter changes
                 setNearMeResults([]); // Clear near me results when filter changes
                 setNearMeMode(false); // Exit near me mode when filter changes
 
                 // Update visibleCategories to match the filter
-                if (newFilter) {
+                if (nextFilter) {
                   // When a specific category is selected, enable only that category
                   setVisibleCategories({
-                    Regular: newFilter === "Regular",
-                    "Sugar Mummy": newFilter === "Sugar Mummy",
-                    Sponsor: newFilter === "Sponsor",
-                    "Ben 10": newFilter === "Ben 10",
+                    Regular: nextFilter === "Regular",
+                    "Sugar Mummy": nextFilter === "Sugar Mummy",
+                    Sponsor: nextFilter === "Sponsor",
+                    "Ben 10": nextFilter === "Ben 10",
+                    "Urban Chics": nextFilter === "Urban Chics",
                   });
                 } else {
                   // When "All Categories" is selected, enable all
@@ -1149,6 +1167,7 @@ const TuvibeMap = () => {
                     "Sugar Mummy": true,
                     Sponsor: true,
                     "Ben 10": true,
+                    "Urban Chics": true,
                   });
                 }
               }}
@@ -1168,6 +1187,7 @@ const TuvibeMap = () => {
               <MenuItem value="Sugar Mummy">Sugar Mummy</MenuItem>
               <MenuItem value="Sponsor">Sponsor</MenuItem>
               <MenuItem value="Ben 10">Ben 10</MenuItem>
+              <MenuItem value="Urban Chics">Urban Chics</MenuItem>
             </Select>
           </FormControl>
         </Box>
