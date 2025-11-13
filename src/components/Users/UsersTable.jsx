@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -31,6 +31,7 @@ import {
   InputAdornment,
   Tabs,
   Tab,
+  Badge,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -60,10 +61,15 @@ import {
   ThumbUp as ThumbUpIcon,
   ThumbDown as ThumbDownIcon,
   PhotoCamera as PhotoIcon,
+  Gavel as GavelIcon,
+  LockOpen as LockOpenIcon,
+  NotificationsActive as NotificationsActiveIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import Swal from "sweetalert2";
+import useSuspensionSocket from "../../hooks/useSuspensionSocket";
+import SuspensionChatModal from "./SuspensionChatModal";
 
 const UsersTable = () => {
   const theme = useTheme();
@@ -99,15 +105,6 @@ const UsersTable = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [moderationLoading, setModerationLoading] = useState({});
-  const [userForm, setUserForm] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    role: "moderator",
-    password: "",
-  });
-
   // User type tabs configuration
   const userTypeTabs = [
     { label: "Admin Users", value: "admin", endpoint: "/api/admin-users" },
@@ -118,9 +115,85 @@ const UsersTable = () => {
     },
   ];
 
+  const [moderationLoading, setModerationLoading] = useState({});
+  const [userForm, setUserForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    role: "moderator",
+    password: "",
+  });
+  const [suspensions, setSuspensions] = useState({});
+  const [suspensionLoading, setSuspensionLoading] = useState({});
+  const [activeSuspension, setActiveSuspension] = useState(null);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const isPublicTab = userTypeTabs[activeTab]?.value === "public";
+  const adminToken = useMemo(
+    () => localStorage.getItem("token"),
+    [isPublicTab]
+  );
+
   useEffect(() => {
     fetchUsers();
   }, [page, rowsPerPage, activeTab, categoryFilter]);
+
+  const fetchActiveSuspensions = useCallback(async () => {
+    if (!isPublicTab) {
+      setSuspensions({});
+      return;
+    }
+    const token = adminToken;
+    if (!token) return;
+    try {
+      const response = await fetch(
+        `/api/suspensions/admin?status=active&limit=500`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || "Failed to load suspensions.");
+      }
+      const rows = Array.isArray(payload.data?.rows)
+        ? payload.data.rows
+        : Array.isArray(payload.data)
+        ? payload.data
+        : [];
+
+      const suspensionMap = {};
+      await Promise.all(
+        rows.map(async (item) => {
+          const unreadResponse = await fetch(
+            `/api/suspensions/admin/${item.id}/messages/unread-count`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          let unreadCount = 0;
+          if (unreadResponse.ok) {
+            const unreadPayload = await unreadResponse.json();
+            unreadCount = unreadPayload.data?.unreadCount ?? 0;
+          }
+          suspensionMap[item.public_user_id] = {
+            ...item,
+            unreadCount,
+          };
+        })
+      );
+      setSuspensions(suspensionMap);
+    } catch (error) {
+      console.error("[UsersTable] fetchActiveSuspensions error:", error);
+    }
+  }, [isPublicTab, adminToken]);
 
   const fetchUsers = async () => {
     try {
@@ -160,6 +233,11 @@ const UsersTable = () => {
       if (data.success) {
         setUsers(data.data || []);
         setTotalUsers(data.pagination?.total || 0);
+        if (isPublicTab) {
+          fetchActiveSuspensions();
+        } else {
+          setSuspensions({});
+        }
       } else {
         setError("Failed to fetch users: " + (data.message || "Unknown error"));
       }
@@ -169,6 +247,308 @@ const UsersTable = () => {
       setLoading(false);
     }
   };
+
+  const handleUnreadUpdate = useCallback((userId, unreadCount = 0) => {
+    setSuspensions((prev) => {
+      const next = { ...prev };
+      if (!next[userId]) return prev;
+      const safeCount = Math.max(0, unreadCount || 0);
+      if (next[userId].unreadCount === safeCount) return prev;
+      next[userId] = {
+        ...next[userId],
+        unreadCount: safeCount,
+      };
+      return next;
+    });
+  }, []);
+
+  const handleSuspensionRevoked = useCallback(
+    (updatedSuspension) => {
+      if (!updatedSuspension) return;
+      setSuspensions((prev) => {
+        const next = { ...prev };
+        const userKey =
+          Object.keys(next).find(
+            (key) =>
+              next[key]?.id === updatedSuspension.id ||
+              key === updatedSuspension.public_user_id
+          ) || updatedSuspension.public_user_id;
+        if (!userKey || !next[userKey]) {
+          return prev;
+        }
+        delete next[userKey];
+        return next;
+      });
+      fetchActiveSuspensions();
+    },
+    [fetchActiveSuspensions]
+  );
+
+  const handleAdminSocketUpdate = useCallback(
+    (payload) => {
+      if (!isPublicTab || !payload?.type) return;
+      setSuspensions((prev) => {
+        let changed = false;
+        const next = { ...prev };
+
+        const findUserBySuspension = (suspensionId) =>
+          Object.keys(next).find((key) => next[key]?.id === suspensionId);
+
+        switch (payload.type) {
+          case "suspension_created":
+          case "suspension_updated": {
+            const suspension = payload.suspension;
+            if (suspension?.public_user_id) {
+              const existing = next[suspension.public_user_id] || {};
+              const unreadCount =
+                payload.unreadCounts?.admin ?? existing.unreadCount ?? 0;
+              next[suspension.public_user_id] = {
+                ...existing,
+                ...suspension,
+                unreadCount,
+              };
+              changed = true;
+            }
+            break;
+          }
+          case "suspension_revoked": {
+            const suspension = payload.suspension;
+            if (suspension?.public_user_id && next[suspension.public_user_id]) {
+              delete next[suspension.public_user_id];
+              changed = true;
+            } else if (suspension?.id) {
+              const key = findUserBySuspension(suspension.id);
+              if (key) {
+                delete next[key];
+                changed = true;
+              }
+            }
+            break;
+          }
+          case "suspension_message": {
+            const suspensionId =
+              payload.suspensionId || payload.message?.suspension_id;
+            if (suspensionId) {
+              const key = findUserBySuspension(suspensionId);
+              if (key && next[key]) {
+                const unreadCount =
+                  payload.unreadCounts?.admin ?? next[key].unreadCount ?? 0;
+                next[key] = {
+                  ...next[key],
+                  unreadCount,
+                };
+                changed = true;
+              }
+            }
+            break;
+          }
+          default:
+            break;
+        }
+
+        return changed ? next : prev;
+      });
+    },
+    [isPublicTab]
+  );
+
+  const handleSuspendUser = useCallback(
+    async (user) => {
+      if (!user?.id) return;
+      const result = await Swal.fire({
+        title: "Suspend Account",
+        text: `Provide a reason for suspending ${user.full_name || user.name}?`,
+        input: "textarea",
+        inputLabel: "Suspension Reason",
+        inputPlaceholder:
+          "Share clear context so the user knows what to fix...",
+        inputValidator: (value) =>
+          !value?.trim() ? "Please provide a suspension reason." : undefined,
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Suspend User",
+        cancelButtonText: "Cancel",
+        showLoaderOnConfirm: true,
+        allowOutsideClick: () => !Swal.isLoading(),
+      });
+
+      if (!result.isConfirmed) return;
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        Swal.fire({
+          icon: "error",
+          title: "Authentication Required",
+          text: "Please log in again to manage suspensions.",
+        });
+        return;
+      }
+
+      setSuspensionLoading((prev) => ({
+        ...prev,
+        [user.id]: true,
+      }));
+
+      try {
+        const response = await fetch(`/api/suspensions/admin`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            public_user_id: user.id,
+            reason: result.value?.trim(),
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "Failed to suspend user.");
+        }
+
+        Swal.fire({
+          icon: "success",
+          title: "Account Suspended",
+          text: "The user has been suspended. They'll see the appeal screen on next login.",
+          timer: 2500,
+          showConfirmButton: false,
+        });
+
+        await fetchActiveSuspensions();
+      } catch (err) {
+        console.error("[UsersTable] suspend user error:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Suspend Failed",
+          text: err.message || "Unable to suspend user. Please try again.",
+        });
+      } finally {
+        setSuspensionLoading((prev) => {
+          const next = { ...prev };
+          delete next[user.id];
+          return next;
+        });
+      }
+    },
+    [fetchActiveSuspensions]
+  );
+
+  const handleRevokeSuspension = useCallback(
+    async (suspension) => {
+      if (!suspension?.id) return;
+      const confirm = await Swal.fire({
+        title: "Revoke Suspension",
+        text: "Are you sure you want to restore this account?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Revoke Suspension",
+        cancelButtonText: "Cancel",
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        Swal.fire({
+          icon: "error",
+          title: "Authentication Required",
+          text: "Please log in again to manage suspensions.",
+        });
+        return;
+      }
+
+      setSuspensionLoading((prev) => ({
+        ...prev,
+        [suspension.public_user_id]: true,
+      }));
+
+      try {
+        const response = await fetch(
+          `/api/suspensions/admin/${suspension.id}/revoke`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "Failed to revoke suspension.");
+        }
+
+        Swal.fire({
+          icon: "success",
+          title: "Suspension Revoked",
+          text: "The user can now access their account again.",
+          timer: 2200,
+          showConfirmButton: false,
+        });
+
+        handleSuspensionRevoked(payload.data);
+        setChatModalOpen(false);
+        setActiveSuspension(null);
+      } catch (err) {
+        console.error("[UsersTable] revoke suspension error:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Revoke Failed",
+          text: err.message || "Unable to revoke suspension. Please try again.",
+        });
+      } finally {
+        setSuspensionLoading((prev) => {
+          const next = { ...prev };
+          delete next[suspension.public_user_id];
+          return next;
+        });
+      }
+    },
+    [handleSuspensionRevoked]
+  );
+
+  const handleOpenSuspensionChat = useCallback(
+    (user) => {
+      if (!user?.id) return;
+      const suspension = suspensions[user.id];
+      if (!suspension) {
+        Swal.fire({
+          icon: "info",
+          title: "No Active Suspension",
+          text: "Suspend the account first to start an appeal conversation.",
+        });
+        return;
+      }
+      setActiveSuspension({
+        ...suspension,
+        publicUser: user,
+      });
+      setChatModalOpen(true);
+      handleUnreadUpdate(user.id, 0);
+    },
+    [suspensions, handleUnreadUpdate]
+  );
+
+  const closeSuspensionChat = useCallback(() => {
+    setChatModalOpen(false);
+    setActiveSuspension(null);
+  }, []);
+
+  const suspensionSocketHandlers = useMemo(
+    () => ({
+      "suspension:admin:update": handleAdminSocketUpdate,
+    }),
+    [handleAdminSocketUpdate]
+  );
+
+  const suspensionSocket = useSuspensionSocket({
+    token: adminToken,
+    enabled: isPublicTab,
+    eventHandlers: suspensionSocketHandlers,
+  });
 
   const getRoleColor = (role) => {
     switch (role) {
@@ -196,14 +576,14 @@ const UsersTable = () => {
       .join(" ");
   };
 
-const displayValue = (value, fallback = "Not provided") => {
-  if (value === null || value === undefined) return fallback;
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : fallback;
-  }
-  return value;
-};
+  const displayValue = (value, fallback = "Not provided") => {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : fallback;
+    }
+    return value;
+  };
 
   const getStatusColor = (isActive) => {
     return isActive ? "success" : "error";
@@ -980,66 +1360,256 @@ const displayValue = (value, fallback = "Not provided") => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user, idx) => (
-                    <TableRow
-                      key={user.id}
-                      sx={{
-                        "&:nth-of-type(even)": {
-                          backgroundColor: "rgba(255, 215, 0, 0.03)",
-                        },
-                        "&:hover": {
-                          backgroundColor: "rgba(255, 215, 0, 0.08)",
-                          transform: { xs: "none", sm: "scale(1.01)" },
-                        },
-                        transition: "all 0.2s ease",
-                        cursor: "pointer",
-                        "& .MuiTableCell-root": {
-                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          padding: { xs: "8px 4px", sm: "16px" },
-                        },
-                      }}
-                    >
-                      <TableCell sx={{ fontWeight: 600, color: "#FFD700" }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: 600,
+                  users.map((user, idx) => {
+                    const suspensionEntry = suspensions[user.id];
+                    const userIsSuspended = Boolean(suspensionEntry);
+                    const unreadAppeals = suspensionEntry?.unreadCount ?? 0;
+                    const suspensionBusy = Boolean(
+                      suspensionLoading[user.id] ||
+                        (suspensionEntry &&
+                          suspensionLoading[suspensionEntry.public_user_id])
+                    );
+                    return (
+                      <TableRow
+                        key={user.id}
+                        sx={{
+                          "&:nth-of-type(even)": {
+                            backgroundColor: "rgba(255, 215, 0, 0.03)",
+                          },
+                          "&:hover": {
+                            backgroundColor: "rgba(255, 215, 0, 0.08)",
+                            transform: { xs: "none", sm: "scale(1.01)" },
+                          },
+                          transition: "all 0.2s ease",
+                          cursor: "pointer",
+                          "& .MuiTableCell-root": {
                             fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                          }}
-                        >
-                          {page * rowsPerPage + idx + 1}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
+                            padding: { xs: "8px 4px", sm: "16px" },
+                          },
+                        }}
+                      >
+                        <TableCell sx={{ fontWeight: 600, color: "#FFD700" }}>
                           <Typography
                             variant="body2"
-                            fontWeight="600"
                             sx={{
-                              color: "#2c3e50",
+                              fontWeight: 600,
                               fontSize: { xs: "0.75rem", sm: "0.875rem" },
                             }}
                           >
-                            {user.full_name || user.name || "N/A"}
+                            {page * rowsPerPage + idx + 1}
                           </Typography>
-                          {/* Show email on mobile below name */}
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: "#7f8c8d",
-                              fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                              display: { xs: "block", md: "none" },
-                              mt: 0.5,
-                            }}
-                          >
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              fontWeight="600"
+                              sx={{
+                                color: "#2c3e50",
+                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                              }}
+                            >
+                              {user.full_name || user.name || "N/A"}
+                            </Typography>
+                            {/* Show email on mobile below name */}
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "#7f8c8d",
+                                fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                                display: { xs: "block", md: "none" },
+                                mt: 0.5,
+                              }}
+                            >
+                              {user.email}
+                            </Typography>
+                            {/* Show status on mobile below name - only for public users */}
+                            {userTypeTabs[activeTab]?.value === "public" && (
+                              <Box
+                                sx={{
+                                  display: { xs: "flex", sm: "none" },
+                                  mt: 0.5,
+                                  gap: 0.5,
+                                }}
+                              >
+                                <Chip
+                                  label={
+                                    user.isActive !== undefined
+                                      ? user.isActive
+                                        ? "Active"
+                                        : "Inactive"
+                                      : user.isVerified
+                                      ? "Verified"
+                                      : "Not Verified"
+                                  }
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{
+                                    fontSize: "0.6rem",
+                                    height: 18,
+                                    textTransform: "capitalize",
+                                    fontWeight: 600,
+                                    borderRadius: 1,
+                                    ...(user.isActive !== undefined
+                                      ? {
+                                          borderColor: user.isActive
+                                            ? "#90EE90"
+                                            : "#FFB6C1",
+                                          color: user.isActive
+                                            ? "#2d8659"
+                                            : "#b85050",
+                                          backgroundColor: user.isActive
+                                            ? "rgba(144, 238, 144, 0.1)"
+                                            : "rgba(255, 182, 193, 0.1)",
+                                        }
+                                      : user.isVerified
+                                      ? {
+                                          borderColor: "#FFD700",
+                                          color: "#b8860b",
+                                          backgroundColor:
+                                            "rgba(255, 215, 0, 0.1)",
+                                        }
+                                      : {
+                                          borderColor: "#B0E0E6",
+                                          color: "#5a8a93",
+                                          backgroundColor:
+                                            "rgba(176, 224, 230, 0.1)",
+                                        }),
+                                    "& .MuiChip-label": {
+                                      px: 0.5,
+                                    },
+                                  }}
+                                />
+                                {/* Show category on mobile if available */}
+                                {user.category && (
+                                  <Chip
+                                    label={user.category}
+                                    color="info"
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                      fontSize: "0.6rem",
+                                      height: 18,
+                                      textTransform: "capitalize",
+                                      fontWeight: 600,
+                                      borderRadius: 1,
+                                      "& .MuiChip-label": {
+                                        px: 0.5,
+                                      },
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            )}
+                            {/* Show role on mobile for admin users */}
+                            {userTypeTabs[activeTab]?.value === "admin" &&
+                              user.role && (
+                                <Box
+                                  sx={{
+                                    display: { xs: "flex", sm: "none" },
+                                    mt: 0.5,
+                                    gap: 0.5,
+                                  }}
+                                >
+                                  <Chip
+                                    label={formatRole(user.role)}
+                                    color={getRoleColor(user.role)}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                      fontSize: "0.6rem",
+                                      height: 18,
+                                      fontWeight: 600,
+                                      borderRadius: 1,
+                                      "& .MuiChip-label": {
+                                        px: 0.5,
+                                      },
+                                    }}
+                                  />
+                                </Box>
+                              )}
+                          </Box>
+                        </TableCell>
+                        <TableCell
+                          sx={{ display: { xs: "none", md: "table-cell" } }}
+                        >
+                          <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
                             {user.email}
                           </Typography>
-                          {/* Show status on mobile below name - only for public users */}
-                          {userTypeTabs[activeTab]?.value === "public" && (
+                        </TableCell>
+                        {userTypeTabs[activeTab]?.value === "admin" ? (
+                          <>
+                            <TableCell
+                              sx={{ display: { xs: "none", lg: "table-cell" } }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  color: "#7f8c8d",
+                                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                                }}
+                              >
+                                {user.phone || "N/A"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell
+                              sx={{ display: { xs: "none", md: "table-cell" } }}
+                            >
+                              <Chip
+                                label={formatRole(user.role)}
+                                color={getRoleColor(user.role)}
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                  textTransform: "capitalize",
+                                  fontWeight: 600,
+                                  borderRadius: 2,
+                                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                                }}
+                              />
+                            </TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell
+                              sx={{ display: { xs: "none", lg: "table-cell" } }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  color: "#7f8c8d",
+                                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                                }}
+                              >
+                                {displayValue(user.county)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell
+                              sx={{ display: { xs: "none", md: "table-cell" } }}
+                            >
+                              <Chip
+                                label={user.category || "N/A"}
+                                color="info"
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                  textTransform: "capitalize",
+                                  fontWeight: 600,
+                                  borderRadius: 2,
+                                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                                }}
+                              />
+                            </TableCell>
+                          </>
+                        )}
+                        {userTypeTabs[activeTab]?.value === "public" && (
+                          <TableCell
+                            sx={{ display: { xs: "none", sm: "table-cell" } }}
+                          >
                             <Box
                               sx={{
-                                display: { xs: "flex", sm: "none" },
-                                mt: 0.5,
+                                display: "flex",
+                                flexDirection: "column",
                                 gap: 0.5,
                               }}
                             >
@@ -1056,11 +1626,10 @@ const displayValue = (value, fallback = "Not provided") => {
                                 size="small"
                                 variant="outlined"
                                 sx={{
-                                  fontSize: "0.6rem",
-                                  height: 18,
                                   textTransform: "capitalize",
                                   fontWeight: 600,
-                                  borderRadius: 1,
+                                  borderRadius: 2,
+                                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
                                   ...(user.isActive !== undefined
                                     ? {
                                         borderColor: user.isActive
@@ -1086,214 +1655,63 @@ const displayValue = (value, fallback = "Not provided") => {
                                         backgroundColor:
                                           "rgba(176, 224, 230, 0.1)",
                                       }),
-                                  "& .MuiChip-label": {
-                                    px: 0.5,
-                                  },
                                 }}
                               />
-                              {/* Show category on mobile if available */}
-                              {user.category && (
-                                <Chip
-                                  label={user.category}
-                                  color="info"
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{
-                                    fontSize: "0.6rem",
-                                    height: 18,
-                                    textTransform: "capitalize",
-                                    fontWeight: 600,
-                                    borderRadius: 1,
-                                    "& .MuiChip-label": {
-                                      px: 0.5,
-                                    },
-                                  }}
-                                />
-                              )}
-                            </Box>
-                          )}
-                          {/* Show role on mobile for admin users */}
-                          {userTypeTabs[activeTab]?.value === "admin" &&
-                            user.role && (
+                              {/* Moderation Status Indicators */}
                               <Box
                                 sx={{
-                                  display: { xs: "flex", sm: "none" },
-                                  mt: 0.5,
+                                  display: "flex",
                                   gap: 0.5,
+                                  flexWrap: "wrap",
                                 }}
                               >
-                                <Chip
-                                  label={formatRole(user.role)}
-                                  color={getRoleColor(user.role)}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{
-                                    fontSize: "0.6rem",
-                                    height: 18,
-                                    fontWeight: 600,
-                                    borderRadius: 1,
-                                    "& .MuiChip-label": {
-                                      px: 0.5,
-                                    },
-                                  }}
-                                />
-                              </Box>
-                            )}
-                        </Box>
-                      </TableCell>
-                      <TableCell
-                        sx={{ display: { xs: "none", md: "table-cell" } }}
-                      >
-                        <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
-                          {user.email}
-                        </Typography>
-                      </TableCell>
-                      {userTypeTabs[activeTab]?.value === "admin" ? (
-                        <>
-                          <TableCell
-                            sx={{ display: { xs: "none", lg: "table-cell" } }}
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "#7f8c8d",
-                                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                              }}
-                            >
-                              {user.phone || "N/A"}
-                            </Typography>
-                          </TableCell>
-                          <TableCell
-                            sx={{ display: { xs: "none", md: "table-cell" } }}
-                          >
-                            <Chip
-                              label={formatRole(user.role)}
-                              color={getRoleColor(user.role)}
-                              size="small"
-                              variant="outlined"
-                              sx={{
-                                textTransform: "capitalize",
-                                fontWeight: 600,
-                                borderRadius: 2,
-                                fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                              }}
-                            />
-                          </TableCell>
-                        </>
-                      ) : (
-                        <>
-                          <TableCell
-                            sx={{ display: { xs: "none", lg: "table-cell" } }}
-                          >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "#7f8c8d",
-                              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                            }}
-                          >
-                            {displayValue(user.county)}
-                          </Typography>
-                          </TableCell>
-                          <TableCell
-                            sx={{ display: { xs: "none", md: "table-cell" } }}
-                          >
-                            <Chip
-                              label={user.category || "N/A"}
-                              color="info"
-                              size="small"
-                              variant="outlined"
-                              sx={{
-                                textTransform: "capitalize",
-                                fontWeight: 600,
-                                borderRadius: 2,
-                                fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                              }}
-                            />
-                          </TableCell>
-                        </>
-                      )}
-                      {userTypeTabs[activeTab]?.value === "public" && (
-                        <TableCell
-                          sx={{ display: { xs: "none", sm: "table-cell" } }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 0.5,
-                            }}
-                          >
-                            <Chip
-                              label={
-                                user.isActive !== undefined
-                                  ? user.isActive
-                                    ? "Active"
-                                    : "Inactive"
-                                  : user.isVerified
-                                  ? "Verified"
-                                  : "Not Verified"
-                              }
-                              size="small"
-                              variant="outlined"
-                              sx={{
-                                textTransform: "capitalize",
-                                fontWeight: 600,
-                                borderRadius: 2,
-                                fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                                ...(user.isActive !== undefined
-                                  ? {
-                                      borderColor: user.isActive
-                                        ? "#90EE90"
-                                        : "#FFB6C1",
-                                      color: user.isActive
-                                        ? "#2d8659"
-                                        : "#b85050",
-                                      backgroundColor: user.isActive
-                                        ? "rgba(144, 238, 144, 0.1)"
-                                        : "rgba(255, 182, 193, 0.1)",
-                                    }
-                                  : user.isVerified
-                                  ? {
-                                      borderColor: "#FFD700",
-                                      color: "#b8860b",
-                                      backgroundColor: "rgba(255, 215, 0, 0.1)",
-                                    }
-                                  : {
-                                      borderColor: "#B0E0E6",
-                                      color: "#5a8a93",
-                                      backgroundColor:
-                                        "rgba(176, 224, 230, 0.1)",
-                                    }),
-                              }}
-                            />
-                            {/* Moderation Status Indicators */}
-                            <Box
-                              sx={{
-                                display: "flex",
-                                gap: 0.5,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              {(() => {
-                                // Check if profile picture is pending
-                                const profilePhotoPending = user.photo_moderation_status === "pending";
-                                
-                                // Check if any gallery photo is pending
-                                const hasGalleryPhotosPending = 
-                                  user.photos && 
-                                  Array.isArray(user.photos) && 
-                                  user.photos.some(photo => photo.moderation_status === "pending");
-                                
-                                // Show chip if either profile photo or any gallery photo is pending
-                                return (profilePhotoPending || hasGalleryPhotosPending) ? (
+                                {(() => {
+                                  // Check if profile picture is pending
+                                  const profilePhotoPending =
+                                    user.photo_moderation_status === "pending";
+
+                                  // Check if any gallery photo is pending
+                                  const hasGalleryPhotosPending =
+                                    user.photos &&
+                                    Array.isArray(user.photos) &&
+                                    user.photos.some(
+                                      (photo) =>
+                                        photo.moderation_status === "pending"
+                                    );
+
+                                  // Show chip if either profile photo or any gallery photo is pending
+                                  return profilePhotoPending ||
+                                    hasGalleryPhotosPending ? (
+                                    <Chip
+                                      icon={
+                                        <PendingIcon
+                                          sx={{
+                                            fontSize: "0.75rem !important",
+                                          }}
+                                        />
+                                      }
+                                      label="Photo Pending"
+                                      size="small"
+                                      sx={{
+                                        fontSize: "0.65rem",
+                                        height: "20px",
+                                        bgcolor: "rgba(255, 193, 7, 0.2)",
+                                        color: "#B8860B",
+                                        fontWeight: 600,
+                                        border:
+                                          "1px solid rgba(255, 193, 7, 0.4)",
+                                      }}
+                                    />
+                                  ) : null;
+                                })()}
+                                {user.bio_moderation_status === "pending" && (
                                   <Chip
                                     icon={
                                       <PendingIcon
                                         sx={{ fontSize: "0.75rem !important" }}
                                       />
                                     }
-                                    label="Photo Pending"
+                                    label="Bio Pending"
                                     size="small"
                                     sx={{
                                       fontSize: "0.65rem",
@@ -1301,113 +1719,222 @@ const displayValue = (value, fallback = "Not provided") => {
                                       bgcolor: "rgba(255, 193, 7, 0.2)",
                                       color: "#B8860B",
                                       fontWeight: 600,
-                                      border: "1px solid rgba(255, 193, 7, 0.4)",
+                                      border:
+                                        "1px solid rgba(255, 193, 7, 0.4)",
                                     }}
                                   />
-                                ) : null;
-                              })()}
-                              {user.bio_moderation_status === "pending" && (
-                                <Chip
-                                  icon={
-                                    <PendingIcon
-                                      sx={{ fontSize: "0.75rem !important" }}
-                                    />
-                                  }
-                                  label="Bio Pending"
-                                  size="small"
-                                  sx={{
-                                    fontSize: "0.65rem",
-                                    height: "20px",
-                                    bgcolor: "rgba(255, 193, 7, 0.2)",
-                                    color: "#B8860B",
-                                    fontWeight: 600,
-                                    border: "1px solid rgba(255, 193, 7, 0.4)",
-                                  }}
-                                />
-                              )}
+                                )}
+                              </Box>
                             </Box>
+                          </TableCell>
+                        )}
+                        <TableCell align="center">
+                          <Box display="flex" gap={0.5} justifyContent="center">
+                            <Tooltip title="View User Details" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleViewUser(user)}
+                                sx={{
+                                  color: "#5a8a93",
+                                  backgroundColor: "rgba(176, 224, 230, 0.15)",
+                                  width: { xs: 28, sm: 36 },
+                                  height: { xs: 28, sm: 36 },
+                                  "&:hover": {
+                                    backgroundColor:
+                                      "rgba(176, 224, 230, 0.25)",
+                                    transform: "scale(1.1)",
+                                  },
+                                  transition: "all 0.2s ease",
+                                  borderRadius: 2,
+                                }}
+                              >
+                                <ViewIcon
+                                  fontSize={isMobile ? "small" : "small"}
+                                />
+                              </IconButton>
+                            </Tooltip>
+                            {userTypeTabs[activeTab]?.value === "admin" ? (
+                              <>
+                                <Tooltip title="Edit User" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleEditUser(user)}
+                                    sx={{
+                                      color: "#b8860b",
+                                      backgroundColor:
+                                        "rgba(255, 215, 0, 0.15)",
+                                      width: { xs: 28, sm: 36 },
+                                      height: { xs: 28, sm: 36 },
+                                      "&:hover": {
+                                        backgroundColor:
+                                          "rgba(255, 215, 0, 0.25)",
+                                        transform: "scale(1.1)",
+                                      },
+                                      transition: "all 0.2s ease",
+                                      borderRadius: 2,
+                                    }}
+                                  >
+                                    <EditIcon
+                                      fontSize={isMobile ? "small" : "small"}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete User" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleDeleteUser(user)}
+                                    sx={{
+                                      color: "#b85050",
+                                      backgroundColor:
+                                        "rgba(255, 182, 193, 0.15)",
+                                      width: { xs: 28, sm: 36 },
+                                      height: { xs: 28, sm: 36 },
+                                      "&:hover": {
+                                        backgroundColor:
+                                          "rgba(255, 182, 193, 0.25)",
+                                        transform: "scale(1.1)",
+                                      },
+                                      transition: "all 0.2s ease",
+                                      borderRadius: 2,
+                                    }}
+                                  >
+                                    <DeleteIcon
+                                      fontSize={isMobile ? "small" : "small"}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            ) : (
+                              <>
+                                <Tooltip
+                                  title={
+                                    userIsSuspended
+                                      ? "Revoke suspension"
+                                      : "Suspend account"
+                                  }
+                                  arrow
+                                >
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        userIsSuspended
+                                          ? handleRevokeSuspension(
+                                              suspensionEntry
+                                            )
+                                          : handleSuspendUser(user)
+                                      }
+                                      disabled={suspensionBusy}
+                                      sx={{
+                                        color: userIsSuspended
+                                          ? "#2d8659"
+                                          : "#b85050",
+                                        backgroundColor: userIsSuspended
+                                          ? "rgba(144, 238, 144, 0.15)"
+                                          : "rgba(255, 182, 193, 0.15)",
+                                        width: { xs: 28, sm: 36 },
+                                        height: { xs: 28, sm: 36 },
+                                        "&:hover": {
+                                          backgroundColor: userIsSuspended
+                                            ? "rgba(144, 238, 144, 0.25)"
+                                            : "rgba(255, 182, 193, 0.25)",
+                                          transform: "scale(1.1)",
+                                        },
+                                        transition: "all 0.2s ease",
+                                        borderRadius: 2,
+                                        position: "relative",
+                                      }}
+                                    >
+                                      {suspensionBusy ? (
+                                        <CircularProgress
+                                          size={18}
+                                          sx={{ color: "#2c3e50" }}
+                                        />
+                                      ) : userIsSuspended ? (
+                                        <LockOpenIcon
+                                          fontSize={
+                                            isMobile ? "small" : "small"
+                                          }
+                                        />
+                                      ) : (
+                                        <GavelIcon
+                                          fontSize={
+                                            isMobile ? "small" : "small"
+                                          }
+                                        />
+                                      )}
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                                <Tooltip title="Open appeal conversation" arrow>
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        handleOpenSuspensionChat(user)
+                                      }
+                                      disabled={!userIsSuspended}
+                                      sx={{
+                                        color: "#b8860b",
+                                        backgroundColor:
+                                          "rgba(255, 215, 0, 0.15)",
+                                        width: { xs: 28, sm: 36 },
+                                        height: { xs: 28, sm: 36 },
+                                        "&:hover": {
+                                          backgroundColor:
+                                            "rgba(255, 215, 0, 0.25)",
+                                          transform: "scale(1.1)",
+                                        },
+                                        transition: "all 0.2s ease",
+                                        borderRadius: 2,
+                                        "@keyframes suspensionShake": {
+                                          "0%, 100%": {
+                                            transform: "rotate(0deg)",
+                                          },
+                                          "25%": { transform: "rotate(8deg)" },
+                                          "75%": { transform: "rotate(-8deg)" },
+                                        },
+                                      }}
+                                    >
+                                      <Badge
+                                        color="error"
+                                        badgeContent={
+                                          unreadAppeals > 99
+                                            ? "99+"
+                                            : unreadAppeals || null
+                                        }
+                                        overlap="circular"
+                                        anchorOrigin={{
+                                          vertical: "top",
+                                          horizontal: "right",
+                                        }}
+                                      >
+                                        <NotificationsActiveIcon
+                                          fontSize={
+                                            isMobile ? "small" : "small"
+                                          }
+                                          sx={{
+                                            animation:
+                                              unreadAppeals > 0
+                                                ? "suspensionShake 1.4s ease-in-out infinite"
+                                                : "none",
+                                            color:
+                                              unreadAppeals > 0
+                                                ? "#d9534f"
+                                                : undefined,
+                                          }}
+                                        />
+                                      </Badge>
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </>
+                            )}
                           </Box>
                         </TableCell>
-                      )}
-                      <TableCell align="center">
-                        <Box display="flex" gap={0.5} justifyContent="center">
-                          <Tooltip title="View User Details" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewUser(user)}
-                              sx={{
-                                color: "#5a8a93",
-                                backgroundColor: "rgba(176, 224, 230, 0.15)",
-                                width: { xs: 28, sm: 36 },
-                                height: { xs: 28, sm: 36 },
-                                "&:hover": {
-                                  backgroundColor: "rgba(176, 224, 230, 0.25)",
-                                  transform: "scale(1.1)",
-                                },
-                                transition: "all 0.2s ease",
-                                borderRadius: 2,
-                              }}
-                            >
-                              <ViewIcon
-                                fontSize={isMobile ? "small" : "small"}
-                              />
-                            </IconButton>
-                          </Tooltip>
-                          {userTypeTabs[activeTab]?.value === "admin" && (
-                            <>
-                              <Tooltip title="Edit User" arrow>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleEditUser(user)}
-                                  sx={{
-                                    color: "#b8860b",
-                                    backgroundColor: "rgba(255, 215, 0, 0.15)",
-                                    width: { xs: 28, sm: 36 },
-                                    height: { xs: 28, sm: 36 },
-                                    "&:hover": {
-                                      backgroundColor:
-                                        "rgba(255, 215, 0, 0.25)",
-                                      transform: "scale(1.1)",
-                                    },
-                                    transition: "all 0.2s ease",
-                                    borderRadius: 2,
-                                  }}
-                                >
-                                  <EditIcon
-                                    fontSize={isMobile ? "small" : "small"}
-                                  />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Delete User" arrow>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleDeleteUser(user)}
-                                  sx={{
-                                    color: "#b85050",
-                                    backgroundColor:
-                                      "rgba(255, 182, 193, 0.15)",
-                                    width: { xs: 28, sm: 36 },
-                                    height: { xs: 28, sm: 36 },
-                                    "&:hover": {
-                                      backgroundColor:
-                                        "rgba(255, 182, 193, 0.25)",
-                                      transform: "scale(1.1)",
-                                    },
-                                    transition: "all 0.2s ease",
-                                    borderRadius: 2,
-                                  }}
-                                >
-                                  <DeleteIcon
-                                    fontSize={isMobile ? "small" : "small"}
-                                  />
-                                </IconButton>
-                              </Tooltip>
-                            </>
-                          )}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -1608,23 +2135,23 @@ const displayValue = (value, fallback = "Not provided") => {
                     >
                       {selectedUser?.email}
                     </Typography>
-                  {userTypeTabs[activeTab]?.value === "public" && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#7f8c8d",
-                          lineHeight: 1.6,
-                          fontSize: "0.95rem",
-                        }}
-                      >
-                        {`Username: ${displayValue(
-                          selectedUser?.username,
-                          "N/A"
-                        )}`}
-                      </Typography>
-                    </Box>
-                  )}
+                    {userTypeTabs[activeTab]?.value === "public" && (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "#7f8c8d",
+                            lineHeight: 1.6,
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {`Username: ${displayValue(
+                            selectedUser?.username,
+                            "N/A"
+                          )}`}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Box>
 
@@ -3308,6 +3835,17 @@ const displayValue = (value, fallback = "Not provided") => {
             )}
           </DialogActions>
         </Dialog>
+
+        <SuspensionChatModal
+          open={chatModalOpen}
+          onClose={closeSuspensionChat}
+          suspension={activeSuspension}
+          socketContext={suspensionSocket}
+          token={adminToken}
+          onUnreadUpdate={handleUnreadUpdate}
+          onSuspensionRevoked={handleSuspensionRevoked}
+          onRequestRevoke={handleRevokeSuspension}
+        />
       </Paper>
     </Box>
   );
