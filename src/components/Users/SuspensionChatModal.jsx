@@ -59,7 +59,6 @@ const SuspensionChatModal = ({
   open,
   onClose,
   suspension,
-  socketContext,
   token,
   onUnreadUpdate,
   onSuspensionRevoked,
@@ -89,10 +88,12 @@ const SuspensionChatModal = ({
     });
   }, []);
 
-  const fetchThread = useCallback(async () => {
+  const fetchThread = useCallback(async (silent = false) => {
     if (!open || !suspensionId || !token) return;
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError("");
       const response = await fetch(
         `/api/suspensions/admin/${suspensionId}/messages`,
@@ -128,15 +129,19 @@ const SuspensionChatModal = ({
       }
     } catch (err) {
       console.error("[SuspensionChatModal] fetchThread error:", err);
-      setError(err.message || "Failed to load appeal chat.");
+      if (!silent) {
+        setError(err.message || "Failed to load appeal chat.");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [open, suspensionId, token, onUnreadUpdate, publicUserId]);
 
   useEffect(() => {
     if (open && suspensionId) {
-      fetchThread();
+      fetchThread(false);
     } else if (!open) {
       setMessages([]);
       setMessageInput("");
@@ -145,66 +150,16 @@ const SuspensionChatModal = ({
   }, [open, suspensionId, fetchThread]);
 
   useEffect(() => {
-    const sock = socketContext?.socket;
-    if (!open || !sock || !suspensionId) return undefined;
+    if (!open || !suspensionId) {
+      return undefined;
+    }
 
-    const handleNewMessage = (payload) => {
-      if (payload?.message?.suspension_id !== suspensionId) return;
-      appendMessage(payload.message);
-      if (typeof onUnreadUpdate === "function") {
-        const unreadForAdmin =
-          payload.unreadCounts?.admin ?? payload.unreadCounts ?? 0;
-        onUnreadUpdate(publicUserId, unreadForAdmin);
-      }
-    };
+    const intervalId = setInterval(() => {
+      fetchThread(true);
+    }, 5000);
 
-    const handleReadReceipt = (payload) => {
-      if (payload?.suspensionId !== suspensionId) return;
-      if (typeof onUnreadUpdate === "function") {
-        const unreadForAdmin =
-          payload.unreadCounts?.admin ?? payload.unreadCounts ?? 0;
-        onUnreadUpdate(publicUserId, unreadForAdmin);
-      }
-    };
-
-    const handleRevoked = (updatedSuspension) => {
-      if (updatedSuspension?.id !== suspensionId) return;
-      if (typeof onSuspensionRevoked === "function") {
-        onSuspensionRevoked(updatedSuspension);
-      }
-      onClose?.();
-    };
-
-    const handleUpdated = (updatedSuspension) => {
-      if (updatedSuspension?.id !== suspensionId) return;
-      if (typeof onSuspensionRevoked === "function") {
-        onSuspensionRevoked(updatedSuspension);
-      }
-    };
-
-    socketContext.joinSuspension(suspensionId);
-    sock.on("suspension:message:new", handleNewMessage);
-    sock.on("suspension:messages:read", handleReadReceipt);
-    sock.on("suspension:revoked", handleRevoked);
-    sock.on("suspension:update", handleUpdated);
-
-    return () => {
-      sock.off("suspension:message:new", handleNewMessage);
-      sock.off("suspension:messages:read", handleReadReceipt);
-      sock.off("suspension:revoked", handleRevoked);
-      sock.off("suspension:update", handleUpdated);
-      socketContext.leaveSuspension(suspensionId);
-    };
-  }, [
-    socketContext,
-    open,
-    suspensionId,
-    appendMessage,
-    onUnreadUpdate,
-    publicUserId,
-    onSuspensionRevoked,
-    onClose,
-  ]);
+    return () => clearInterval(intervalId);
+  }, [open, suspensionId, fetchThread]);
 
   const handleSendMessage = useCallback(async () => {
     if (!messageInput.trim() || !suspensionId || !token) return;

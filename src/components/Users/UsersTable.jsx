@@ -68,7 +68,6 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import Swal from "sweetalert2";
-import useSuspensionSocket from "../../hooks/useSuspensionSocket";
 import SuspensionChatModal from "./SuspensionChatModal";
 
 const UsersTable = () => {
@@ -284,73 +283,6 @@ const UsersTable = () => {
     [fetchActiveSuspensions]
   );
 
-  const handleAdminSocketUpdate = useCallback(
-    (payload) => {
-      if (!isPublicTab || !payload?.type) return;
-      setSuspensions((prev) => {
-        let changed = false;
-        const next = { ...prev };
-
-        const findUserBySuspension = (suspensionId) =>
-          Object.keys(next).find((key) => next[key]?.id === suspensionId);
-
-        switch (payload.type) {
-          case "suspension_created":
-          case "suspension_updated": {
-            const suspension = payload.suspension;
-            if (suspension?.public_user_id) {
-              const existing = next[suspension.public_user_id] || {};
-              const unreadCount =
-                payload.unreadCounts?.admin ?? existing.unreadCount ?? 0;
-              next[suspension.public_user_id] = {
-                ...existing,
-                ...suspension,
-                unreadCount,
-              };
-              changed = true;
-            }
-            break;
-          }
-          case "suspension_revoked": {
-            const suspension = payload.suspension;
-            if (suspension?.public_user_id && next[suspension.public_user_id]) {
-              delete next[suspension.public_user_id];
-              changed = true;
-            } else if (suspension?.id) {
-              const key = findUserBySuspension(suspension.id);
-              if (key) {
-                delete next[key];
-                changed = true;
-              }
-            }
-            break;
-          }
-          case "suspension_message": {
-            const suspensionId =
-              payload.suspensionId || payload.message?.suspension_id;
-            if (suspensionId) {
-              const key = findUserBySuspension(suspensionId);
-              if (key && next[key]) {
-                const unreadCount =
-                  payload.unreadCounts?.admin ?? next[key].unreadCount ?? 0;
-                next[key] = {
-                  ...next[key],
-                  unreadCount,
-                };
-                changed = true;
-              }
-            }
-            break;
-          }
-          default:
-            break;
-        }
-
-        return changed ? next : prev;
-      });
-    },
-    [isPublicTab]
-  );
 
   const handleSuspendUser = useCallback(
     async (user) => {
@@ -536,19 +468,6 @@ const UsersTable = () => {
     setChatModalOpen(false);
     setActiveSuspension(null);
   }, []);
-
-  const suspensionSocketHandlers = useMemo(
-    () => ({
-      "suspension:admin:update": handleAdminSocketUpdate,
-    }),
-    [handleAdminSocketUpdate]
-  );
-
-  const suspensionSocket = useSuspensionSocket({
-    token: adminToken,
-    enabled: isPublicTab,
-    eventHandlers: suspensionSocketHandlers,
-  });
 
   const getRoleColor = (role) => {
     switch (role) {
@@ -3840,7 +3759,6 @@ const UsersTable = () => {
           open={chatModalOpen}
           onClose={closeSuspensionChat}
           suspension={activeSuspension}
-          socketContext={suspensionSocket}
           token={adminToken}
           onUnreadUpdate={handleUnreadUpdate}
           onSuspensionRevoked={handleSuspensionRevoked}

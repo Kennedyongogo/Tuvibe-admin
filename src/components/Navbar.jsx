@@ -41,6 +41,7 @@ import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { Box } from "@mui/material";
@@ -364,11 +365,13 @@ const Navbar = (props) => {
         </List>
         <Divider />
         <List>
-          <ListItem button onClick={logout} sx={{ cursor: "pointer" }}>
-            <ListItemIcon>
-              <Logout />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
+          <ListItem disablePadding>
+            <ListItemButton onClick={logout} sx={{ cursor: "pointer" }}>
+              <ListItemIcon>
+                <Logout />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItemButton>
           </ListItem>
         </List>
       </Drawer>
