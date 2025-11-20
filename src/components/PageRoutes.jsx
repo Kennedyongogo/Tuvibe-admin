@@ -10,6 +10,8 @@ import Analytics from "./Analytics/Analytics";
 import Verification from "./Verification/Verification";
 import Marketplace from "./Marketplace/Marketplace";
 import Reports from "./Reports/Reports";
+import StoriesModeration from "./Stories/StoriesModeration";
+import PostsModeration from "./Posts/PostsModeration";
 
 function PageRoutes() {
   const [user, setUser] = useState(null);
@@ -56,6 +58,8 @@ function PageRoutes() {
             <Route path="map" element={<TuvibeMap />} />
             <Route path="verification" element={<Verification />} />
             <Route path="marketplace" element={<Marketplace />} />
+            <Route path="stories" element={<StoriesModeration />} />
+            <Route path="posts" element={<PostsModeration />} />
             <Route path="reports" element={<Reports />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="users" element={<UsersTable />} />

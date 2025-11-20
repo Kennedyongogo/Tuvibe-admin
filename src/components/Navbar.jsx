@@ -27,6 +27,8 @@ import {
   RateReview,
   Store,
   Report,
+  AutoStories,
+  Article,
 } from "@mui/icons-material";
 import { Money } from "@phosphor-icons/react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -165,6 +167,16 @@ const Navbar = (props) => {
       text: "Marketplace",
       icon: <Store />,
       path: "/marketplace",
+    },
+    {
+      text: "Stories",
+      icon: <AutoStories />,
+      path: "/stories",
+    },
+    {
+      text: "Posts",
+      icon: <Article />,
+      path: "/posts",
     },
     {
       text: "Resources",
