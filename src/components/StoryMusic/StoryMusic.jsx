@@ -58,6 +58,7 @@ const StoryMusic = () => {
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
   const [audioRef, setAudioRef] = useState(null);
   const [playingProgress, setPlayingProgress] = useState(0);
+  const audioEventHandlersRef = React.useRef(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -84,6 +85,14 @@ const StoryMusic = () => {
       if (audioRef) {
         audioRef.pause();
         audioRef.src = "";
+        // Remove event listeners if they exist
+        if (audioEventHandlersRef.current) {
+          const { handleEnded, handleTimeUpdate, handleError } =
+            audioEventHandlersRef.current;
+          audioRef.removeEventListener("ended", handleEnded);
+          audioRef.removeEventListener("timeupdate", handleTimeUpdate);
+          audioRef.removeEventListener("error", handleError);
+        }
       }
     };
   }, [audioRef]);
@@ -235,20 +244,21 @@ const StoryMusic = () => {
     try {
       const token = localStorage.getItem("token");
       const formDataToSend = new FormData();
-      
+
       formDataToSend.append("title", formData.title);
       formDataToSend.append("artist", formData.artist);
-      if (formData.duration) formDataToSend.append("duration", formData.duration);
+      if (formData.duration)
+        formDataToSend.append("duration", formData.duration);
       if (formData.order) formDataToSend.append("order", formData.order);
       formDataToSend.append("is_active", formData.is_active);
-      
+
       // Add files if uploaded, otherwise add URLs
       if (audioFile) {
         formDataToSend.append("audio_file", audioFile);
       } else if (formData.audio_url) {
         formDataToSend.append("audio_url", formData.audio_url);
       }
-      
+
       if (coverFile) {
         formDataToSend.append("cover_image", coverFile);
       } else if (formData.cover_image_url) {
@@ -273,6 +283,23 @@ const StoryMusic = () => {
           timer: 1500,
           showConfirmButton: false,
         });
+        // Clean up any existing audio playback
+        if (audioRef) {
+          audioRef.pause();
+          audioRef.src = "";
+          // Remove event listeners if they exist
+          if (audioEventHandlersRef.current) {
+            const { handleEnded, handleTimeUpdate, handleError } =
+              audioEventHandlersRef.current;
+            audioRef.removeEventListener("ended", handleEnded);
+            audioRef.removeEventListener("timeupdate", handleTimeUpdate);
+            audioRef.removeEventListener("error", handleError);
+          }
+        }
+        setAudioRef(null);
+        setCurrentlyPlaying(null);
+        setPlayingProgress(0);
+        audioEventHandlersRef.current = null;
         handleCloseDialog();
         fetchMusicTracks();
       } else {
@@ -307,20 +334,22 @@ const StoryMusic = () => {
     try {
       const token = localStorage.getItem("token");
       const formDataToSend = new FormData();
-      
+
       formDataToSend.append("title", formData.title);
       formDataToSend.append("artist", formData.artist);
-      if (formData.duration !== undefined) formDataToSend.append("duration", formData.duration);
-      if (formData.order !== undefined) formDataToSend.append("order", formData.order);
+      if (formData.duration !== undefined)
+        formDataToSend.append("duration", formData.duration);
+      if (formData.order !== undefined)
+        formDataToSend.append("order", formData.order);
       formDataToSend.append("is_active", formData.is_active);
-      
+
       // Add files if uploaded, otherwise add URLs (or keep existing)
       if (audioFile) {
         formDataToSend.append("audio_file", audioFile);
       } else if (formData.audio_url) {
         formDataToSend.append("audio_url", formData.audio_url);
       }
-      
+
       if (coverFile) {
         formDataToSend.append("cover_image", coverFile);
       } else if (formData.cover_image_url) {
@@ -347,10 +376,22 @@ const StoryMusic = () => {
         });
         handleCloseEditDialog();
         fetchMusicTracks();
-        // Stop playing if this track was playing
+        // Stop playing if this track was playing and clean up
         if (currentlyPlaying === selectedTrack.id && audioRef) {
           audioRef.pause();
+          audioRef.src = "";
+          // Remove event listeners if they exist
+          if (audioEventHandlersRef.current) {
+            const { handleEnded, handleTimeUpdate, handleError } =
+              audioEventHandlersRef.current;
+            audioRef.removeEventListener("ended", handleEnded);
+            audioRef.removeEventListener("timeupdate", handleTimeUpdate);
+            audioRef.removeEventListener("error", handleError);
+          }
+          setAudioRef(null);
           setCurrentlyPlaying(null);
+          setPlayingProgress(0);
+          audioEventHandlersRef.current = null;
         }
       } else {
         throw new Error(data.message || "Failed to update music track");
@@ -398,11 +439,23 @@ const StoryMusic = () => {
           timer: 1500,
           showConfirmButton: false,
         });
-        // Stop playing if this track was playing
+        // Stop playing if this track was playing and clean up audio reference
         if (currentlyPlaying === track.id && audioRef) {
           audioRef.pause();
-          setCurrentlyPlaying(null);
+          audioRef.src = "";
+          // Remove event listeners if they exist
+          if (audioEventHandlersRef.current) {
+            const { handleEnded, handleTimeUpdate, handleError } =
+              audioEventHandlersRef.current;
+            audioRef.removeEventListener("ended", handleEnded);
+            audioRef.removeEventListener("timeupdate", handleTimeUpdate);
+            audioRef.removeEventListener("error", handleError);
+          }
         }
+        setAudioRef(null);
+        setCurrentlyPlaying(null);
+        setPlayingProgress(0);
+        audioEventHandlersRef.current = null;
         fetchMusicTracks();
       } else {
         throw new Error(data.message || "Failed to delete music track");
@@ -425,10 +478,19 @@ const StoryMusic = () => {
         setCurrentlyPlaying(null);
       }
     } else {
-      // Stop any currently playing track
+      // Stop any currently playing track and clean up
       if (audioRef) {
         audioRef.pause();
         audioRef.src = "";
+        // Remove old event listeners if they exist
+        if (audioEventHandlersRef.current) {
+          const { handleEnded, handleTimeUpdate, handleError } =
+            audioEventHandlersRef.current;
+          audioRef.removeEventListener("ended", handleEnded);
+          audioRef.removeEventListener("timeupdate", handleTimeUpdate);
+          audioRef.removeEventListener("error", handleError);
+        }
+        setAudioRef(null);
       }
 
       // Play new track - use getImageUrl to properly construct the URL
@@ -443,35 +505,82 @@ const StoryMusic = () => {
       }
 
       const audio = new Audio(audioUrl);
-      audio.addEventListener("ended", () => {
+
+      // Track if audio successfully started playing
+      let hasStartedPlaying = false;
+
+      // Create named functions for event listeners and store them for cleanup
+      const handleEnded = () => {
         setCurrentlyPlaying(null);
         setPlayingProgress(0);
-      });
-      audio.addEventListener("timeupdate", () => {
+        audioEventHandlersRef.current = null;
+      };
+
+      const handleTimeUpdate = () => {
         if (audio.duration) {
           setPlayingProgress((audio.currentTime / audio.duration) * 100);
+          // If we get time updates, audio is playing successfully
+          hasStartedPlaying = true;
         }
-      });
-      audio.addEventListener("error", (e) => {
+      };
+
+      const handleError = (e) => {
         console.error("Audio playback error:", e);
-        Swal.fire({
-          icon: "error",
-          title: "Playback Error",
-          text: "Failed to play audio. Please check if the file exists.",
-        });
-        setCurrentlyPlaying(null);
-        setPlayingProgress(0);
-      });
-      audio.play().catch((error) => {
-        console.error("Error playing audio:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Playback Error",
-          text: "Failed to play audio. Please check if the file exists.",
-        });
-      });
-      setAudioRef(audio);
+        // Only show error if this is the current audio and it hasn't started playing
+        if (
+          audioRef === audio &&
+          !hasStartedPlaying &&
+          audio.paused &&
+          audio.readyState < 2
+        ) {
+          Swal.fire({
+            icon: "error",
+            title: "Playback Error",
+            text: "Failed to play audio. Please check if the file exists.",
+          });
+          setCurrentlyPlaying(null);
+          setPlayingProgress(0);
+          setAudioRef(null);
+          audioEventHandlersRef.current = null;
+        }
+      };
+
+      // Store handlers for cleanup
+      audioEventHandlersRef.current = {
+        handleEnded,
+        handleTimeUpdate,
+        handleError,
+      };
+
+      audio.addEventListener("ended", handleEnded);
+      audio.addEventListener("timeupdate", handleTimeUpdate);
+      audio.addEventListener("error", handleError);
+
+      // Set playing state immediately so pause button shows
       setCurrentlyPlaying(track.id);
+      setAudioRef(audio);
+
+      audio
+        .play()
+        .then(() => {
+          // Audio started playing successfully
+          hasStartedPlaying = true;
+        })
+        .catch((error) => {
+          console.error("Error playing audio:", error);
+          // Only show error if this is still the current audio and it hasn't started playing
+          if (audioRef === audio && !hasStartedPlaying) {
+            Swal.fire({
+              icon: "error",
+              title: "Playback Error",
+              text: "Failed to play audio. Please check if the file exists.",
+            });
+            setCurrentlyPlaying(null);
+            setPlayingProgress(0);
+            setAudioRef(null);
+            audioEventHandlersRef.current = null;
+          }
+        });
     }
   };
 
@@ -587,11 +696,17 @@ const StoryMusic = () => {
                   <TableRow>
                     <TableCell colSpan={7} align="center">
                       <Box sx={{ py: 4 }}>
-                        <MusicIcon sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+                        <MusicIcon
+                          sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                        />
                         <Typography variant="h6" color="text.secondary">
                           No music tracks found
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mt: 1 }}
+                        >
                           Click "Add Music Track" to get started
                         </Typography>
                       </Box>
@@ -647,23 +762,39 @@ const StoryMusic = () => {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2">{track.order || 0}</Typography>
+                          <Typography variant="body2">
+                            {track.order || 0}
+                          </Typography>
                         </TableCell>
                         <TableCell>
                           <Chip
-                            icon={track.is_active ? <ActiveIcon /> : <InactiveIcon />}
+                            icon={
+                              track.is_active ? (
+                                <ActiveIcon />
+                              ) : (
+                                <InactiveIcon />
+                              )
+                            }
                             label={track.is_active ? "Active" : "Inactive"}
                             color={track.is_active ? "success" : "default"}
                             size="small"
                           />
                         </TableCell>
                         <TableCell align="right">
-                          <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            justifyContent="flex-end"
+                          >
                             <Tooltip title="Play/Pause">
                               <IconButton
                                 size="small"
                                 onClick={() => handlePlayPause(track)}
-                                color={currentlyPlaying === track.id ? "primary" : "default"}
+                                color={
+                                  currentlyPlaying === track.id
+                                    ? "primary"
+                                    : "default"
+                                }
                               >
                                 {currentlyPlaying === track.id ? (
                                   <PauseIcon />
@@ -780,7 +911,9 @@ const StoryMusic = () => {
                 fullWidth
                 sx={{ mb: 1 }}
               >
-                {audioFile ? audioFile.name : "Choose Audio File (MP3, WAV, etc.)"}
+                {audioFile
+                  ? audioFile.name
+                  : "Choose Audio File (MP3, WAV, etc.)"}
                 <input
                   type="file"
                   hidden
@@ -790,18 +923,34 @@ const StoryMusic = () => {
               </Button>
               {audioPreview && (
                 <Box sx={{ mt: 1, mb: 1 }}>
-                  <audio controls src={audioPreview} style={{ width: "100%" }} />
+                  <audio
+                    controls
+                    src={audioPreview}
+                    style={{ width: "100%" }}
+                  />
                 </Box>
               )}
               {selectedTrack?.audio_url && !audioFile && !audioPreview && (
                 <Box sx={{ mt: 1, mb: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mb: 1 }}
+                  >
                     Current audio:
                   </Typography>
-                  <audio controls src={getImageUrl(selectedTrack.audio_url)} style={{ width: "100%" }} />
+                  <audio
+                    controls
+                    src={getImageUrl(selectedTrack.audio_url)}
+                    style={{ width: "100%" }}
+                  />
                 </Box>
               )}
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", mb: 2 }}
+              >
                 OR enter audio URL below
               </Typography>
               <TextField
@@ -811,7 +960,11 @@ const StoryMusic = () => {
                 value={formData.audio_url}
                 onChange={handleInputChange}
                 disabled={!!audioFile}
-                helperText={audioFile ? "File selected, URL disabled" : "Enter the full URL to the audio file"}
+                helperText={
+                  audioFile
+                    ? "File selected, URL disabled"
+                    : "Enter the full URL to the audio file"
+                }
               />
             </Box>
             <Box>
@@ -824,7 +977,9 @@ const StoryMusic = () => {
                 fullWidth
                 sx={{ mb: 1 }}
               >
-                {coverFile ? coverFile.name : "Choose Cover Image (JPG, PNG, etc.)"}
+                {coverFile
+                  ? coverFile.name
+                  : "Choose Cover Image (JPG, PNG, etc.)"}
                 <input
                   type="file"
                   hidden
@@ -846,24 +1001,34 @@ const StoryMusic = () => {
                   />
                 </Box>
               )}
-              {selectedTrack?.cover_image_url && !coverFile && !coverPreview && (
-                <Box sx={{ mt: 1, mb: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                    Current cover:
-                  </Typography>
-                  <CardMedia
-                    component="img"
-                    sx={{
-                      maxHeight: 200,
-                      objectFit: "contain",
-                      borderRadius: 1,
-                    }}
-                    image={getImageUrl(selectedTrack.cover_image_url)}
-                    alt="Current cover"
-                  />
-                </Box>
-              )}
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+              {selectedTrack?.cover_image_url &&
+                !coverFile &&
+                !coverPreview && (
+                  <Box sx={{ mt: 1, mb: 1 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block", mb: 1 }}
+                    >
+                      Current cover:
+                    </Typography>
+                    <CardMedia
+                      component="img"
+                      sx={{
+                        maxHeight: 200,
+                        objectFit: "contain",
+                        borderRadius: 1,
+                      }}
+                      image={getImageUrl(selectedTrack.cover_image_url)}
+                      alt="Current cover"
+                    />
+                  </Box>
+                )}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", mb: 2 }}
+              >
                 OR enter cover image URL below
               </Typography>
               <TextField
@@ -873,7 +1038,11 @@ const StoryMusic = () => {
                 value={formData.cover_image_url}
                 onChange={handleInputChange}
                 disabled={!!coverFile}
-                helperText={coverFile ? "File selected, URL disabled" : "Enter the full URL to the cover image"}
+                helperText={
+                  coverFile
+                    ? "File selected, URL disabled"
+                    : "Enter the full URL to the cover image"
+                }
               />
             </Box>
             <TextField
@@ -951,7 +1120,9 @@ const StoryMusic = () => {
                 fullWidth
                 sx={{ mb: 1 }}
               >
-                {audioFile ? audioFile.name : "Choose Audio File (MP3, WAV, etc.)"}
+                {audioFile
+                  ? audioFile.name
+                  : "Choose Audio File (MP3, WAV, etc.)"}
                 <input
                   type="file"
                   hidden
@@ -961,18 +1132,34 @@ const StoryMusic = () => {
               </Button>
               {audioPreview && (
                 <Box sx={{ mt: 1, mb: 1 }}>
-                  <audio controls src={audioPreview} style={{ width: "100%" }} />
+                  <audio
+                    controls
+                    src={audioPreview}
+                    style={{ width: "100%" }}
+                  />
                 </Box>
               )}
               {selectedTrack?.audio_url && !audioFile && !audioPreview && (
                 <Box sx={{ mt: 1, mb: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mb: 1 }}
+                  >
                     Current audio:
                   </Typography>
-                  <audio controls src={getImageUrl(selectedTrack.audio_url)} style={{ width: "100%" }} />
+                  <audio
+                    controls
+                    src={getImageUrl(selectedTrack.audio_url)}
+                    style={{ width: "100%" }}
+                  />
                 </Box>
               )}
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", mb: 2 }}
+              >
                 OR enter audio URL below
               </Typography>
               <TextField
@@ -982,7 +1169,11 @@ const StoryMusic = () => {
                 value={formData.audio_url}
                 onChange={handleInputChange}
                 disabled={!!audioFile}
-                helperText={audioFile ? "File selected, URL disabled" : "Enter the full URL to the audio file"}
+                helperText={
+                  audioFile
+                    ? "File selected, URL disabled"
+                    : "Enter the full URL to the audio file"
+                }
               />
             </Box>
             <Box>
@@ -995,7 +1186,9 @@ const StoryMusic = () => {
                 fullWidth
                 sx={{ mb: 1 }}
               >
-                {coverFile ? coverFile.name : "Choose Cover Image (JPG, PNG, etc.)"}
+                {coverFile
+                  ? coverFile.name
+                  : "Choose Cover Image (JPG, PNG, etc.)"}
                 <input
                   type="file"
                   hidden
@@ -1017,24 +1210,34 @@ const StoryMusic = () => {
                   />
                 </Box>
               )}
-              {selectedTrack?.cover_image_url && !coverFile && !coverPreview && (
-                <Box sx={{ mt: 1, mb: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                    Current cover:
-                  </Typography>
-                  <CardMedia
-                    component="img"
-                    sx={{
-                      maxHeight: 200,
-                      objectFit: "contain",
-                      borderRadius: 1,
-                    }}
-                    image={getImageUrl(selectedTrack.cover_image_url)}
-                    alt="Current cover"
-                  />
-                </Box>
-              )}
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+              {selectedTrack?.cover_image_url &&
+                !coverFile &&
+                !coverPreview && (
+                  <Box sx={{ mt: 1, mb: 1 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block", mb: 1 }}
+                    >
+                      Current cover:
+                    </Typography>
+                    <CardMedia
+                      component="img"
+                      sx={{
+                        maxHeight: 200,
+                        objectFit: "contain",
+                        borderRadius: 1,
+                      }}
+                      image={getImageUrl(selectedTrack.cover_image_url)}
+                      alt="Current cover"
+                    />
+                  </Box>
+                )}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", mb: 2 }}
+              >
                 OR enter cover image URL below
               </Typography>
               <TextField
@@ -1044,7 +1247,11 @@ const StoryMusic = () => {
                 value={formData.cover_image_url}
                 onChange={handleInputChange}
                 disabled={!!coverFile}
-                helperText={coverFile ? "File selected, URL disabled" : "Enter the full URL to the cover image"}
+                helperText={
+                  coverFile
+                    ? "File selected, URL disabled"
+                    : "Enter the full URL to the cover image"
+                }
               />
             </Box>
             <TextField
@@ -1089,4 +1296,3 @@ const StoryMusic = () => {
 };
 
 export default StoryMusic;
-
