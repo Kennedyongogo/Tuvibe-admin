@@ -12,6 +12,7 @@ import Marketplace from "./Marketplace/Marketplace";
 import Reports from "./Reports/Reports";
 import StoriesModeration from "./Stories/StoriesModeration";
 import PostsModeration from "./Posts/PostsModeration";
+import StoryMusic from "./StoryMusic/StoryMusic";
 
 function PageRoutes() {
   const [user, setUser] = useState(null);
@@ -59,6 +60,7 @@ function PageRoutes() {
             <Route path="verification" element={<Verification />} />
             <Route path="marketplace" element={<Marketplace />} />
             <Route path="stories" element={<StoriesModeration />} />
+            <Route path="stories/music" element={<StoryMusic />} />
             <Route path="posts" element={<PostsModeration />} />
             <Route path="reports" element={<Reports />} />
             <Route path="analytics" element={<Analytics />} />

@@ -29,6 +29,7 @@ import {
   Report,
   AutoStories,
   Article,
+  MusicNote,
 } from "@mui/icons-material";
 import { Money } from "@phosphor-icons/react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -172,6 +173,11 @@ const Navbar = (props) => {
       text: "Stories",
       icon: <AutoStories />,
       path: "/stories",
+    },
+    {
+      text: "Story Music",
+      icon: <MusicNote />,
+      path: "/stories/music",
     },
     {
       text: "Posts",
