@@ -283,7 +283,6 @@ const UsersTable = () => {
     [fetchActiveSuspensions]
   );
 
-
   const handleSuspendUser = useCallback(
     async (user) => {
       if (!user?.id) return;
@@ -1142,6 +1141,7 @@ const UsersTable = () => {
                   <MenuItem value="Sugar Mummy">Sugar Mummy</MenuItem>
                   <MenuItem value="Sponsor">Sponsor</MenuItem>
                   <MenuItem value="Ben 10">Ben 10</MenuItem>
+                  <MenuItem value="Urban Chics">Urban Chics</MenuItem>
                 </Select>
               </FormControl>
             </Box>
