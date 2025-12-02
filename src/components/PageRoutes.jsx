@@ -13,6 +13,7 @@ import Reports from "./Reports/Reports";
 import StoriesModeration from "./Stories/StoriesModeration";
 import PostsModeration from "./Posts/PostsModeration";
 import StoryMusic from "./StoryMusic/StoryMusic";
+import FakeContent from "./FakeContent/FakeContent";
 
 function PageRoutes() {
   const [user, setUser] = useState(null);
@@ -66,6 +67,7 @@ function PageRoutes() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="users" element={<UsersTable />} />
             <Route path="settings" element={<Settings user={user} />} />
+            <Route path="fake-content" element={<FakeContent />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         )}

@@ -30,6 +30,7 @@ import {
   AutoStories,
   Article,
   MusicNote,
+  PersonAdd,
 } from "@mui/icons-material";
 import { Money } from "@phosphor-icons/react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -208,6 +209,11 @@ const Navbar = (props) => {
           text: "Settings",
           icon: <Settings />,
           path: "/settings",
+        },
+        {
+          text: "Fake Content",
+          icon: <PersonAdd />,
+          path: "/fake-content",
         },
       ],
     },
