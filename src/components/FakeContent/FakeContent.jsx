@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Card,
@@ -19,6 +19,10 @@ import {
   Avatar,
   InputAdornment,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   PersonAdd,
@@ -29,13 +33,16 @@ import {
   AttachMoney,
   Visibility,
   VisibilityOff,
+  TrendingUp,
 } from "@mui/icons-material";
 import Swal from "sweetalert2";
+import GeoTargetPicker from "../Boost/GeoTargetPicker";
 
 export default function FakeContent() {
   const [loading, setLoading] = useState(false);
   const [testimonialLoading, setTestimonialLoading] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [boostLoading, setBoostLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [users, setUsers] = useState([]);
@@ -77,6 +84,28 @@ export default function FakeContent() {
     plan: "Silver",
     duration_days: 30,
   });
+
+  // Fake Boost Form State
+  const [boostForm, setBoostForm] = useState({
+    public_user_id: "",
+    targetCategory: "Regular",
+    targetArea: "",
+    targetLatitude: "",
+    targetLongitude: "",
+    targetRadiusKm: 10,
+    durationHours: 1,
+  });
+  const [boostDialogOpen, setBoostDialogOpen] = useState(false);
+  const [boostLatitude, setBoostLatitude] = useState(null);
+  const [boostLongitude, setBoostLongitude] = useState(null);
+  const [locatingBoost, setLocatingBoost] = useState(false);
+  const [locationError, setLocationError] = useState("");
+  const [userSubscription, setUserSubscription] = useState(null);
+  const [boostHoursInfo, setBoostHoursInfo] = useState(null);
+  const [activeBoosts, setActiveBoosts] = useState([]);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
+  const [loadingBoosts, setLoadingBoosts] = useState(false);
+  const [selectedBoostForExtend, setSelectedBoostForExtend] = useState(null);
 
   const handleProfileChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -134,6 +163,259 @@ export default function FakeContent() {
       [name]: value,
     }));
   };
+
+  const handleBoostChange = (e) => {
+    const { name, value } = e.target;
+    setBoostForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const parseNumericValue = (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    const numeric = Number.parseFloat(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  };
+
+  const requestCurrentLocation = useCallback(({ onComplete } = {}) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocationError(
+        "Geolocation is not supported by this device or browser."
+      );
+      if (onComplete) onComplete(false);
+      return;
+    }
+
+    setLocatingBoost(true);
+    setLocationError("");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocatingBoost(false);
+        setLocationError("");
+        setBoostLatitude(latitude);
+        setBoostLongitude(longitude);
+        setBoostForm((prev) => ({
+          ...prev,
+          targetLatitude: String(latitude),
+          targetLongitude: String(longitude),
+        }));
+        if (onComplete) onComplete(true);
+      },
+      (error) => {
+        setLocatingBoost(false);
+        setLocationError(
+          error?.message || "Unable to fetch your current location."
+        );
+        if (onComplete) onComplete(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000,
+      }
+    );
+  }, []);
+
+  const fetchUserSubscription = useCallback(async (userId) => {
+    if (!userId) {
+      setUserSubscription(null);
+      setBoostHoursInfo(null);
+      return;
+    }
+
+    setLoadingSubscription(true);
+    try {
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token");
+      const response = await fetch(
+        `/api/admin-users/public-users/${userId}/subscription`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log("[FakeContent] Subscription response:", data);
+      if (data.success && data.data) {
+        if (data.data.hasSubscription && data.data.subscription) {
+          setUserSubscription(data.data.subscription);
+          setBoostHoursInfo(data.data.boostHours);
+        } else {
+          setUserSubscription(null);
+          setBoostHoursInfo(null);
+        }
+      } else {
+        setUserSubscription(null);
+        setBoostHoursInfo(null);
+      }
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      setUserSubscription(null);
+      setBoostHoursInfo(null);
+    } finally {
+      setLoadingSubscription(false);
+    }
+  }, []);
+
+  const fetchUserBoosts = useCallback(async (userId) => {
+    if (!userId) {
+      setActiveBoosts([]);
+      return;
+    }
+
+    setLoadingBoosts(true);
+    try {
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token");
+      const response = await fetch(
+        `/api/admin-users/public-users/${userId}/boosts/status`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        setActiveBoosts(data.data.boosts || []);
+      } else {
+        setActiveBoosts([]);
+      }
+    } catch (error) {
+      console.error("Error fetching user boosts:", error);
+      setActiveBoosts([]);
+    } finally {
+      setLoadingBoosts(false);
+    }
+  }, []);
+
+  const handleOpenBoostDialog = () => {
+    if (!boostForm.public_user_id) {
+      Swal.fire({
+        icon: "warning",
+        title: "Select User First",
+        text: "Please select a user before opening the boost dialog.",
+        confirmButtonColor: "#D4AF37",
+      });
+      return;
+    }
+    // Initialize coordinates from form if available
+    const lat = parseNumericValue(boostForm.targetLatitude);
+    const lng = parseNumericValue(boostForm.targetLongitude);
+    if (lat !== null && lng !== null) {
+      setBoostLatitude(lat);
+      setBoostLongitude(lng);
+    }
+    // Fetch subscription and boost status
+    fetchUserSubscription(boostForm.public_user_id);
+    fetchUserBoosts(boostForm.public_user_id);
+    setBoostDialogOpen(true);
+  };
+
+  const handleCloseBoostDialog = () => {
+    setBoostDialogOpen(false);
+    setLocationError("");
+    setSelectedBoostForExtend(null);
+  };
+
+  const handleExtendBoost = async (boost) => {
+    if (!boost || !boost.id) {
+      Swal.fire({
+        icon: "info",
+        title: "No Boost Selected",
+        text: "Please select a boost to extend.",
+        confirmButtonColor: "#D4AF37",
+      });
+      return;
+    }
+
+    const { value: hours } = await Swal.fire({
+      title: "Extend Boost",
+      html: `
+        <div style="text-align: left;">
+          <p><strong>Current Boost:</strong></p>
+          <p>Ends at: ${new Date(boost.ends_at).toLocaleString()}</p>
+          <p>Category: ${boost.target_category}</p>
+          <p>Area: ${boost.target_area || "N/A"}</p>
+          <p>Radius: ${
+            boost.radius_km ? boost.radius_km.toFixed(1) + " km" : "N/A"
+          }</p>
+          <br>
+          <label for="extend-hours">Hours to add (0.1-24):</label>
+          <input id="extend-hours" type="number" class="swal2-input" min="0.1" max="24" step="0.1" value="1" />
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Extend",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#D4AF37",
+      preConfirm: () => {
+        const hoursInput = document.getElementById("extend-hours");
+        const hours = parseFloat(hoursInput?.value || "1");
+        if (!hours || hours < 0.1 || hours > 24) {
+          Swal.showValidationMessage("Hours must be between 0.1 and 24");
+          return false;
+        }
+        return hours;
+      },
+    });
+
+    if (!hours) return;
+
+    setBoostLoading(true);
+    try {
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token");
+      const response = await fetch(
+        `/api/admin-users/boosts/${boost.id}/extend`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            additionalHours: hours,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Boost Extended!",
+          text: `Boost extended by ${hours} hour(s).`,
+          confirmButtonColor: "#D4AF37",
+        });
+        await fetchUserBoosts(boostForm.public_user_id);
+        await fetchUserSubscription(boostForm.public_user_id);
+      } else {
+        throw new Error(data.message || "Failed to extend boost");
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Failed to extend boost",
+        confirmButtonColor: "#D4AF37",
+      });
+    } finally {
+      setBoostLoading(false);
+    }
+  };
+
+  const sanitizedBoostRadiusKm = Math.min(
+    200,
+    Math.max(1, Number.parseFloat(boostForm.targetRadiusKm) || 10)
+  );
 
   // Fetch users for autocomplete
   const fetchUsers = async (query = "") => {
@@ -436,6 +718,122 @@ export default function FakeContent() {
     }
   };
 
+  const handleCreateFakeBoost = async () => {
+    if (!boostForm.public_user_id || !boostForm.targetCategory) {
+      Swal.fire({
+        icon: "error",
+        title: "Missing Fields",
+        text: "User ID and target category are required",
+        confirmButtonColor: "#D4AF37",
+      });
+      return;
+    }
+
+    // Use coordinates from state (map) or form
+    const lat =
+      boostLatitude !== null
+        ? boostLatitude
+        : parseNumericValue(boostForm.targetLatitude);
+    const lng =
+      boostLongitude !== null
+        ? boostLongitude
+        : parseNumericValue(boostForm.targetLongitude);
+
+    if (lat === null || lng === null) {
+      Swal.fire({
+        icon: "error",
+        title: "Missing Coordinates",
+        text: "Please select a location on the map or provide coordinates",
+        confirmButtonColor: "#D4AF37",
+      });
+      return;
+    }
+
+    const duration = parseFloat(boostForm.durationHours);
+    if (!duration || duration <= 0 || duration > 24) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Duration",
+        text: "Duration must be between 0.1 and 24 hours",
+        confirmButtonColor: "#D4AF37",
+      });
+      return;
+    }
+
+    setBoostLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin-users/boosts/create-fake", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          public_user_id: boostForm.public_user_id,
+          targetCategory: boostForm.targetCategory,
+          targetArea: boostForm.targetArea || undefined,
+          targetLatitude: lat,
+          targetLongitude: lng,
+          targetRadiusKm: sanitizedBoostRadiusKm,
+          durationHours: duration,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSuccessMessage("Fake profile boost created successfully!");
+        Swal.fire({
+          icon: "success",
+          title: "Boost Created!",
+          html: `Fake profile boost has been created successfully.<br><br><strong>Duration:</strong> ${duration} hour(s)<br><strong>Target Category:</strong> ${
+            boostForm.targetCategory
+          }<br><strong>Radius:</strong> ${
+            boostForm.targetRadiusKm
+          } km<br><strong>Ends At:</strong> ${new Date(
+            data.data.boost.ends_at
+          ).toLocaleString()}`,
+          confirmButtonColor: "#D4AF37",
+        });
+        // Refresh subscription and boost status
+        if (boostForm.public_user_id) {
+          await fetchUserSubscription(boostForm.public_user_id);
+          await fetchUserBoosts(boostForm.public_user_id);
+        }
+        // Reset form
+        setBoostForm({
+          public_user_id: "",
+          targetCategory: "Regular",
+          targetArea: "",
+          targetLatitude: "",
+          targetLongitude: "",
+          targetRadiusKm: 10,
+          durationHours: 1,
+        });
+        setBoostLatitude(null);
+        setBoostLongitude(null);
+        setLocationError("");
+        setBoostDialogOpen(false);
+      } else {
+        throw new Error(data.message || "Failed to create fake boost");
+      }
+    } catch (error) {
+      setErrorMessage(error.message || "Failed to create fake boost");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Failed to create fake boost",
+        confirmButtonColor: "#D4AF37",
+      });
+    } finally {
+      setBoostLoading(false);
+    }
+  };
+
   return (
     <Box>
       <Typography
@@ -546,6 +944,34 @@ export default function FakeContent() {
               </li>
               <li>Regular users: Silver = KES 149, Gold = KES 249</li>
               <li>Premium users: Silver = KES 199, Gold = KES 349</li>
+            </ul>
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>Creating Fake Profile Boosts:</strong>
+          </Typography>
+          <Typography variant="body2" component="div" sx={{ pl: 2 }}>
+            <ul>
+              <li>
+                User ID is required (get this from the created fake profile
+                response)
+              </li>
+              <li>Target category is required (Regular, Sugar Mummy, etc.)</li>
+              <li>
+                Target latitude and longitude are required for geotargeting
+              </li>
+              <li>
+                Target radius defaults to 10 km but can be customized (1-200 km)
+              </li>
+              <li>
+                Duration can be set between 0.1 and 24 hours (default: 1 hour)
+              </li>
+              <li>
+                Target area (county) is optional but recommended for better
+                targeting
+              </li>
+              <li>
+                Admin-created boosts bypass all subscription checks and are free
+              </li>
             </ul>
           </Typography>
         </CardContent>
@@ -1078,6 +1504,536 @@ export default function FakeContent() {
             </Stack>
           </CardContent>
         </Card>
+
+        {/* Create Fake Boost Section */}
+        <Card>
+          <CardContent>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+              <TrendingUp sx={{ color: "#D4AF37", fontSize: 28 }} />
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                Create Fake Profile Boost
+              </Typography>
+            </Box>
+
+            <Stack spacing={2}>
+              <FormControl fullWidth required>
+                <InputLabel>Select User *</InputLabel>
+                <Select
+                  value={boostForm.public_user_id || ""}
+                  onChange={(e) => {
+                    setBoostForm((prev) => ({
+                      ...prev,
+                      public_user_id: e.target.value,
+                    }));
+                  }}
+                  label="Select User *"
+                  disabled={loadingUsers}
+                >
+                  {loadingUsers ? (
+                    <MenuItem disabled>
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                      Loading users...
+                    </MenuItem>
+                  ) : users.length === 0 ? (
+                    <MenuItem disabled>No users available</MenuItem>
+                  ) : (
+                    users.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          {user.photo && (
+                            <Avatar
+                              src={`/uploads/${user.photo}`}
+                              sx={{ width: 24, height: 24 }}
+                            />
+                          )}
+                          <Box>
+                            <Typography variant="body2">
+                              {user.name || "Unknown"}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {user.email}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
+              {boostForm.public_user_id && (
+                <Chip
+                  label={`Selected: ${boostForm.public_user_id}`}
+                  onDelete={() => {
+                    setBoostForm((prev) => ({
+                      ...prev,
+                      public_user_id: "",
+                    }));
+                  }}
+                  color="primary"
+                  size="small"
+                />
+              )}
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleOpenBoostDialog}
+                disabled={!boostForm.public_user_id || boostLoading}
+                startIcon={<TrendingUp />}
+                sx={{
+                  bgcolor: "#D4AF37",
+                  "&:hover": { bgcolor: "#B8941F" },
+                  py: 1.5,
+                }}
+              >
+                {boostForm.public_user_id
+                  ? "Open Boost Dialog"
+                  : "Select User First"}
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        {/* Boost Dialog */}
+        <Dialog
+          open={boostDialogOpen}
+          onClose={handleCloseBoostDialog}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: "20px",
+              maxHeight: "90vh",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: "linear-gradient(45deg, #D4AF37, #B8941F)",
+              color: "#1a1a1a",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <TrendingUp />
+            Create Fake Profile Boost
+          </DialogTitle>
+          <DialogContent
+            sx={{
+              pt: 3,
+              pb: 0,
+              display: "flex",
+              flexDirection: "column",
+              maxHeight: "calc(90vh - 120px)",
+              overflowY: "auto",
+            }}
+          >
+            <Stack spacing={2.5}>
+              {loadingSubscription || loadingBoosts ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : null}
+
+              {!userSubscription && !loadingSubscription ? (
+                <Alert
+                  severity="warning"
+                  sx={{
+                    borderRadius: "12px",
+                    bgcolor: "rgba(255, 152, 0, 0.08)",
+                    border: "1px solid rgba(255, 152, 0, 0.2)",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    No Active Subscription
+                  </Typography>
+                  <Typography variant="body2">
+                    This user does not have an active subscription.
+                    Admin-created boosts will bypass subscription checks, but
+                    for realistic testing, consider creating a subscription
+                    first.
+                  </Typography>
+                </Alert>
+              ) : null}
+
+              {userSubscription && boostHoursInfo && (
+                <Alert
+                  severity="info"
+                  sx={{
+                    borderRadius: "12px",
+                    bgcolor: "rgba(33, 150, 243, 0.08)",
+                    border: "1px solid rgba(33, 150, 243, 0.2)",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    User's Boost Hours Package
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Plan:</strong> {userSubscription.plan || "N/A"} ·{" "}
+                    <strong>Total Daily Hours:</strong>{" "}
+                    {boostHoursInfo.totalHoursPerDay || 0} hrs ·{" "}
+                    <strong>Used Today:</strong>{" "}
+                    {boostHoursInfo.usedHours?.toFixed(1) || 0} hrs ·{" "}
+                    <strong>Remaining:</strong>{" "}
+                    {boostHoursInfo.remainingHours?.toFixed(1) || 0} hrs
+                  </Typography>
+                  {boostHoursInfo.remainingHours <= 0 ? (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        mt: 0.5,
+                        color: "#d32f2f",
+                        fontWeight: 600,
+                      }}
+                    >
+                      ⚠️ Daily boost hours exhausted. User cannot create new
+                      boosts until tomorrow (admin can still bypass).
+                    </Typography>
+                  ) : (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        mt: 0.5,
+                        color: "rgba(26, 26, 26, 0.65)",
+                      }}
+                    >
+                      Default boost duration:{" "}
+                      {boostHoursInfo.defaultDurationPerBoost || 1} hour
+                      {boostHoursInfo.defaultDurationPerBoost > 1
+                        ? "s"
+                        : ""}{" "}
+                      per boost.
+                    </Typography>
+                  )}
+                </Alert>
+              )}
+
+              {activeBoosts.length > 0 && (
+                <Alert
+                  severity="success"
+                  sx={{
+                    borderRadius: "12px",
+                    bgcolor: "rgba(76, 175, 80, 0.08)",
+                    border: "1px solid rgba(76, 175, 80, 0.2)",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                    Active Boosts ({activeBoosts.length})
+                  </Typography>
+                  <Stack spacing={1}>
+                    {activeBoosts.map((boost) => {
+                      const endsAt = new Date(boost.ends_at);
+                      const now = new Date();
+                      const remainingMs = endsAt.getTime() - now.getTime();
+                      const remainingHours = Math.floor(
+                        remainingMs / (1000 * 60 * 60)
+                      );
+                      const remainingMinutes = Math.floor(
+                        (remainingMs % (1000 * 60 * 60)) / (1000 * 60)
+                      );
+                      return (
+                        <Box
+                          key={boost.id}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1,
+                            bgcolor: "rgba(255, 255, 255, 0.5)",
+                            border: "1px solid rgba(76, 175, 80, 0.2)",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "start",
+                              mb: 0.5,
+                            }}
+                          >
+                            <Box>
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: 600 }}
+                              >
+                                {boost.target_category}
+                                {boost.target_area
+                                  ? ` · ${boost.target_area}`
+                                  : ""}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Ends: {endsAt.toLocaleString()}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {" · "}
+                                {remainingHours > 0
+                                  ? `${remainingHours}h ${remainingMinutes}m left`
+                                  : remainingMinutes > 0
+                                  ? `${remainingMinutes}m left`
+                                  : "Expired"}
+                              </Typography>
+                            </Box>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleExtendBoost(boost)}
+                              disabled={boostLoading}
+                              sx={{
+                                minWidth: "auto",
+                                px: 1.5,
+                                py: 0.5,
+                                fontSize: "0.75rem",
+                                textTransform: "none",
+                              }}
+                            >
+                              Extend
+                            </Button>
+                          </Box>
+                          {boost.radius_km && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Radius: {boost.radius_km.toFixed(1)} km
+                            </Typography>
+                          )}
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </Alert>
+              )}
+
+              <Alert
+                severity="info"
+                sx={{
+                  borderRadius: "12px",
+                  bgcolor: "rgba(33, 150, 243, 0.08)",
+                  border: "1px solid rgba(33, 150, 243, 0.2)",
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  Admin Boost Creation
+                </Typography>
+                <Typography variant="body2">
+                  Admin-created boosts bypass all subscription checks and are
+                  free. The boost will be active immediately and expire after
+                  the specified duration.
+                </Typography>
+              </Alert>
+
+              <FormControl fullWidth>
+                <InputLabel>Target Category</InputLabel>
+                <Select
+                  value={boostForm.targetCategory}
+                  label="Target Category"
+                  onChange={(e) =>
+                    setBoostForm((prev) => ({
+                      ...prev,
+                      targetCategory: e.target.value,
+                    }))
+                  }
+                  disabled={boostLoading}
+                >
+                  <MenuItem value="Regular">Regular</MenuItem>
+                  <MenuItem value="Sugar Mummy">Sugar Mummy</MenuItem>
+                  <MenuItem value="Sponsor">Sponsor</MenuItem>
+                  <MenuItem value="Ben 10">Ben 10</MenuItem>
+                  <MenuItem value="Urban Chics">Urban Chics</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Hours to boost"
+                type="number"
+                value={boostForm.durationHours}
+                onChange={(e) =>
+                  setBoostForm((prev) => ({
+                    ...prev,
+                    durationHours: e.target.value,
+                  }))
+                }
+                inputProps={{
+                  min: 0.1,
+                  max: 24,
+                  step: 0.1,
+                }}
+                helperText="Boost duration (0.1-24 hours)"
+                fullWidth
+                disabled={boostLoading}
+              />
+
+              <TextField
+                label="Target radius (km)"
+                type="number"
+                value={boostForm.targetRadiusKm}
+                onChange={(e) =>
+                  setBoostForm((prev) => ({
+                    ...prev,
+                    targetRadiusKm: e.target.value,
+                  }))
+                }
+                inputProps={{
+                  min: 1,
+                  max: 200,
+                  step: 0.5,
+                }}
+                helperText={`Boost reaches users within ${sanitizedBoostRadiusKm.toFixed(
+                  1
+                )} km of your target point.`}
+                fullWidth
+                disabled={boostLoading}
+              />
+
+              <GeoTargetPicker
+                latitude={boostLatitude}
+                longitude={boostLongitude}
+                radiusKm={sanitizedBoostRadiusKm}
+                onLocationChange={(lat, lon) => {
+                  setBoostLatitude(lat);
+                  setBoostLongitude(lon);
+                  setBoostForm((prev) => ({
+                    ...prev,
+                    targetLatitude: lat !== null ? String(lat) : "",
+                    targetLongitude: lon !== null ? String(lon) : "",
+                  }));
+                  setLocationError("");
+                }}
+                onRequestCurrentLocation={() =>
+                  requestCurrentLocation({
+                    onComplete: (success) => {
+                      if (!success) {
+                        setBoostLatitude(null);
+                        setBoostLongitude(null);
+                      }
+                    },
+                  })
+                }
+                locating={boostLoading ? false : locatingBoost}
+                locationError={locationError}
+                onCountySuggested={(county) => {
+                  setBoostForm((prev) => ({
+                    ...prev,
+                    targetArea: county || "",
+                  }));
+                }}
+              />
+
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 600, color: "rgba(26, 26, 26, 0.75)" }}
+                >
+                  Selected location:
+                </Typography>
+                <Chip
+                  label={boostForm.targetArea || "None"}
+                  size="small"
+                  sx={{
+                    bgcolor: boostForm.targetArea
+                      ? "rgba(212, 175, 55, 0.15)"
+                      : "rgba(0, 0, 0, 0.05)",
+                    color: "rgba(26, 26, 26, 0.8)",
+                    fontWeight: 600,
+                  }}
+                />
+                {!boostForm.targetArea && (
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "rgba(26, 26, 26, 0.55)" }}
+                  >
+                    Use the map search above to choose a target area.
+                  </Typography>
+                )}
+              </Box>
+
+              <Alert
+                severity="success"
+                sx={{
+                  borderRadius: "12px",
+                  bgcolor: "rgba(76, 175, 80, 0.08)",
+                  border: "1px solid rgba(76, 175, 80, 0.2)",
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Boost Preview
+                </Typography>
+                <Typography variant="body2">
+                  This boost will run for{" "}
+                  <strong>
+                    {parseFloat(boostForm.durationHours) || 1} hour
+                    {parseFloat(boostForm.durationHours) > 1 ? "s" : ""}
+                  </strong>{" "}
+                  covering roughly {sanitizedBoostRadiusKm.toFixed(1)} km.
+                </Typography>
+              </Alert>
+            </Stack>
+          </DialogContent>
+          <DialogActions
+            sx={{
+              p: 3,
+              pt: 2,
+              borderTop: "1px solid rgba(0,0,0,0.08)",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+            }}
+          >
+            <Button
+              onClick={handleCloseBoostDialog}
+              disabled={boostLoading}
+              sx={{
+                color: "rgba(26, 26, 26, 0.7)",
+                fontWeight: 600,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateFakeBoost}
+              variant="contained"
+              disabled={
+                boostLoading ||
+                boostLatitude === null ||
+                boostLongitude === null
+              }
+              startIcon={
+                boostLoading ? <CircularProgress size={20} /> : <TrendingUp />
+              }
+              sx={{
+                background: "linear-gradient(45deg, #D4AF37, #B8941F)",
+                color: "#1a1a1a",
+                fontWeight: 700,
+                "&:hover": {
+                  background: "linear-gradient(45deg, #B8941F, #D4AF37)",
+                },
+                "&:disabled": {
+                  background: "rgba(0, 0, 0, 0.12)",
+                  color: "rgba(0, 0, 0, 0.26)",
+                },
+              }}
+            >
+              {boostLoading ? "Creating..." : "Create Boost"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Stack>
     </Box>
   );

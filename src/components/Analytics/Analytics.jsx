@@ -557,8 +557,8 @@ const Analytics = () => {
               <TrendingUpIcon color="warning" />
             </ListItemIcon>
             <ListItemText
-              primary="Boosts"
-              secondary="Total profile boosts used today, this week, and this month"
+              primary="Boost Hours"
+              secondary="Total boost hours consumed today, this week, and this month (sum of all boost hours used by all users)"
             />
           </ListItem>
           <ListItem>
@@ -1213,9 +1213,13 @@ const Analytics = () => {
                     borderRadius: 2,
                   }}
                 >
-                  <Typography fontWeight="500">Boosts</Typography>
+                  <Typography fontWeight="500">Boost Hours</Typography>
                   <Chip
-                    label={analyticsData.usageStats?.todayBoosts || 0}
+                    label={
+                      parseFloat(
+                        analyticsData.usageStats?.todayBoosts || 0
+                      ).toFixed(1) + " hrs"
+                    }
                     color="warning"
                   />
                 </Box>
@@ -1286,9 +1290,13 @@ const Analytics = () => {
                     borderRadius: 2,
                   }}
                 >
-                  <Typography fontWeight="500">Boosts</Typography>
+                  <Typography fontWeight="500">Boost Hours</Typography>
                   <Chip
-                    label={analyticsData.usageStats?.weekBoosts || 0}
+                    label={
+                      parseFloat(
+                        analyticsData.usageStats?.weekBoosts || 0
+                      ).toFixed(1) + " hrs"
+                    }
                     color="warning"
                   />
                 </Box>
@@ -3201,10 +3209,14 @@ const Analytics = () => {
                     }}
                   >
                     <Typography fontWeight="500" sx={{ fontSize: "0.95rem" }}>
-                      Boosts
+                      Boost Hours
                     </Typography>
                     <Chip
-                      label={analyticsData.usageStats?.monthBoosts || 0}
+                      label={
+                        parseFloat(
+                          analyticsData.usageStats?.monthBoosts || 0
+                        ).toFixed(1) + " hrs"
+                      }
                       color="warning"
                       size="medium"
                     />
