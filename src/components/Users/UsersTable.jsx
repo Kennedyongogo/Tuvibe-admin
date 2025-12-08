@@ -194,6 +194,101 @@ const UsersTable = () => {
     }
   }, [isPublicTab, adminToken]);
 
+  // Poll for unread appeal messages in real-time
+  const pollUnreadAppeals = useCallback(async () => {
+    if (!isPublicTab || !adminToken) return;
+
+    try {
+      // Get current suspensions to update their unread counts
+      const response = await fetch(
+        `/api/suspensions/admin?status=active&limit=500`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+        }
+      );
+      const payload = await response.json();
+      if (!response.ok || !payload.success) return;
+
+      const rows = Array.isArray(payload.data?.rows)
+        ? payload.data.rows
+        : Array.isArray(payload.data)
+        ? payload.data
+        : [];
+
+      // Fetch unread counts for all suspensions
+      const unreadCounts = await Promise.all(
+        rows.map(async (item) => {
+          const userId = item.public_user_id;
+          try {
+            const unreadResponse = await fetch(
+              `/api/suspensions/admin/${item.id}/messages/unread-count`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${adminToken}`,
+                },
+              }
+            );
+            if (unreadResponse.ok) {
+              const unreadPayload = await unreadResponse.json();
+              return {
+                userId,
+                suspensionId: item.id,
+                unreadCount: unreadPayload.data?.unreadCount ?? 0,
+              };
+            }
+          } catch (err) {
+            console.error(
+              `[UsersTable] Error polling unread count for user ${userId}:`,
+              err
+            );
+          }
+          return { userId, suspensionId: item.id, unreadCount: 0 };
+        })
+      );
+
+      // Update unread counts for existing suspensions
+      setSuspensions((prev) => {
+        const updated = { ...prev };
+        let hasChanges = false;
+
+        unreadCounts.forEach(({ userId, unreadCount }) => {
+          if (updated[userId] && updated[userId].unreadCount !== unreadCount) {
+            updated[userId] = {
+              ...updated[userId],
+              unreadCount,
+            };
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? updated : prev;
+      });
+    } catch (error) {
+      console.error("[UsersTable] pollUnreadAppeals error:", error);
+    }
+  }, [isPublicTab, adminToken]);
+
+  // Set up polling interval for unread appeal messages
+  useEffect(() => {
+    if (!isPublicTab) return;
+
+    // Poll immediately on mount/tab switch
+    pollUnreadAppeals();
+
+    // Set up interval to poll every 5 seconds
+    const intervalId = setInterval(() => {
+      pollUnreadAppeals();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [isPublicTab, pollUnreadAppeals]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
