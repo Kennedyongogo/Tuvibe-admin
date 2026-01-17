@@ -421,7 +421,7 @@ export default function FakeContent() {
     Math.max(1, Number.parseFloat(boostForm.targetRadiusKm) || 10)
   );
 
-  // Fetch users for autocomplete
+  // Fetch users for autocomplete (only fake profiles)
   const fetchUsers = async (query = "") => {
     setLoadingUsers(true);
     try {
@@ -429,6 +429,7 @@ export default function FakeContent() {
       const params = new URLSearchParams({
         page: "1",
         pageSize: "50", // Limit to 50 for autocomplete
+        is_fake: "true", // Only fetch fake profiles
       });
       if (query) {
         params.append("q", query);
