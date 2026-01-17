@@ -207,26 +207,30 @@ export default function GeoTargetPicker({
     (lon, lat) => {
       const markerFeature = markerFeatureRef.current;
       const radiusFeature = radiusFeatureRef.current;
-      if (!markerFeature || !radiusFeature || lon === null || lat === null) {
+      if (!markerFeature || lon === null || lat === null) {
         return;
       }
       const projected = fromLonLat([lon, lat]);
       const markerGeometry = markerFeature.getGeometry();
-      const radiusGeometry = radiusFeature.getGeometry();
       if (markerGeometry) {
         markerGeometry.setCoordinates(projected);
       } else {
         markerFeature.setGeometry(new Point(projected));
       }
-      if (radiusGeometry instanceof CircleGeom) {
-        radiusGeometry.setCenter(projected);
-      } else {
-        radiusFeature.setGeometry(
-          new CircleGeom(projected, (radiusKm || 1) * 1000)
-        );
-      }
       markerFeature.changed();
-      radiusFeature.changed();
+
+      // Only update radius if radiusKm is provided and valid
+      if (radiusFeature && radiusKm !== null && radiusKm !== undefined && radiusKm > 0) {
+        const radiusGeometry = radiusFeature.getGeometry();
+        if (radiusGeometry instanceof CircleGeom) {
+          radiusGeometry.setCenter(projected);
+        } else {
+          radiusFeature.setGeometry(
+            new CircleGeom(projected, radiusKm * 1000)
+          );
+        }
+        radiusFeature.changed();
+      }
     },
     [radiusKm]
   );
@@ -242,23 +246,29 @@ export default function GeoTargetPicker({
       latitude !== null && latitude !== undefined
         ? latitude
         : DEFAULT_CENTER[1];
-    const initialRadiusMeters = (radiusKm || 1) * 1000;
-
     const markerFeature = new Feature({
       geometry: new Point(fromLonLat([initialLon, initialLat])),
     });
     markerFeatureRef.current = markerFeature;
 
-    const radiusFeature = new Feature({
-      geometry: new CircleGeom(
-        fromLonLat([initialLon, initialLat]),
-        initialRadiusMeters
-      ),
-    });
-    radiusFeatureRef.current = radiusFeature;
+    // Only create radius feature if radiusKm is provided
+    const features = [markerFeature];
+    if (radiusKm !== null && radiusKm !== undefined && radiusKm > 0) {
+      const initialRadiusMeters = radiusKm * 1000;
+      const radiusFeature = new Feature({
+        geometry: new CircleGeom(
+          fromLonLat([initialLon, initialLat]),
+          initialRadiusMeters
+        ),
+      });
+      radiusFeatureRef.current = radiusFeature;
+      features.push(radiusFeature);
+    } else {
+      radiusFeatureRef.current = null;
+    }
 
     const vectorSource = new VectorSource({
-      features: [radiusFeature, markerFeature],
+      features,
     });
     vectorSourceRef.current = vectorSource;
 
@@ -384,10 +394,10 @@ export default function GeoTargetPicker({
 
   useEffect(() => {
     const radiusFeature = radiusFeatureRef.current;
-    if (!radiusFeature) return;
+    if (!radiusFeature || radiusKm === null || radiusKm === undefined || radiusKm <= 0) return;
     const geometry = radiusFeature.getGeometry();
     if (geometry instanceof CircleGeom) {
-      geometry.setRadius((radiusKm || 1) * 1000);
+      geometry.setRadius(radiusKm * 1000);
       radiusFeature.changed();
     }
   }, [radiusKm]);

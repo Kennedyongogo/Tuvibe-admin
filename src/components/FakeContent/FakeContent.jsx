@@ -48,6 +48,10 @@ export default function FakeContent() {
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [profileLatitude, setProfileLatitude] = useState(null);
+  const [profileLongitude, setProfileLongitude] = useState(null);
+  const [locatingProfile, setLocatingProfile] = useState(false);
+  const [profileLocationError, setProfileLocationError] = useState("");
 
   // Fake Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -453,6 +457,18 @@ export default function FakeContent() {
     fetchUsers("");
   }, []);
 
+  // Sync profileForm latitude/longitude with location picker state
+  useEffect(() => {
+    const lat = parseNumericValue(profileForm.latitude);
+    const lon = parseNumericValue(profileForm.longitude);
+    
+    // Only update if values have changed to avoid loops
+    if (lat !== profileLatitude || lon !== profileLongitude) {
+      setProfileLatitude(lat);
+      setProfileLongitude(lon);
+    }
+  }, [profileForm.latitude, profileForm.longitude]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleCreateFakeProfile = async () => {
     if (!profileForm.name || !profileForm.username || !profileForm.email) {
       Swal.fire({
@@ -560,6 +576,10 @@ export default function FakeContent() {
         });
         setProfileImage(null);
         setProfileImagePreview(null);
+        // Reset location picker
+        setProfileLatitude(null);
+        setProfileLongitude(null);
+        setProfileLocationError("");
         // Refresh users list to include the newly created user (but don't auto-select)
         fetchUsers();
       } else {
@@ -1168,28 +1188,72 @@ export default function FakeContent() {
                   </Box>
                 )}
               </Box>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <TextField
-                    label="Latitude"
-                    name="latitude"
-                    type="number"
-                    value={profileForm.latitude}
-                    onChange={handleProfileChange}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    label="Longitude"
-                    name="longitude"
-                    type="number"
-                    value={profileForm.longitude}
-                    onChange={handleProfileChange}
-                    fullWidth
-                  />
-                </Grid>
-              </Grid>
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Location (Optional)
+                </Typography>
+                <GeoTargetPicker
+                  latitude={profileLatitude}
+                  longitude={profileLongitude}
+                  radiusKm={null}
+                  onLocationChange={(lat, lon) => {
+                    setProfileLatitude(lat);
+                    setProfileLongitude(lon);
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      latitude: lat !== null && lat !== undefined ? String(lat) : "",
+                      longitude: lon !== null && lon !== undefined ? String(lon) : "",
+                    }));
+                    setProfileLocationError("");
+                  }}
+                  onRequestCurrentLocation={() => {
+                    if (typeof navigator === "undefined" || !navigator.geolocation) {
+                      setProfileLocationError(
+                        "Geolocation is not supported by this device or browser."
+                      );
+                      return;
+                    }
+
+                    setLocatingProfile(true);
+                    setProfileLocationError("");
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setLocatingProfile(false);
+                        setProfileLocationError("");
+                        setProfileLatitude(latitude);
+                        setProfileLongitude(longitude);
+                        setProfileForm((prev) => ({
+                          ...prev,
+                          latitude: String(latitude),
+                          longitude: String(longitude),
+                        }));
+                      },
+                      (error) => {
+                        setLocatingProfile(false);
+                        setProfileLocationError(
+                          error?.message || "Unable to fetch your current location."
+                        );
+                      },
+                      {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 30000,
+                      }
+                    );
+                  }}
+                  locating={locatingProfile}
+                  locationError={profileLocationError}
+                  onCountySuggested={(county) => {
+                    if (county && typeof county === "string" && county.trim()) {
+                      setProfileForm((prev) => ({
+                        ...prev,
+                        county: county.trim(),
+                      }));
+                    }
+                  }}
+                />
+              </Box>
               <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                 <Chip
                   label={profileForm.isVerified ? "Verified" : "Not Verified"}

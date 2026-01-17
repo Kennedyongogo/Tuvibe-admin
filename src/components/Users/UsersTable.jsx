@@ -112,6 +112,11 @@ const UsersTable = () => {
       value: "public",
       endpoint: "/api/admin-users/public-users",
     },
+    {
+      label: "Fake Profiles",
+      value: "fake",
+      endpoint: "/api/admin-users/public-users",
+    },
   ];
 
   const [moderationLoading, setModerationLoading] = useState({});
@@ -308,6 +313,11 @@ const UsersTable = () => {
       // Add category filter for public users
       if (activeTab === 1 && categoryFilter) {
         queryParams.append("category", categoryFilter);
+      }
+
+      // Add is_fake filter for fake profiles tab
+      if (activeTab === 2) {
+        queryParams.append("is_fake", "true");
       }
 
       // Get the appropriate endpoint based on the selected tab
