@@ -151,6 +151,7 @@ const UsersTable = () => {
   const [activeSuspension, setActiveSuspension] = useState(null);
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const isPublicTab = userTypeTabs[activeTab]?.value === "public";
+  const isFakeTab = userTypeTabs[activeTab]?.value === "fake";
   const adminToken = useMemo(
     () => localStorage.getItem("token"),
     [isPublicTab]
@@ -819,30 +820,51 @@ const UsersTable = () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setError("No authentication token found. Please login again.");
+        Swal.fire({
+          icon: "error",
+          title: "Authentication Error",
+          text: "No authentication token found. Please login again.",
+          confirmButtonColor: "#D4AF37",
+        });
+        setIsUpdating(false);
         return;
       }
 
       const isPublicUser = isPublicTab || isFakeTab;
 
       if (isPublicUser) {
+        // Validate required fields
+        if (!publicUserForm.name || !publicUserForm.username || !publicUserForm.email) {
+          Swal.fire({
+            icon: "error",
+            title: "Validation Error",
+            text: "Name, username, and email are required fields.",
+            confirmButtonColor: "#D4AF37",
+          });
+          setIsUpdating(false);
+          return;
+        }
         // Update public user (including fake profiles)
         const formData = new FormData();
         
-        // Append all form fields
-        if (publicUserForm.name) formData.append("name", publicUserForm.name);
-        if (publicUserForm.username) formData.append("username", publicUserForm.username);
-        if (publicUserForm.email) formData.append("email", publicUserForm.email);
+        // Always append required fields (even if empty, backend will handle validation)
+        formData.append("name", publicUserForm.name || "");
+        formData.append("username", publicUserForm.username || "");
+        formData.append("email", publicUserForm.email || "");
+        
+        // Append optional fields only if they have values
         if (publicUserForm.phone) formData.append("phone", publicUserForm.phone);
         if (publicUserForm.gender) formData.append("gender", publicUserForm.gender);
         if (publicUserForm.category) formData.append("category", publicUserForm.category);
-        if (publicUserForm.bio) formData.append("bio", publicUserForm.bio);
+        if (publicUserForm.bio !== undefined && publicUserForm.bio !== null) {
+          formData.append("bio", publicUserForm.bio || "");
+        }
         if (publicUserForm.birth_year) formData.append("birth_year", publicUserForm.birth_year);
         if (publicUserForm.age) formData.append("age", publicUserForm.age);
         if (publicUserForm.county) formData.append("county", publicUserForm.county);
         if (publicUserForm.latitude) formData.append("latitude", publicUserForm.latitude);
         if (publicUserForm.longitude) formData.append("longitude", publicUserForm.longitude);
-        formData.append("isVerified", publicUserForm.isVerified);
+        formData.append("isVerified", publicUserForm.isVerified ? "true" : "false");
         
         // Add photo if uploaded
         if (publicUserPhoto) {
@@ -861,7 +883,8 @@ const UsersTable = () => {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.message || "Failed to update user");
+          console.error("Update user error:", result);
+          throw new Error(result.message || result.error || "Failed to update user");
         }
 
         // Reset form
@@ -3978,6 +4001,32 @@ const UsersTable = () => {
                       </Grid>
                     </Grid>
                     <Box>
+                      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                        Profile Photo
+                      </Typography>
+                      {/* Display current photo if exists */}
+                      {selectedUser?.photo && !publicUserPhotoPreview && (
+                        <Box sx={{ mb: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          <Typography variant="caption" sx={{ mb: 1, color: "text.secondary" }}>
+                            Current Photo:
+                          </Typography>
+                          <img
+                            src={buildImageUrl(selectedUser.photo)}
+                            alt="Current profile"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
+                            style={{
+                              maxWidth: "150px",
+                              maxHeight: "150px",
+                              borderRadius: "8px",
+                              objectFit: "cover",
+                              border: "2px solid rgba(212, 175, 55, 0.3)",
+                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                            }}
+                          />
+                        </Box>
+                      )}
                       <input
                         accept="image/*"
                         type="file"
@@ -3996,7 +4045,10 @@ const UsersTable = () => {
                         </Button>
                       </label>
                       {publicUserPhotoPreview && (
-                        <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
+                        <Box sx={{ mt: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          <Typography variant="caption" sx={{ mb: 1, color: "text.secondary" }}>
+                            New Photo Preview:
+                          </Typography>
                           <img
                             src={publicUserPhotoPreview}
                             alt="Preview"
@@ -4005,6 +4057,8 @@ const UsersTable = () => {
                               maxHeight: "150px",
                               borderRadius: "8px",
                               objectFit: "cover",
+                              border: "2px solid rgba(212, 175, 55, 0.3)",
+                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
                             }}
                           />
                         </Box>
@@ -4170,11 +4224,21 @@ const UsersTable = () => {
             </Button>
             {(openEditDialog || openCreateDialog) && (
               <Button
-                onClick={openEditDialog ? handleUpdateUser : handleCreateUser}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (openEditDialog) {
+                    handleUpdateUser();
+                  } else {
+                    handleCreateUser();
+                  }
+                }}
+                disabled={isCreating || isUpdating}
                 variant="contained"
                 startIcon={
                   isCreating || isUpdating ? (
                     <CircularProgress size={20} color="inherit" />
+                  ) : openEditDialog ? (
+                    <EditIcon />
                   ) : (
                     <AddIcon />
                   )
@@ -4202,8 +4266,9 @@ const UsersTable = () => {
                   transition: "all 0.3s ease",
                 }}
                 disabled={
-                  !userForm.full_name ||
-                  !userForm.email ||
+                  (openEditDialog && (isPublicTab || isFakeTab)
+                    ? (!publicUserForm.name || !publicUserForm.username || !publicUserForm.email)
+                    : (!userForm.full_name || !userForm.email)) ||
                   (openCreateDialog && !userForm.password) ||
                   isCreating ||
                   isUpdating
