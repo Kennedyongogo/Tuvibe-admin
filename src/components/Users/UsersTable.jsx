@@ -16,6 +16,7 @@ import {
   Select,
   MenuItem,
   Stack,
+  Grid,
   Divider,
   CircularProgress,
   Paper,
@@ -127,6 +128,24 @@ const UsersTable = () => {
     role: "moderator",
     password: "",
   });
+  // Public user form state (for editing public users and fake profiles)
+  const [publicUserForm, setPublicUserForm] = useState({
+    name: "",
+    username: "",
+    email: "",
+    phone: "",
+    gender: "",
+    category: "Regular",
+    bio: "",
+    birth_year: "",
+    age: "",
+    county: "",
+    latitude: "",
+    longitude: "",
+    isVerified: false,
+  });
+  const [publicUserPhoto, setPublicUserPhoto] = useState(null);
+  const [publicUserPhotoPreview, setPublicUserPhotoPreview] = useState(null);
   const [suspensions, setSuspensions] = useState({});
   const [suspensionLoading, setSuspensionLoading] = useState({});
   const [activeSuspension, setActiveSuspension] = useState(null);
@@ -673,14 +692,69 @@ const UsersTable = () => {
   const handleEditUser = (user) => {
     setSelectedUser(user);
 
-    setUserForm({
-      full_name: user.full_name || user.name || "",
-      email: user.email || "",
-      phone: user.phone || "",
-      role: user.role || "moderator",
-      password: "",
-    });
+    // Check if this is a public user or admin user
+    const isPublicUser = isPublicTab || isFakeTab;
+
+    if (isPublicUser) {
+      // Populate public user form
+      setPublicUserForm({
+        name: user.name || "",
+        username: user.username || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        gender: user.gender || "",
+        category: user.category || "Regular",
+        bio: user.bio || "",
+        birth_year: user.birth_year ? String(user.birth_year) : "",
+        age: user.age ? String(user.age) : "",
+        county: user.county || "",
+        latitude: user.latitude ? String(user.latitude) : "",
+        longitude: user.longitude ? String(user.longitude) : "",
+        isVerified: user.isVerified || false,
+      });
+      setPublicUserPhoto(null);
+      setPublicUserPhotoPreview(null);
+    } else {
+      // Populate admin user form
+      setUserForm({
+        full_name: user.full_name || user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        role: user.role || "moderator",
+        password: "",
+      });
+    }
     setOpenEditDialog(true);
+  };
+
+  const handlePublicUserPhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid File",
+          text: "Please select an image file.",
+          confirmButtonColor: "#D4AF37",
+        });
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        Swal.fire({
+          icon: "error",
+          title: "File Too Large",
+          text: "Please select an image smaller than 10MB.",
+          confirmButtonColor: "#D4AF37",
+        });
+        return;
+      }
+      setPublicUserPhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPublicUserPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleDeleteUser = async (user) => {
@@ -749,36 +823,98 @@ const UsersTable = () => {
         return;
       }
 
-      // Send only fields that the API accepts
-      const updateData = {
-        name: userForm.full_name,
-        email: userForm.email,
-        phone: userForm.phone,
-        role: userForm.role,
-      };
+      const isPublicUser = isPublicTab || isFakeTab;
 
-      const response = await fetch(`/api/admin-users/${selectedUser.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updateData),
-      });
+      if (isPublicUser) {
+        // Update public user (including fake profiles)
+        const formData = new FormData();
+        
+        // Append all form fields
+        if (publicUserForm.name) formData.append("name", publicUserForm.name);
+        if (publicUserForm.username) formData.append("username", publicUserForm.username);
+        if (publicUserForm.email) formData.append("email", publicUserForm.email);
+        if (publicUserForm.phone) formData.append("phone", publicUserForm.phone);
+        if (publicUserForm.gender) formData.append("gender", publicUserForm.gender);
+        if (publicUserForm.category) formData.append("category", publicUserForm.category);
+        if (publicUserForm.bio) formData.append("bio", publicUserForm.bio);
+        if (publicUserForm.birth_year) formData.append("birth_year", publicUserForm.birth_year);
+        if (publicUserForm.age) formData.append("age", publicUserForm.age);
+        if (publicUserForm.county) formData.append("county", publicUserForm.county);
+        if (publicUserForm.latitude) formData.append("latitude", publicUserForm.latitude);
+        if (publicUserForm.longitude) formData.append("longitude", publicUserForm.longitude);
+        formData.append("isVerified", publicUserForm.isVerified);
+        
+        // Add photo if uploaded
+        if (publicUserPhoto) {
+          formData.append("profile_image", publicUserPhoto);
+        }
 
-      const result = await response.json();
+        const response = await fetch(`/api/admin-users/public-users/${selectedUser.id}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Don't set Content-Type - browser will set it with boundary for FormData
+          },
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to update user");
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to update user");
+        }
+
+        // Reset form
+        setPublicUserForm({
+          name: "",
+          username: "",
+          email: "",
+          phone: "",
+          gender: "",
+          category: "Regular",
+          bio: "",
+          birth_year: "",
+          age: "",
+          county: "",
+          latitude: "",
+          longitude: "",
+          isVerified: false,
+        });
+        setPublicUserPhoto(null);
+        setPublicUserPhotoPreview(null);
+      } else {
+        // Update admin user
+        const updateData = {
+          name: userForm.full_name,
+          email: userForm.email,
+          phone: userForm.phone,
+          role: userForm.role,
+        };
+
+        const response = await fetch(`/api/admin-users/${selectedUser.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to update user");
+        }
+
+        setUserForm({
+          full_name: "",
+          email: "",
+          phone: "",
+          role: "moderator",
+          password: "",
+        });
       }
 
-      setUserForm({
-        full_name: "",
-        email: "",
-        phone: "",
-        role: "moderator",
-        password: "",
-      });
       setOpenEditDialog(false);
       setSelectedUser(null);
 
@@ -796,7 +932,7 @@ const UsersTable = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to update user. Please try again.",
+        text: err.message || "Failed to update user. Please try again.",
       });
     } finally {
       setIsUpdating(false);
@@ -1777,32 +1913,33 @@ const UsersTable = () => {
                                 />
                               </IconButton>
                             </Tooltip>
+                            {/* Edit button - show for all user types */}
+                            <Tooltip title="Edit User" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleEditUser(user)}
+                                sx={{
+                                  color: "#b8860b",
+                                  backgroundColor:
+                                    "rgba(255, 215, 0, 0.15)",
+                                  width: { xs: 28, sm: 36 },
+                                  height: { xs: 28, sm: 36 },
+                                  "&:hover": {
+                                    backgroundColor:
+                                      "rgba(255, 215, 0, 0.25)",
+                                    transform: "scale(1.1)",
+                                  },
+                                  transition: "all 0.2s ease",
+                                  borderRadius: 2,
+                                }}
+                              >
+                                <EditIcon
+                                  fontSize={isMobile ? "small" : "small"}
+                                />
+                              </IconButton>
+                            </Tooltip>
                             {userTypeTabs[activeTab]?.value === "admin" ? (
                               <>
-                                <Tooltip title="Edit User" arrow>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleEditUser(user)}
-                                    sx={{
-                                      color: "#b8860b",
-                                      backgroundColor:
-                                        "rgba(255, 215, 0, 0.15)",
-                                      width: { xs: 28, sm: 36 },
-                                      height: { xs: 28, sm: 36 },
-                                      "&:hover": {
-                                        backgroundColor:
-                                          "rgba(255, 215, 0, 0.25)",
-                                        transform: "scale(1.1)",
-                                      },
-                                      transition: "all 0.2s ease",
-                                      borderRadius: 2,
-                                    }}
-                                  >
-                                    <EditIcon
-                                      fontSize={isMobile ? "small" : "small"}
-                                    />
-                                  </IconButton>
-                                </Tooltip>
                                 <Tooltip title="Delete User" arrow>
                                   <IconButton
                                     size="small"
@@ -3683,85 +3820,292 @@ const UsersTable = () => {
                 noValidate
                 sx={{ maxHeight: "45vh", overflowY: "auto" }}
               >
-                <Stack spacing={1.5} sx={{ mt: 1 }}>
-                  <TextField
-                    fullWidth
-                    label="Full Name"
-                    value={userForm.full_name}
-                    onChange={(e) =>
-                      setUserForm({ ...userForm, full_name: e.target.value })
-                    }
-                    required
-                    variant="outlined"
-                    size="small"
-                  />
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    type="email"
-                    value={userForm.email}
-                    onChange={(e) =>
-                      setUserForm({ ...userForm, email: e.target.value })
-                    }
-                    required
-                    variant="outlined"
-                    size="small"
-                  />
-                  <TextField
-                    fullWidth
-                    label="Phone"
-                    value={userForm.phone}
-                    onChange={(e) =>
-                      setUserForm({ ...userForm, phone: e.target.value })
-                    }
-                    variant="outlined"
-                    size="small"
-                  />
-                  <FormControl fullWidth variant="outlined" size="small">
-                    <InputLabel>Role</InputLabel>
-                    <Select
-                      value={userForm.role}
-                      onChange={(e) =>
-                        setUserForm({ ...userForm, role: e.target.value })
-                      }
-                      label="Role"
-                    >
-                      <MenuItem value="superadmin">Super Admin</MenuItem>
-                      <MenuItem value="moderator">Moderator</MenuItem>
-                    </Select>
-                  </FormControl>
-                  {openCreateDialog && (
+                {(isPublicTab || isFakeTab) && openEditDialog ? (
+                  // Public User Edit Form
+                  <Stack spacing={1.5} sx={{ mt: 1 }}>
                     <TextField
                       fullWidth
-                      label="Password"
-                      type={showPassword ? "text" : "password"}
-                      value={userForm.password}
+                      label="Name"
+                      value={publicUserForm.name}
                       onChange={(e) =>
-                        setUserForm({ ...userForm, password: e.target.value })
+                        setPublicUserForm({ ...publicUserForm, name: e.target.value })
                       }
                       required
                       variant="outlined"
                       size="small"
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword(!showPassword)}
-                              edge="end"
-                              size="small"
-                            >
-                              {showPassword ? (
-                                <VisibilityOff />
-                              ) : (
-                                <Visibility />
-                              )}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
                     />
-                  )}
-                </Stack>
+                    <TextField
+                      fullWidth
+                      label="Username"
+                      value={publicUserForm.username}
+                      onChange={(e) =>
+                        setPublicUserForm({ ...publicUserForm, username: e.target.value })
+                      }
+                      required
+                      variant="outlined"
+                      size="small"
+                    />
+                    <TextField
+                      fullWidth
+                      label="Email"
+                      type="email"
+                      value={publicUserForm.email}
+                      onChange={(e) =>
+                        setPublicUserForm({ ...publicUserForm, email: e.target.value })
+                      }
+                      required
+                      variant="outlined"
+                      size="small"
+                    />
+                    <TextField
+                      fullWidth
+                      label="Phone"
+                      value={publicUserForm.phone}
+                      onChange={(e) =>
+                        setPublicUserForm({ ...publicUserForm, phone: e.target.value })
+                      }
+                      variant="outlined"
+                      size="small"
+                      placeholder="+254798123456"
+                    />
+                    <FormControl fullWidth variant="outlined" size="small">
+                      <InputLabel>Gender</InputLabel>
+                      <Select
+                        value={publicUserForm.gender}
+                        onChange={(e) =>
+                          setPublicUserForm({ ...publicUserForm, gender: e.target.value })
+                        }
+                        label="Gender"
+                      >
+                        <MenuItem value="">None</MenuItem>
+                        <MenuItem value="Male">Male</MenuItem>
+                        <MenuItem value="Female">Female</MenuItem>
+                        <MenuItem value="Other">Other</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth variant="outlined" size="small">
+                      <InputLabel>Category</InputLabel>
+                      <Select
+                        value={publicUserForm.category}
+                        onChange={(e) =>
+                          setPublicUserForm({ ...publicUserForm, category: e.target.value })
+                        }
+                        label="Category"
+                      >
+                        <MenuItem value="Regular">Regular</MenuItem>
+                        <MenuItem value="Sugar Mummy">Sugar Mummy</MenuItem>
+                        <MenuItem value="Sponsor">Sponsor</MenuItem>
+                        <MenuItem value="Ben 10">Ben 10</MenuItem>
+                        <MenuItem value="Urban Chics">Urban Chics</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      fullWidth
+                      label="Bio"
+                      multiline
+                      rows={3}
+                      value={publicUserForm.bio}
+                      onChange={(e) =>
+                        setPublicUserForm({ ...publicUserForm, bio: e.target.value })
+                      }
+                      variant="outlined"
+                      size="small"
+                    />
+                    <Grid container spacing={1.5}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Birth Year"
+                          type="number"
+                          value={publicUserForm.birth_year}
+                          onChange={(e) =>
+                            setPublicUserForm({ ...publicUserForm, birth_year: e.target.value })
+                          }
+                          variant="outlined"
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Age"
+                          type="number"
+                          value={publicUserForm.age}
+                          onChange={(e) =>
+                            setPublicUserForm({ ...publicUserForm, age: e.target.value })
+                          }
+                          variant="outlined"
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                    <TextField
+                      fullWidth
+                      label="County"
+                      value={publicUserForm.county}
+                      onChange={(e) =>
+                        setPublicUserForm({ ...publicUserForm, county: e.target.value })
+                      }
+                      variant="outlined"
+                      size="small"
+                    />
+                    <Grid container spacing={1.5}>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Latitude"
+                          type="number"
+                          value={publicUserForm.latitude}
+                          onChange={(e) =>
+                            setPublicUserForm({ ...publicUserForm, latitude: e.target.value })
+                          }
+                          variant="outlined"
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          label="Longitude"
+                          type="number"
+                          value={publicUserForm.longitude}
+                          onChange={(e) =>
+                            setPublicUserForm({ ...publicUserForm, longitude: e.target.value })
+                          }
+                          variant="outlined"
+                          size="small"
+                        />
+                      </Grid>
+                    </Grid>
+                    <Box>
+                      <input
+                        accept="image/*"
+                        type="file"
+                        id="edit-public-user-photo"
+                        style={{ display: "none" }}
+                        onChange={handlePublicUserPhotoChange}
+                      />
+                      <label htmlFor="edit-public-user-photo">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          fullWidth
+                          size="small"
+                        >
+                          {publicUserPhoto ? publicUserPhoto.name : "Change Profile Photo (Optional)"}
+                        </Button>
+                      </label>
+                      {publicUserPhotoPreview && (
+                        <Box sx={{ mt: 1, display: "flex", justifyContent: "center" }}>
+                          <img
+                            src={publicUserPhotoPreview}
+                            alt="Preview"
+                            style={{
+                              maxWidth: "150px",
+                              maxHeight: "150px",
+                              borderRadius: "8px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        </Box>
+                      )}
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Chip
+                        label={publicUserForm.isVerified ? "Verified" : "Not Verified"}
+                        color={publicUserForm.isVerified ? "success" : "default"}
+                        onClick={() =>
+                          setPublicUserForm((prev) => ({
+                            ...prev,
+                            isVerified: !prev.isVerified,
+                          }))
+                        }
+                        sx={{ cursor: "pointer" }}
+                      />
+                    </Box>
+                  </Stack>
+                ) : (
+                  // Admin User Form
+                  <Stack spacing={1.5} sx={{ mt: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Full Name"
+                      value={userForm.full_name}
+                      onChange={(e) =>
+                        setUserForm({ ...userForm, full_name: e.target.value })
+                      }
+                      required
+                      variant="outlined"
+                      size="small"
+                    />
+                    <TextField
+                      fullWidth
+                      label="Email"
+                      type="email"
+                      value={userForm.email}
+                      onChange={(e) =>
+                        setUserForm({ ...userForm, email: e.target.value })
+                      }
+                      required
+                      variant="outlined"
+                      size="small"
+                    />
+                    <TextField
+                      fullWidth
+                      label="Phone"
+                      value={userForm.phone}
+                      onChange={(e) =>
+                        setUserForm({ ...userForm, phone: e.target.value })
+                      }
+                      variant="outlined"
+                      size="small"
+                    />
+                    <FormControl fullWidth variant="outlined" size="small">
+                      <InputLabel>Role</InputLabel>
+                      <Select
+                        value={userForm.role}
+                        onChange={(e) =>
+                          setUserForm({ ...userForm, role: e.target.value })
+                        }
+                        label="Role"
+                      >
+                        <MenuItem value="superadmin">Super Admin</MenuItem>
+                        <MenuItem value="moderator">Moderator</MenuItem>
+                      </Select>
+                    </FormControl>
+                    {openCreateDialog && (
+                      <TextField
+                        fullWidth
+                        label="Password"
+                        type={showPassword ? "text" : "password"}
+                        value={userForm.password}
+                        onChange={(e) =>
+                          setUserForm({ ...userForm, password: e.target.value })
+                        }
+                        required
+                        variant="outlined"
+                        size="small"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={() => setShowPassword(!showPassword)}
+                                edge="end"
+                                size="small"
+                              >
+                                {showPassword ? (
+                                  <VisibilityOff />
+                                ) : (
+                                  <Visibility />
+                                )}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
+                  </Stack>
+                )}
               </Box>
             )}
           </DialogContent>
@@ -3788,6 +4132,23 @@ const UsersTable = () => {
                   role: "moderator",
                   password: "",
                 });
+                setPublicUserForm({
+                  name: "",
+                  username: "",
+                  email: "",
+                  phone: "",
+                  gender: "",
+                  category: "Regular",
+                  bio: "",
+                  birth_year: "",
+                  age: "",
+                  county: "",
+                  latitude: "",
+                  longitude: "",
+                  isVerified: false,
+                });
+                setPublicUserPhoto(null);
+                setPublicUserPhotoPreview(null);
               }}
               variant="outlined"
               fullWidth={isMobile}
