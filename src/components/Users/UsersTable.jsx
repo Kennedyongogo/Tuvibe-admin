@@ -1936,59 +1936,62 @@ const UsersTable = () => {
                                 />
                               </IconButton>
                             </Tooltip>
-                            {/* Edit button - show for all user types */}
-                            <Tooltip title="Edit User" arrow>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEditUser(user)}
-                                sx={{
-                                  color: "#b8860b",
-                                  backgroundColor:
-                                    "rgba(255, 215, 0, 0.15)",
-                                  width: { xs: 28, sm: 36 },
-                                  height: { xs: 28, sm: 36 },
-                                  "&:hover": {
+                            {/* Edit button - show only for Admin Users and Fake Profiles, NOT for Public Users */}
+                            {(userTypeTabs[activeTab]?.value === "admin" || userTypeTabs[activeTab]?.value === "fake") && (
+                              <Tooltip title="Edit User" arrow>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleEditUser(user)}
+                                  sx={{
+                                    color: "#b8860b",
                                     backgroundColor:
-                                      "rgba(255, 215, 0, 0.25)",
-                                    transform: "scale(1.1)",
-                                  },
-                                  transition: "all 0.2s ease",
-                                  borderRadius: 2,
-                                }}
-                              >
-                                <EditIcon
-                                  fontSize={isMobile ? "small" : "small"}
-                                />
-                              </IconButton>
-                            </Tooltip>
-                            {userTypeTabs[activeTab]?.value === "admin" ? (
-                              <>
-                                <Tooltip title="Delete User" arrow>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleDeleteUser(user)}
-                                    sx={{
-                                      color: "#b85050",
+                                      "rgba(255, 215, 0, 0.15)",
+                                    width: { xs: 28, sm: 36 },
+                                    height: { xs: 28, sm: 36 },
+                                    "&:hover": {
                                       backgroundColor:
-                                        "rgba(255, 182, 193, 0.15)",
-                                      width: { xs: 28, sm: 36 },
-                                      height: { xs: 28, sm: 36 },
-                                      "&:hover": {
-                                        backgroundColor:
-                                          "rgba(255, 182, 193, 0.25)",
-                                        transform: "scale(1.1)",
-                                      },
-                                      transition: "all 0.2s ease",
-                                      borderRadius: 2,
-                                    }}
-                                  >
-                                    <DeleteIcon
-                                      fontSize={isMobile ? "small" : "small"}
-                                    />
-                                  </IconButton>
-                                </Tooltip>
-                              </>
-                            ) : (
+                                        "rgba(255, 215, 0, 0.25)",
+                                      transform: "scale(1.1)",
+                                    },
+                                    transition: "all 0.2s ease",
+                                    borderRadius: 2,
+                                  }}
+                                >
+                                  <EditIcon
+                                    fontSize={isMobile ? "small" : "small"}
+                                  />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {/* Delete button - only for Admin Users tab */}
+                            {userTypeTabs[activeTab]?.value === "admin" && (
+                              <Tooltip title="Delete User" arrow>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleDeleteUser(user)}
+                                  sx={{
+                                    color: "#b85050",
+                                    backgroundColor:
+                                      "rgba(255, 182, 193, 0.15)",
+                                    width: { xs: 28, sm: 36 },
+                                    height: { xs: 28, sm: 36 },
+                                    "&:hover": {
+                                      backgroundColor:
+                                        "rgba(255, 182, 193, 0.25)",
+                                      transform: "scale(1.1)",
+                                    },
+                                    transition: "all 0.2s ease",
+                                    borderRadius: 2,
+                                  }}
+                                >
+                                  <DeleteIcon
+                                    fontSize={isMobile ? "small" : "small"}
+                                  />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {/* Suspend and Appeal buttons - only for Public Users tab (NOT Fake Profiles) */}
+                            {userTypeTabs[activeTab]?.value === "public" && (
                               <>
                                 <Tooltip
                                   title={
